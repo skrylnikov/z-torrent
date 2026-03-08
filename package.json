@@ -1,0 +1,19 @@
+{
+  "name": "z-torrent",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "clean": "turbo clean && rm -rf node_modules",
+    "format": "prettier --write \"packages/**/*.{js,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "turbo": "^2.8.14"
+  },
+  "packageManager": "bun@1.3.9"
+}
