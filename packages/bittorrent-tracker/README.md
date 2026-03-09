@@ -321,34 +321,36 @@ $ bittorrent-tracker --help
 
 ## Docker
 
-### Сборка и запуск из исходников
+### Build and run from source
 
 ```bash
 cd packages/bittorrent-tracker
 docker compose up -d
 ```
 
-Или из корня репозитория:
+Or from the repository root:
 
 ```bash
 docker compose -f packages/bittorrent-tracker/docker-compose.yml up -d
 ```
 
-### Production (готовый образ)
+### Production (pre-built image)
 
-Использует образ из [GitHub Container Registry](https://github.com/skrylnikov/z-torrent/pkgs/container/bittorrent-tracker):
+Uses the image from [GitHub Container Registry](https://github.com/skrylnikov/z-torrent/pkgs/container/bittorrent-tracker).
+
+Download the compose file and run:
 
 ```bash
-cd packages/bittorrent-tracker
+wget https://raw.githubusercontent.com/skrylnikov/z-torrent/main/packages/bittorrent-tracker/docker-compose.prod.yml
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-Tracker будет доступен на порту 8000:
+The tracker will be available on port 8000:
 
 - HTTP: http://localhost:8000/announce
 - UDP: udp://localhost:8000
 - WebSocket: ws://localhost:8000
-- Статистика: http://localhost:8000/stats
+- Stats: http://localhost:8000/stats
 
 ## license
 
