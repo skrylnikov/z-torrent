@@ -1,0 +1,238 @@
+import Client from '../index.js'
+import commonTest from './common.js'
+import fixtures from 'webtorrent-fixtures'
+import fetch from 'cross-fetch-ponyfill'
+import test from 'tape'
+import type { Test } from 'tape'
+import type { default as ClientType } from '../client.js'
+
+const peerId = Buffer.from('-WW0091-4ea5886ce160')
+const unknownPeerId = Buffer.from('01234567890123456789')
+
+interface StatsResult {
+  torrents: number | null
+  activeTorrents: number | null
+  peersAll: number | null
+  peersSeederOnly: number | null
+  peersLeecherOnly: number | null
+  peersSeederAndLeecher: number | null
+  peersIPv4: number | null
+  peersIPv6: number | null
+}
+
+function parseHtml(html: string): StatsResult {
+  const extractValue = /[^v^h](\d+)/
+  const array = html
+    .replace('torrents', '\n')
+    .split('\n')
+    .filter((line) => line && line.trim().length > 0)
+    .map((line) => {
+      const a = extractValue.exec(line)
+      if (a) {
+        return parseInt(a[1])
+      }
+      return null
+    })
+  let i = 0
+  return {
+    torrents: array[i++],
+    activeTorrents: array[i++],
+    peersAll: array[i++],
+    peersSeederOnly: array[i++],
+    peersLeecherOnly: array[i++],
+    peersSeederAndLeecher: array[i++],
+    peersIPv4: array[i++],
+    peersIPv6: array[i],
+  }
+}
+
+test('server: get empty stats', (t: Test) => {
+  t.plan(10)
+
+  commonTest.createServer(t, 'http', async (server, announceUrl) => {
+    const url = announceUrl.replace('/announce', '/stats')
+
+    let res
+    try {
+      res = await fetch(url)
+    } catch (err) {
+      t.error(err)
+      return
+    }
+    const data = Buffer.from(await res.arrayBuffer())
+
+    const stats = parseHtml(data.toString())
+    t.equal(res.status, 200)
+    t.equal(stats.torrents, 0)
+    t.equal(stats.activeTorrents, 0)
+    t.equal(stats.peersAll, 0)
+    t.equal(stats.peersSeederOnly, 0)
+    t.equal(stats.peersLeecherOnly, 0)
+    t.equal(stats.peersSeederAndLeecher, 0)
+    t.equal(stats.peersIPv4, 0)
+    t.equal(stats.peersIPv6, 0)
+
+    server.close(() => {
+      t.pass('server closed')
+    })
+  })
+})
+
+test('server: get empty stats with json header', (t: Test) => {
+  t.plan(10)
+
+  commonTest.createServer(t, 'http', async (server, announceUrl) => {
+    const opts = {
+      headers: {
+        accept: 'application/json',
+      },
+    }
+    let res
+    try {
+      res = await fetch(announceUrl.replace('/announce', '/stats'), opts)
+    } catch (err) {
+      t.error(err)
+      return
+    }
+    const stats = (await res.json()) as StatsResult
+
+    t.equal(res.status, 200)
+    t.equal(stats.torrents, 0)
+    t.equal(stats.activeTorrents, 0)
+    t.equal(stats.peersAll, 0)
+    t.equal(stats.peersSeederOnly, 0)
+    t.equal(stats.peersLeecherOnly, 0)
+    t.equal(stats.peersSeederAndLeecher, 0)
+    t.equal(stats.peersIPv4, 0)
+    t.equal(stats.peersIPv6, 0)
+
+    server.close(() => {
+      t.pass('server closed')
+    })
+  })
+})
+
+test('server: get empty stats on stats.json', (t: Test) => {
+  t.plan(10)
+
+  commonTest.createServer(t, 'http', async (server, announceUrl) => {
+    let res
+    try {
+      res = await fetch(announceUrl.replace('/announce', '/stats.json'))
+    } catch (err) {
+      t.error(err)
+      return
+    }
+    const stats = (await res.json()) as StatsResult
+
+    t.equal(res.status, 200)
+    t.equal(stats.torrents, 0)
+    t.equal(stats.activeTorrents, 0)
+    t.equal(stats.peersAll, 0)
+    t.equal(stats.peersSeederOnly, 0)
+    t.equal(stats.peersLeecherOnly, 0)
+    t.equal(stats.peersSeederAndLeecher, 0)
+    t.equal(stats.peersIPv4, 0)
+    t.equal(stats.peersIPv6, 0)
+
+    server.close(() => {
+      t.pass('server closed')
+    })
+  })
+})
+
+test('server: get leecher stats.json', (t: Test) => {
+  t.plan(10)
+
+  commonTest.createServer(t, 'http', (server, announceUrl) => {
+    const client: ClientType = new Client({
+      infoHash: fixtures.leaves.parsedTorrent.infoHash,
+      announce: announceUrl,
+      peerId,
+      port: 6881,
+    })
+    client.on('error', (err) => {
+      t.error(err)
+    })
+    client.on('warning', (err) => {
+      t.error(err)
+    })
+
+    client.start()
+
+    server.once('start', async () => {
+      let res
+      try {
+        res = await fetch(announceUrl.replace('/announce', '/stats.json'))
+      } catch (err) {
+        t.error(err)
+        return
+      }
+      const stats = (await res.json()) as any
+
+      t.equal(res.status, 200)
+      t.equal(stats.torrents, 1)
+      t.equal(stats.activeTorrents, 1)
+      t.equal(stats.peersAll, 1)
+      t.equal(stats.peersSeederOnly, 0)
+      t.equal(stats.peersLeecherOnly, 1)
+      t.equal(stats.peersSeederAndLeecher, 0)
+      t.equal(stats.clients.WebTorrent['0.91'], 1)
+
+      client.destroy(() => {
+        t.pass('client destroyed')
+      })
+      server.close(() => {
+        t.pass('server closed')
+      })
+    })
+  })
+})
+
+test('server: get leecher stats.json (unknown peerId)', (t: Test) => {
+  t.plan(10)
+
+  commonTest.createServer(t, 'http', (server, announceUrl) => {
+    const client: ClientType = new Client({
+      infoHash: fixtures.leaves.parsedTorrent.infoHash,
+      announce: announceUrl,
+      peerId: unknownPeerId,
+      port: 6881,
+    })
+    client.on('error', (err) => {
+      t.error(err)
+    })
+    client.on('warning', (err) => {
+      t.error(err)
+    })
+
+    client.start()
+
+    server.once('start', async () => {
+      let res
+      try {
+        res = await fetch(announceUrl.replace('/announce', '/stats.json'))
+      } catch (err) {
+        t.error(err)
+        return
+      }
+      const stats = (await res.json()) as any
+
+      t.equal(res.status, 200)
+      t.equal(stats.torrents, 1)
+      t.equal(stats.activeTorrents, 1)
+      t.equal(stats.peersAll, 1)
+      t.equal(stats.peersSeederOnly, 0)
+      t.equal(stats.peersLeecherOnly, 1)
+      t.equal(stats.peersSeederAndLeecher, 0)
+      t.equal(stats.clients.unknown['01234567'], 1)
+
+      client.destroy(() => {
+        t.pass('client destroyed')
+      })
+      server.close(() => {
+        t.pass('server closed')
+      })
+    })
+  })
+})

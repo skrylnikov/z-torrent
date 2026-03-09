@@ -1,0 +1,11 @@
+services:
+  tracker:
+    build:
+      context: ../..
+      dockerfile: packages/bittorrent-tracker/Dockerfile
+    ports:
+      - "8000:8000/tcp"
+      - "8000:8000/udp"
+    restart: unless-stopped
+    environment:
+      - PORT=${PORT:-8000}

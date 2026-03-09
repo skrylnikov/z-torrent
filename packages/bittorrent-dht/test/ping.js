@@ -1,7 +1,7 @@
 import test from 'tape'
 import DHT from '../index.js'
 
-test('ping should clear clones', t => {
+test('ping should clear clones', (t) => {
   const dht1 = new DHT({ bootstrap: false })
 
   dht1.listen(10000, () => {
@@ -17,7 +17,7 @@ test('ping should clear clones', t => {
 
     dht2.listen(20000)
 
-    function ping () {
+    function ping() {
       t.same(dht1.nodes.toArray().length, 2, 'have two nodes')
       dht1._pingAll(() => {
         t.same(dht1.nodes.toArray().length, 1, 'should remove all nodes')
@@ -25,7 +25,7 @@ test('ping should clear clones', t => {
       })
     }
 
-    function done () {
+    function done() {
       dht1.destroy(() => {
         dht2.destroy(() => {
           t.end()
@@ -35,7 +35,7 @@ test('ping should clear clones', t => {
   })
 })
 
-test('ping should clear with three nodes', t => {
+test('ping should clear with three nodes', (t) => {
   const dht1 = new DHT({ bootstrap: false })
   let dht3
 
@@ -52,7 +52,7 @@ test('ping should clear with three nodes', t => {
 
     dht2.listen(20000)
 
-    function ping () {
+    function ping() {
       t.same(dht3.nodes.toArray().length, 1, 'has one node')
       t.same(dht1.nodes.toArray().length, 2, 'have two nodes')
       dht1._pingAll(() => {
@@ -64,7 +64,7 @@ test('ping should clear with three nodes', t => {
       })
     }
 
-    function done () {
+    function done() {
       dht1.destroy(() => {
         dht2.destroy(() => {
           dht3.destroy(() => {

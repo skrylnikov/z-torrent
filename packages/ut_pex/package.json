@@ -14,14 +14,13 @@
   "dependencies": {
     "bencode": "^4.0.0",
     "compact2string": "^1.4.1",
-    "string2compact": "^2.0.1"
+    "string2compact": "workspace:*"
   },
   "devDependencies": {
+    "@types/tape": "^5.6.0",
     "@webtorrent/semantic-release-config": "1.0.10",
-    "bittorrent-protocol": "4.1.21",
-    "nyc": "15.1.0",
+    "bittorrent-protocol": "workspace:*",
     "semantic-release": "21.1.2",
-    "standard": "*",
     "tape": "5.9.0"
   },
   "keywords": [
@@ -36,18 +35,32 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=12.20.0"
+    "node": ">=18.0.0"
   },
   "exports": {
-    "import": "./index.js"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/webtorrent/ut_pex.git"
   },
   "scripts": {
-    "test": "standard && tape test/*.js"
+    "build": "rolldown -c",
+    "test": "tsx test/*.ts",
+    "size": "size-limit"
   },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "30 KB"
+    }
+  ],
   "funding": [
     {
       "type": "github",

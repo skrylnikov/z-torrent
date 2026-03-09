@@ -28,9 +28,9 @@ npm install bittorrent-protocol
 The protocol is implemented as a **duplex stream**, so all you have to do is pipe to and
 from it.
 
-duplex streams | a.pipe(b).pipe(a)
----- | ---
-![duplex streams](https://raw.github.com/substack/lxjs-stream-examples/master/images/duplex_streams.png) | ![a.pipe(b).pipe(a)](https://raw.github.com/substack/lxjs-stream-examples/master/images/a_pipe_b_pipe_a.png)
+| duplex streams                                                                                           | a.pipe(b).pipe(a)                                                                                            |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| ![duplex streams](https://raw.github.com/substack/lxjs-stream-examples/master/images/duplex_streams.png) | ![a.pipe(b).pipe(a)](https://raw.github.com/substack/lxjs-stream-examples/master/images/a_pipe_b_pipe_a.png) |
 
 (Images from the ["harnessing streams"](https://github.com/substack/lxjs-stream-examples/blob/master/slides.markdown) talk by substack.)
 
@@ -38,23 +38,25 @@ duplex streams | a.pipe(b).pipe(a)
 import Protocol from 'bittorrent-protocol'
 import net from 'net'
 
-net.createServer(socket => {
-	const wire = new Protocol()
+net
+  .createServer((socket) => {
+    const wire = new Protocol()
 
-	// pipe to and from the protocol
-	socket.pipe(wire).pipe(socket)
+    // pipe to and from the protocol
+    socket.pipe(wire).pipe(socket)
 
-	wire.on('handshake', (infoHash, peerId) => {
-    // receive a handshake (infoHash and peerId are hex strings)
+    wire.on('handshake', (infoHash, peerId) => {
+      // receive a handshake (infoHash and peerId are hex strings)
 
-		// lets emit a handshake of our own as well
-		wire.handshake('my info hash (hex)', 'my peer id (hex)')
-	})
+      // lets emit a handshake of our own as well
+      wire.handshake('my info hash (hex)', 'my peer id (hex)')
+    })
 
-	wire.on('unchoke', () => {
-		console.log('peer is no longer choking us: ' + wire.peerChoking)
-	})
-}).listen(6881)
+    wire.on('unchoke', () => {
+      console.log('peer is no longer choking us: ' + wire.peerChoking)
+    })
+  })
+  .listen(6881)
 ```
 
 ## methods
@@ -67,7 +69,7 @@ Send and receive a handshake from the peer. This is the first message.
 // send a handshake to the peer
 wire.handshake(infoHash, peerId, { dht: true })
 wire.on('handshake', (infoHash, peerId, extensions) => {
-	// receive a handshake (infoHash and peerId are hex strings)
+  // receive a handshake (infoHash and peerId are hex strings)
   console.log(extensions.dht) // supports DHT (BEP-0005)
   console.log(extensions.extended) // supports extension protocol (BEP-0010)
 })
@@ -84,10 +86,10 @@ wire.peerChoking // is the peer choking us?
 wire.amChoking // are we choking the peer?
 
 wire.on('choke', () => {
-	// the peer is now choking us
+  // the peer is now choking us
 })
 wire.on('unchoke', () => {
-	// peer is no longer choking us
+  // peer is no longer choking us
 })
 ```
 
@@ -100,10 +102,10 @@ wire.peerInterested // is the peer interested in us?
 wire.amInterested // are we interested in the peer?
 
 wire.on('interested', () => {
-	// peer is now interested
+  // peer is now interested
 })
 wire.on('uninterested', () => {
-	// peer is no longer interested
+  // peer is no longer interested
 })
 ```
 
@@ -114,14 +116,14 @@ Exchange piece information with the peer.
 ```js
 // send a bitfield to the peer
 wire.bitfield(buffer)
-wire.on('bitfield', bitfield => {
-	// bitfield received from the peer
+wire.on('bitfield', (bitfield) => {
+  // bitfield received from the peer
 })
 
 // send a have message indicating that you have a piece
 wire.have(pieceIndex)
-wire.on('have', pieceIndex => {
-	// peer has sent you a have message
+wire.on('have', (pieceIndex) => {
+  // peer has sent you a have message
 })
 ```
 
@@ -140,11 +142,11 @@ Send and respond to requests for pieces.
 ```js
 // request a block from a peer
 wire.request(pieceIndex, offset, length, (err, block) => {
-	if (err) {
-		// there was an error (peer has started choking us etc)
-		return
-	}
-	// got block
+  if (err) {
+    // there was an error (peer has started choking us etc)
+    return
+  }
+  // got block
 })
 
 // cancel a request to a peer
@@ -152,11 +154,11 @@ wire.cancel(pieceIndex, offset, length)
 
 // receive a request from a peer
 wire.on('request', (pieceIndex, offset, length, callback) => {
-	// ... read block ...
-	callback(null, block) // respond back to the peer
+  // ... read block ...
+  callback(null, block) // respond back to the peer
 })
 
-wire.requests     // list of requests we currently have pending {piece, offset, length}
+wire.requests // list of requests we currently have pending {piece, offset, length}
 wire.peerRequests // list of requests the peer currently have pending {piece, offset, length}
 ```
 
@@ -177,8 +179,8 @@ the torrent dht. Afterwards you can send your dht port.
 ```js
 // send your port to the peer
 wire.port(dhtPort)
-wire.on('port', dhtPort => {
-	// peer has sent a port to us
+wire.on('port', (dhtPort) => {
+  // peer has sent a port to us
 })
 ```
 
@@ -197,9 +199,10 @@ You can enable the keep-alive ping (triggered every 60s).
 // starts the keep alive
 wire.setKeepAlive(true)
 wire.on('keep-alive', () => {
-	// peer sent a keep alive - just ignore it
+  // peer sent a keep alive - just ignore it
 })
 ```
+
 ### fast extension (BEP 6)
 
 This module has built-in support for the
@@ -284,7 +287,6 @@ wire.on('upload', numberOfBytes => {
 })
 ```
 
-
 ## extension api
 
 This package supports a simple extension API so you can extend the default protocol
@@ -294,7 +296,7 @@ Here are the **bittorrent-protocol** extensions that we know about:
 
 - [ut_metadata](https://www.npmjs.com/package/ut_metadata) - Extension for Peers to Send Metadata Files (BEP 9)
 - [ut_pex](https://www.npmjs.com/package/ut_pex) - Extension for Peer Discovery (PEX)
-- *Add yours here! Send a pull request!*
+- _Add yours here! Send a pull request!_
 
 In short, an extension can register itself with at a certain name, which will be added to
 the extended protocol handshake sent to the remote peer. Extensions can also hook events
@@ -309,40 +311,40 @@ import Protocol from 'bittorrent-protocol'
 import net from 'net'
 import ut_metadata from 'ut_metadata'
 
-net.createServer(socket => {
-  const wire = new Protocol()
-  socket.pipe(wire).pipe(socket)
+net
+  .createServer((socket) => {
+    const wire = new Protocol()
+    socket.pipe(wire).pipe(socket)
 
-  // initialize the extension
-  wire.use(ut_metadata())
+    // initialize the extension
+    wire.use(ut_metadata())
 
-  // all `ut_metadata` functionality can now be accessed at wire.ut_metadata
+    // all `ut_metadata` functionality can now be accessed at wire.ut_metadata
 
-  // ask the peer to send us metadata
-  wire.ut_metadata.fetch()
+    // ask the peer to send us metadata
+    wire.ut_metadata.fetch()
 
-  // 'metadata' event will fire when the metadata arrives and is verified to be correct!
-  wire.ut_metadata.on('metadata', metadata => {
-    // got metadata!
+    // 'metadata' event will fire when the metadata arrives and is verified to be correct!
+    wire.ut_metadata.on('metadata', (metadata) => {
+      // got metadata!
+      // Note: the event will not fire if the peer does not support ut_metadata, if they
+      // don't have metadata yet either, if they repeatedly send invalid data, or if they
+      // simply don't respond.
+    })
 
-    // Note: the event will not fire if the peer does not support ut_metadata, if they
-    // don't have metadata yet either, if they repeatedly send invalid data, or if they
-    // simply don't respond.
+    // optionally, listen to the 'warning' event if you want to know that metadata is
+    // probably not going to arrive for one of the above reasons.
+    wire.ut_metadata.on('warning', (err) => {
+      console.log(err.message)
+    })
+
+    // handle handshake
+    wire.on('handshake', (infoHash, peerId) => {
+      // receive a handshake (infoHash and peerId are hex strings)
+      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+    })
   })
-
-  // optionally, listen to the 'warning' event if you want to know that metadata is
-  // probably not going to arrive for one of the above reasons.
-  wire.ut_metadata.on('warning', err => {
-    console.log(err.message)
-  })
-
-  // handle handshake
-  wire.on('handshake', (infoHash, peerId) => {
-    // receive a handshake (infoHash and peerId are hex strings)
-    wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
-  })
-
-}).listen(6881)
+  .listen(6881)
 ```
 
 If you want to write your own extension, take a look at the

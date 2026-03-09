@@ -43,13 +43,15 @@ The second argument can be an optional `opts` object which will be passed to
 method. This is useful for setting the user agent, for example.
 
 ```js
-loadIPSet('http://example.com/list.txt', {
-  headers: {
-    'user-agent': 'WebTorrent (http://webtorrent.io)'
-  }
-}, (err, ipSet) => {
-
-})
+loadIPSet(
+  'http://example.com/list.txt',
+  {
+    headers: {
+      'user-agent': 'WebTorrent (http://webtorrent.io)',
+    },
+  },
+  (err, ipSet) => {}
+)
 ```
 
 ### License

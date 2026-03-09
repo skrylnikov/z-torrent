@@ -11,22 +11,22 @@ for (let i = from; i <= to; i++) {
   runAnnounceLookupTest(i)
 }
 
-function runAnnounceLookupTest (numInstances) {
-  test(`horde: announce+lookup with ${numInstances} DHTs`, t => {
+function runAnnounceLookupTest(numInstances) {
+  test(`horde: announce+lookup with ${numInstances} DHTs`, (t) => {
     let numRunning = numInstances
     findPeers(numInstances, t, (err, dhts) => {
       if (err) throw err
 
-      dhts.forEach(dht => {
+      dhts.forEach((dht) => {
         for (const infoHash in dht.tables) {
           const table = dht.tables[infoHash]
-          table.toJSON().nodes.forEach(contact => {
+          table.toJSON().nodes.forEach((contact) => {
             t.ok(contact.token, 'contact has token')
           })
         }
 
         process.nextTick(() => {
-          dht.destroy(err => {
+          dht.destroy((err) => {
             t.error(err, 'destroyed dht')
             if (--numRunning === 0) t.end()
           })
@@ -40,7 +40,7 @@ function runAnnounceLookupTest (numInstances) {
  *  Initialize [numInstances] dhts, have one announce an infoHash, and another perform a
  *  lookup. Times out after a while.
  */
-function findPeers (numInstances, t, cb) {
+function findPeers(numInstances, t, cb) {
   cb = once(cb)
   const dhts = []
   const timeoutId = setTimeout(() => {
@@ -57,8 +57,8 @@ function findPeers (numInstances, t, cb) {
   }
 
   // wait until every dht is listening
-  const tasks = dhts.map(dht => {
-    return cb => {
+  const tasks = dhts.map((dht) => {
+    return (cb) => {
       dht.listen(cb)
     }
   })
@@ -85,7 +85,7 @@ function findPeers (numInstances, t, cb) {
  * Add every dht address to the dht "before" it.
  * This should guarantee that any dht can be located (with enough queries).
  */
-function makeFriends (dhts) {
+function makeFriends(dhts) {
   const len = dhts.length
   for (let i = 0; i < len; i++) {
     const next = dhts[(i + 1) % len]

@@ -61,7 +61,7 @@ const requiredOpts = {
   infoHash: new Buffer('012345678901234567890'), // hex string or Buffer
   peerId: new Buffer('01234567890123456789'), // hex string or Buffer
   announce: [], // list of tracker server urls
-  port: 6881 // torrent client port, (in browser, optional)
+  port: 6881, // torrent client port, (in browser, optional)
 }
 
 const optionalOpts = {
@@ -78,23 +78,23 @@ const optionalOpts = {
       uploaded: 0,
       downloaded: 0,
       left: 0,
-      customParam: 'blah' // custom parameters supported
+      customParam: 'blah', // custom parameters supported
     }
   },
   // Proxy options (used to proxy requests in node)
   proxyOpts: {
-      // For WSS trackers this is always a http.Agent
-      // For UDP trackers this is an object of options for the Socks Connection
-      // For HTTP trackers this is either an undici Agent if using Node16 or later, or http.Agent if using versions prior to Node 16, ex:
-      // import Socks from 'socks'
-      // proxyOpts.socksProxy = new Socks.Agent(optionsObject, isHttps)
-      // or if using Node 16 or later
-      // import { socksDispatcher } from 'fetch-socks'
-      // proxyOpts.socksProxy = socksDispatcher(optionsObject)
-      socksProxy: new SocksProxy(socksOptionsObject),
-      // Populated with socksProxy if it's provided
-      httpAgent: new http.Agent(agentOptionsObject),
-      httpsAgent: new https.Agent(agentOptionsObject)
+    // For WSS trackers this is always a http.Agent
+    // For UDP trackers this is an object of options for the Socks Connection
+    // For HTTP trackers this is either an undici Agent if using Node16 or later, or http.Agent if using versions prior to Node 16, ex:
+    // import Socks from 'socks'
+    // proxyOpts.socksProxy = new Socks.Agent(optionsObject, isHttps)
+    // or if using Node 16 or later
+    // import { socksDispatcher } from 'fetch-socks'
+    // proxyOpts.socksProxy = socksDispatcher(optionsObject)
+    socksProxy: new SocksProxy(socksOptionsObject),
+    // Populated with socksProxy if it's provided
+    httpAgent: new http.Agent(agentOptionsObject),
+    httpsAgent: new https.Agent(agentOptionsObject),
   },
 }
 
@@ -134,7 +134,7 @@ client.update({
   uploaded: 0,
   downloaded: 0,
   left: 0,
-  customParam: 'blah' // custom parameters supported
+  customParam: 'blah', // custom parameters supported
 })
 
 // stop getting peers from the tracker, gracefully leave the swarm
@@ -179,7 +179,7 @@ const server = new Server({
 
     // This example only allows one torrent.
 
-    const allowed = (infoHash === 'aaa67059ed6bd08362da625b3ae77f6f4a075aaa')
+    const allowed = infoHash === 'aaa67059ed6bd08362da625b3ae77f6f4a075aaa'
     if (allowed) {
       // If the callback is passed `null`, the torrent will be allowed.
       cb(null)
@@ -188,7 +188,7 @@ const server = new Server({
       // and the error's `message` property will be given as the reason.
       cb(new Error('disallowed torrent'))
     }
-  }
+  },
 })
 
 // Internal http, udp, and websocket servers exposed as public properties.
@@ -226,13 +226,11 @@ server.on('listening', function () {
   const wsHost = wsAddr.address !== '::' ? wsAddr.address : 'localhost'
   const wsPort = wsAddr.port
   console.log(`WebSocket tracker: ws://${wsHost}:${wsPort}`)
-
 })
-
 
 // start tracker server listening! Use 0 to listen on a random free port.
 const port = 0
-const hostname = "localhost"
+const hostname = 'localhost'
 server.listen(port, hostname, () => {
   // Do something on listening...
 })
@@ -270,7 +268,7 @@ Scraping multiple torrent info is possible with a static `Client.scrape` method:
 import Client from 'bittorrent-tracker'
 // Or import Client from 'bittorrent-tracker/client'
 
-Client.scrape({ announce: announceUrl, infoHash: [ infoHash1, infoHash2 ]}, function (err, results) {
+Client.scrape({ announce: announceUrl, infoHash: [infoHash1, infoHash2] }, function (err, results) {
   results[infoHash1].announce
   results[infoHash1].infoHash
   results[infoHash1].complete
@@ -279,7 +277,7 @@ Client.scrape({ announce: announceUrl, infoHash: [ infoHash1, infoHash2 ]}, func
 
   // ...
 })
-````
+```
 
 ## command line
 
@@ -320,6 +318,37 @@ $ bittorrent-tracker --help
     -s, --silent         show no output
     -v, --version        print the current version
 ```
+
+## Docker
+
+### Сборка и запуск из исходников
+
+```bash
+cd packages/bittorrent-tracker
+docker compose up -d
+```
+
+Или из корня репозитория:
+
+```bash
+docker compose -f packages/bittorrent-tracker/docker-compose.yml up -d
+```
+
+### Production (готовый образ)
+
+Использует образ из [GitHub Container Registry](https://github.com/skrylnikov/z-torrent/pkgs/container/bittorrent-tracker):
+
+```bash
+cd packages/bittorrent-tracker
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Tracker будет доступен на порту 8000:
+
+- HTTP: http://localhost:8000/announce
+- UDP: udp://localhost:8000
+- WebSocket: ws://localhost:8000
+- Статистика: http://localhost:8000/stats
 
 ## license
 

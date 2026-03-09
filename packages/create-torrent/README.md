@@ -59,7 +59,7 @@ Or, an **array of `string`, `File`, `Buffer`, or `stream.Readable` objects**.
 
 `opts` is optional and allows you to set special settings on the produced .torrent file.
 
-``` js
+```js
 {
   name: String,             // name of the torrent (default = basename of `path`, or 1st file's name)
   comment: String,          // free-form textual comments of the author

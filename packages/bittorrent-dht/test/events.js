@@ -2,7 +2,7 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('`node` event fires for each added node (100x)', t => {
+test('`node` event fires for each added node (100x)', (t) => {
   const dht = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht)
 
@@ -19,7 +19,7 @@ test('`node` event fires for each added node (100x)', t => {
   common.addRandomNodes(dht, 100)
 })
 
-test('`node` event fires for each added node (10000x)', t => {
+test('`node` event fires for each added node (10000x)', (t) => {
   const dht = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht)
 
@@ -36,7 +36,7 @@ test('`node` event fires for each added node (10000x)', t => {
   common.addRandomNodes(dht, 10000)
 })
 
-test('`announce` event fires for each added peer (100x)', t => {
+test('`announce` event fires for each added peer (100x)', (t) => {
   const dht = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht)
 
@@ -53,7 +53,7 @@ test('`announce` event fires for each added peer (100x)', t => {
   common.addRandomPeers(dht, 100)
 })
 
-test('`announce` event fires for each added peer (10000x)', t => {
+test('`announce` event fires for each added peer (10000x)', (t) => {
   const dht = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht)
 
@@ -70,7 +70,7 @@ test('`announce` event fires for each added peer (10000x)', t => {
   common.addRandomPeers(dht, 10000)
 })
 
-test('`listening` event fires', t => {
+test('`listening` event fires', (t) => {
   t.plan(2)
   const dht = new DHT({ bootstrap: false })
 
@@ -85,7 +85,7 @@ test('`listening` event fires', t => {
   })
 })
 
-test('`ready` event fires when bootstrap === false', t => {
+test('`ready` event fires when bootstrap === false', (t) => {
   t.plan(2)
   const dht = new DHT({ bootstrap: false })
 
@@ -98,7 +98,7 @@ test('`ready` event fires when bootstrap === false', t => {
   })
 })
 
-test('`ready` event fires when there are K nodes', t => {
+test('`ready` event fires when there are K nodes', (t) => {
   t.plan(6)
 
   // dht1 will simulate an existing node (with a populated routing table)

@@ -3,7 +3,7 @@ import DHT from '../index.js'
 import * as common from './common.js'
 
 // https://github.com/webtorrent/bittorrent-dht/pull/36
-test('bootstrap and listen to custom port', t => {
+test('bootstrap and listen to custom port', (t) => {
   t.plan(4)
 
   const dht = new DHT({ bootstrap: ['1.2.3.4:1000'] })

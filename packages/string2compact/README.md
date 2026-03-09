@@ -32,7 +32,7 @@ console.log(compact) // new Buffer('0A0A0A05FF80', 'hex')
 #### tranform multiple into one buffer
 
 ```js
-var compacts = string2compact([ '10.10.10.5:128', '100.56.58.99:28525' ])
+var compacts = string2compact(['10.10.10.5:128', '100.56.58.99:28525'])
 console.log(compacts) // new Buffer('0A0A0A05008064383a636f6d', 'hex')
 ```
 

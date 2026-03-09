@@ -2,7 +2,7 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('adding a node updates the lastChange property', t => {
+test('adding a node updates the lastChange property', (t) => {
   t.plan(3)
 
   const now = Date.now()
@@ -13,15 +13,12 @@ test('adding a node updates the lastChange property', t => {
   setTimeout(() => {
     dht.addNode({ host: '127.0.0.1', port: 9999, id: common.randomId() })
     t.equal(typeof dht._rpc.nodes.metadata.lastChange, 'number')
-    t.ok(
-      dht._rpc.nodes.metadata.lastChange > now,
-      'lastChange timestamp is older'
-    )
+    t.ok(dht._rpc.nodes.metadata.lastChange > now, 'lastChange timestamp is older')
     dht.destroy()
   }, 50)
 })
 
-test('same node doesn´t change the lastChange property', t => {
+test('same node doesn´t change the lastChange property', (t) => {
   t.plan(3)
 
   const dht = new DHT({ bootstrap: false })
@@ -44,7 +41,7 @@ test('same node doesn´t change the lastChange property', t => {
   }, 1)
 })
 
-test('same node doesn´t change the lastChange property', t => {
+test('same node doesn´t change the lastChange property', (t) => {
   t.plan(3)
 
   const dht = new DHT({ bootstrap: false })
@@ -67,7 +64,7 @@ test('same node doesn´t change the lastChange property', t => {
   }, 1)
 })
 
-test('_checkNodes: skips good nodes', t => {
+test('_checkNodes: skips good nodes', (t) => {
   t.plan(5)
   const dht1 = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht1)
@@ -98,7 +95,7 @@ test('_checkNodes: skips good nodes', t => {
   })
 })
 
-test('_checkNodes: returns the bad one', t => {
+test('_checkNodes: returns the bad one', (t) => {
   t.plan(5)
   const dht1 = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht1)
@@ -135,7 +132,7 @@ test('_checkNodes: returns the bad one', t => {
   })
 })
 
-test('_checkAndRemoveNodes: removes bad nodes', t => {
+test('_checkAndRemoveNodes: removes bad nodes', (t) => {
   t.plan(6)
   const dht1 = new DHT({ bootstrap: false })
   common.failOnWarningOrError(t, dht1)

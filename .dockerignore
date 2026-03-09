@@ -1,0 +1,22 @@
+# Dependencies (reinstalled in container)
+node_modules
+
+# Git
+.git
+.github
+
+# Build outputs (rebuilt in container)
+**/dist
+.turbo
+
+# Tests and dev
+**/test
+**/*.test.ts
+**/*.spec.ts
+coverage
+*.log
+
+# IDE and misc
+.env*
+.idea
+.vscode

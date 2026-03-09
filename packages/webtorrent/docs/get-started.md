@@ -1,36 +1,36 @@
-# Get Started with WebTorrent
+# Get Started with Z-Torrent
 
-**WebTorrent** is the first torrent client that works in the **browser**. It's easy
+**Z-Torrent** is the first torrent client that works in the **browser**. It's easy
 to get started!
 
 ## Install
 
-To start using WebTorrent, simply include the
-[`webtorrent`](https://esm.sh/webtorrent)
+To start using Z-Torrent, simply include the
+[`z-torrent`](https://esm.sh/z-torrent)
 script on your page.
 
 ```html
-<script type='module'>
-  import WebTorrent from 'https://esm.sh/webtorrent/dist/webtorrent.min.js'
+<script type="module">
+  import WebTorrent from 'https://esm.sh/z-torrent/dist/z-torrent.min.js'
 </script>
 ```
 
 ### Browserify and Webpack
 
-WebTorrent also works great with [browserify](http://browserify.org/), [webpack](https://webpack.js.org/) and other bundlers, which let
+Z-Torrent also works great with [browserify](http://browserify.org/), [webpack](https://webpack.js.org/) and other bundlers, which let
 you use [node.js](http://nodejs.org/) style `require()` to organize your browser
 code, and load packages installed by [npm](https://npmjs.org/).
 
-For an example webpack config see [the webpack bundle config used by webtorrent](/scripts/browser.webpack.js).
+For an example webpack config see [the webpack bundle config used by z-torrent](/scripts/browser.webpack.js).
 
 ```
-npm install webtorrent
+npm install z-torrent
 ```
 
 Then use `WebTorrent` like this:
 
 ```js
-import WebTorrent from 'webtorrent'
+import WebTorrent from 'z-torrent'
 ```
 
 ## Quick Examples
@@ -43,15 +43,18 @@ import WebTorrent from 'webtorrent'
 const client = new WebTorrent()
 
 // Sintel, a free, Creative Commons movie
-const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+const torrentId =
+  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
 
-const controller = await navigator.serviceWorker.register('./sw.min.js', { scope: './' })
+const controller = await navigator.serviceWorker.register('./sw.min.js', {
+  scope: './',
+})
 await navigator.serviceWorker.ready
 client.createServer({ controller })
 
-client.add(torrentId, torrent => {
+client.add(torrentId, (torrent) => {
   // Torrents can contain many files. Let's use the .mp4 file
-  const file = torrent.files.find(file => {
+  const file = torrent.files.find((file) => {
     return file.name.endsWith('.mp4')
   })
 
@@ -77,8 +80,8 @@ import WebTorrent from 'webtorrent'
 const client = new WebTorrent()
 
 // When user drops files on the browser, create a new torrent and start seeding it!
-dragDrop('body', files => {
-  client.seed(files, torrent => {
+dragDrop('body', (files) => {
+  client.seed(files, (torrent) => {
     console.log('Client is seeding ' + torrent.magnetURI)
   })
 })
@@ -100,7 +103,7 @@ const client = new WebTorrent()
 
 const magnetURI = 'magnet: ...'
 
-client.add(magnetURI, { path: '/path/to/folder' }, torrent => {
+client.add(magnetURI, { path: '/path/to/folder' }, (torrent) => {
   torrent.on('done', () => {
     console.log('torrent download finished')
   })
@@ -115,8 +118,8 @@ client.add(magnetURI, { path: '/path/to/folder' }, torrent => {
 import WebTorrent from 'webtorrent-hybrid'
 const client = new WebTorrent()
 
-client.seed('/seed-me.txt', torrent => {
-    console.log('Client is seeding ' + torrent.magnetURI)
+client.seed('/seed-me.txt', (torrent) => {
+  console.log('Client is seeding ' + torrent.magnetURI)
 })
 ```
 
@@ -141,24 +144,29 @@ downloaded.
 
     <form>
       <label for="torrentId">Download from a magnet link: </label>
-      <input name="torrentId", placeholder="magnet:" value="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent">
+      <input
+        name="torrentId"
+        ,
+        placeholder="magnet:"
+        value="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent"
+      />
       <button type="submit">Download</button>
     </form>
 
     <h2>Log</h2>
     <div class="log"></div>
 
-    <script type='module'>
+    <script type="module">
       // Include the latest version of WebTorrent
       import WebTorrent from 'https://esm.sh/webtorrent/dist/webtorrent.min.js'
-      
+
       const client = new WebTorrent()
 
-      client.on('error', err => {
+      client.on('error', (err) => {
         console.error('ERROR: ' + err.message)
       })
 
-      document.querySelector('form').addEventListener('submit', e => {
+      document.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault() // Prevent page refresh
 
         const torrentId = document.querySelector('form input[name=torrentId]').value
@@ -166,12 +174,20 @@ downloaded.
         client.add(torrentId, onTorrent)
       })
 
-      async function onTorrent (torrent) {
+      async function onTorrent(torrent) {
         log('Got torrent metadata!')
         log(
-          'Torrent info hash: ' + torrent.infoHash + ' ' +
-          '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
-          '<a href="' + URL.createObjectURL(torrent.torrentFileBlob) + '" target="_blank" download="' + torrent.name + '.torrent">[Download .torrent]</a>'
+          'Torrent info hash: ' +
+            torrent.infoHash +
+            ' ' +
+            '<a href="' +
+            torrent.magnetURI +
+            '" target="_blank">[Magnet URI]</a> ' +
+            '<a href="' +
+            URL.createObjectURL(torrent.torrentFileBlob) +
+            '" target="_blank" download="' +
+            torrent.name +
+            '.torrent">[Download .torrent]</a>'
         )
 
         // Print out progress every 5 seconds
@@ -189,16 +205,24 @@ downloaded.
           try {
             const blob = await file.blob()
             document.querySelector('.log').append(file.name)
-            log('(Blob URLs only work if the file is loaded from a server. "http//localhost" works. "file://" does not.)')
+            log(
+              '(Blob URLs only work if the file is loaded from a server. "http//localhost" works. "file://" does not.)'
+            )
             log('File done.')
-            log('<a href="' + URL.createObjectURL(blob) + '">Download full file: ' + file.name + '</a>')
+            log(
+              '<a href="' +
+                URL.createObjectURL(blob) +
+                '">Download full file: ' +
+                file.name +
+                '</a>'
+            )
           } catch (err) {
             if (err) log(err.message)
           }
         }
       }
 
-      function log (str) {
+      function log(str) {
         const p = document.createElement('p')
         p.innerHTML = str
         document.querySelector('.log').appendChild(p)
@@ -227,179 +251,179 @@ or [Instant.io](https://instant.io) to seed torrents to the WebTorrent network.
 ```html
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebTorrent video player</title>
+    <style>
+      #output video {
+        width: 100%;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <title>WebTorrent video player</title>
-  <style>
-    #output video {
-      width: 100%;
-    }
+      #progressBar {
+        height: 5px;
+        width: 0%;
+        background-color: #35b44f;
+        transition: width 0.4s ease-in-out;
+      }
 
-    #progressBar {
-      height: 5px;
-      width: 0%;
-      background-color: #35b44f;
-      transition: width .4s ease-in-out;
-    }
+      body.is-seed .show-seed {
+        display: inline;
+      }
 
-    body.is-seed .show-seed {
-      display: inline;
-    }
+      body.is-seed .show-leech {
+        display: none;
+      }
 
-    body.is-seed .show-leech {
-      display: none;
-    }
+      .show-seed {
+        display: none;
+      }
 
-    .show-seed {
-      display: none;
-    }
+      #status code {
+        font-size: 90%;
+        font-weight: 700;
+        margin-left: 3px;
+        margin-right: 3px;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+      }
 
-    #status code {
-      font-size: 90%;
-      font-weight: 700;
-      margin-left: 3px;
-      margin-right: 3px;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
-    }
+      .is-seed {
+        background-color: #154820;
+        transition: 0.5s 0.5s background-color ease-in-out;
+      }
 
-    .is-seed {
-      background-color: #154820;
-      transition: .5s .5s background-color ease-in-out;
-    }
+      body {
+        background-color: #2a3749;
+        margin: 0;
+        height: 100%;
+      }
 
-    body {
-      background-color: #2a3749;
-      margin: 0;
-      height: 100%;
-    }
+      #status {
+        color: #fff;
+        font-size: 17px;
+        padding: 5px;
+      }
 
-    #status {
-      color: #fff;
-      font-size: 17px;
-      padding: 5px;
-    }
+      a:link,
+      a:visited {
+        color: #30a247;
+        text-decoration: none;
+      }
+    </style>
+  </head>
 
-    a:link,
-    a:visited {
-      color: #30a247;
-      text-decoration: none;
-    }
-  </style>
-</head>
-
-<body>
-  <div>
-    <div id="progressBar"></div>
-    <video id="output" controls></video>
-  </div>
-  <!-- Statistics -->
-  <div id="status">
+  <body>
     <div>
-      <span class="show-leech">Downloading </span>
-      <span class="show-seed">Seeding </span>
-      <code>
+      <div id="progressBar"></div>
+      <video id="output" controls></video>
+    </div>
+    <!-- Statistics -->
+    <div id="status">
+      <div>
+        <span class="show-leech">Downloading </span>
+        <span class="show-seed">Seeding </span>
+        <code>
           <!-- Informative link to the torrent file -->
-          <a id="torrentLink" href="https://webtorrent.io/torrents/sintel.torrent">sintel.torrent</a>
+          <a id="torrentLink" href="https://webtorrent.io/torrents/sintel.torrent"
+            >sintel.torrent</a
+          >
         </code>
-      <span class="show-leech"> from </span>
-      <span class="show-seed"> to </span>
-      <code id="numPeers">0 peers</code>.
+        <span class="show-leech"> from </span>
+        <span class="show-seed"> to </span>
+        <code id="numPeers">0 peers</code>.
+      </div>
+      <div>
+        <code id="downloaded"></code>
+        of <code id="total"></code> — <span id="remaining"></span><br />
+        &#x2198;<code id="downloadSpeed">0 b/s</code> / &#x2197;<code id="uploadSpeed">0 b/s</code>
+      </div>
     </div>
-    <div>
-      <code id="downloaded"></code>
-      of <code id="total"></code>
-      — <span id="remaining"></span><br />
-      &#x2198;<code id="downloadSpeed">0 b/s</code>
-      / &#x2197;<code id="uploadSpeed">0 b/s</code>
-    </div>
-  </div>
 
-  <!-- Moment is used to show a human-readable remaining time -->
-  <script src="http://momentjs.com/downloads/moment.min.js"></script>
+    <!-- Moment is used to show a human-readable remaining time -->
+    <script src="http://momentjs.com/downloads/moment.min.js"></script>
 
-  <script type="module">
-    // Include the latest version of WebTorrent
-    import WebTorrent from './webtorrent.min.js'
+    <script type="module">
+      // Include the latest version of WebTorrent
+      import WebTorrent from './webtorrent.min.js'
 
-    const torrentId = 'https://webtorrent.io/torrents/sintel.torrent'
+      const torrentId = 'https://webtorrent.io/torrents/sintel.torrent'
 
-    const client = new WebTorrent()
+      const client = new WebTorrent()
 
-    // HTML elements
-    const $body = document.body
-    const $progressBar = document.querySelector('#progressBar')
-    const $numPeers = document.querySelector('#numPeers')
-    const $downloaded = document.querySelector('#downloaded')
-    const $total = document.querySelector('#total')
-    const $remaining = document.querySelector('#remaining')
-    const $uploadSpeed = document.querySelector('#uploadSpeed')
-    const $downloadSpeed = document.querySelector('#downloadSpeed')
+      // HTML elements
+      const $body = document.body
+      const $progressBar = document.querySelector('#progressBar')
+      const $numPeers = document.querySelector('#numPeers')
+      const $downloaded = document.querySelector('#downloaded')
+      const $total = document.querySelector('#total')
+      const $remaining = document.querySelector('#remaining')
+      const $uploadSpeed = document.querySelector('#uploadSpeed')
+      const $downloadSpeed = document.querySelector('#downloadSpeed')
 
-    const controller = await navigator.serviceWorker.register('./sw.min.js', { scope: './' })
-    await navigator.serviceWorker.ready
-    client.createServer({ controller })
+      const controller = await navigator.serviceWorker.register('./sw.min.js', {
+        scope: './',
+      })
+      await navigator.serviceWorker.ready
+      client.createServer({ controller })
 
-    // Download the torrent
-    client.add(torrentId, torrent => {
-      // Torrents can contain many files. Let's use the .mp4 file
-      const file = torrent.files.find(file => {
-        return file.name.endsWith('.mp4')
+      // Download the torrent
+      client.add(torrentId, (torrent) => {
+        // Torrents can contain many files. Let's use the .mp4 file
+        const file = torrent.files.find((file) => {
+          return file.name.endsWith('.mp4')
+        })
+
+        // Stream the file in the browser
+        file.streamTo(document.querySelector('#output'))
+
+        // Trigger statistics refresh
+        torrent.on('done', onDone)
+        setInterval(onProgress, 500)
+        onProgress()
+
+        // Statistics
+        function onProgress() {
+          // Peers
+          $numPeers.innerHTML = torrent.numPeers + (torrent.numPeers === 1 ? ' peer' : ' peers')
+
+          // Progress
+          const percent = Math.round(torrent.progress * 100 * 100) / 100
+          $progressBar.style.width = percent + '%'
+          $downloaded.innerHTML = prettyBytes(torrent.downloaded)
+          $total.innerHTML = prettyBytes(torrent.length)
+
+          // Remaining time
+          let remaining
+          if (torrent.done) {
+            remaining = 'Done.'
+          } else {
+            remaining = moment.duration(torrent.timeRemaining / 1000, 'seconds').humanize()
+            remaining = remaining[0].toUpperCase() + remaining.substring(1) + ' remaining.'
+          }
+          $remaining.innerHTML = remaining
+
+          // Speed rates
+          $downloadSpeed.innerHTML = prettyBytes(torrent.downloadSpeed) + '/s'
+          $uploadSpeed.innerHTML = prettyBytes(torrent.uploadSpeed) + '/s'
+        }
+        function onDone() {
+          $body.className += ' is-seed'
+          onProgress()
+        }
       })
 
-      // Stream the file in the browser
-      file.streamTo(document.querySelector('#output'))
-
-      // Trigger statistics refresh
-      torrent.on('done', onDone)
-      setInterval(onProgress, 500)
-      onProgress()
-
-      // Statistics
-      function onProgress () {
-        // Peers
-        $numPeers.innerHTML = torrent.numPeers + (torrent.numPeers === 1 ? ' peer' : ' peers')
-
-        // Progress
-        const percent = Math.round(torrent.progress * 100 * 100) / 100
-        $progressBar.style.width = percent + '%'
-        $downloaded.innerHTML = prettyBytes(torrent.downloaded)
-        $total.innerHTML = prettyBytes(torrent.length)
-
-        // Remaining time
-        let remaining
-        if (torrent.done) {
-          remaining = 'Done.'
-        } else {
-          remaining = moment.duration(torrent.timeRemaining / 1000, 'seconds').humanize()
-          remaining = remaining[0].toUpperCase() + remaining.substring(1) + ' remaining.'
-        }
-        $remaining.innerHTML = remaining
-
-        // Speed rates
-        $downloadSpeed.innerHTML = prettyBytes(torrent.downloadSpeed) + '/s'
-        $uploadSpeed.innerHTML = prettyBytes(torrent.uploadSpeed) + '/s'
+      // Human readable bytes util
+      function prettyBytes(num) {
+        const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+        const neg = num < 0
+        if (neg) num = -num
+        if (num < 1) return (neg ? '-' : '') + num + ' B'
+        const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
+        const unit = units[exponent]
+        num = Number((num / Math.pow(1000, exponent)).toFixed(2))
+        return (neg ? '-' : '') + num + ' ' + unit
       }
-      function onDone () {
-        $body.className += ' is-seed'
-        onProgress()
-      }
-    })
-
-    // Human readable bytes util
-    function prettyBytes (num) {
-      const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-      const neg = num < 0
-      if (neg) num = -num
-      if (num < 1) return (neg ? '-' : '') + num + ' B'
-      const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
-      const unit = units[exponent]
-      num = Number((num / Math.pow(1000, exponent)).toFixed(2))
-      return (neg ? '-' : '') + num + ' ' + unit
-    }
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
 ```
 

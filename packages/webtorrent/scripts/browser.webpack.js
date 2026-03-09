@@ -1,47 +1,55 @@
 import webpack from 'webpack'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import TerserPlugin from 'terser-webpack-plugin'
-import info from '../package.json' assert { type: 'json' }
+import info from '../package.json' with { type: 'json' }
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const polyfillProcess = path.resolve(__dirname, '../src/polyfills/process-fast.js')
 
 /** @type {import('webpack').Configuration} */
 export default {
-  entry: './index.js',
+  entry: './dist/index.js',
   devtool: 'source-map',
+  context: path.resolve(__dirname, '..'),
   resolve: {
     aliasFields: ['browser'],
     alias: {
       ...info.browser,
-      path: 'path-esm'
-    }
+      path: 'path-esm',
+    },
   },
   output: {
     chunkFormat: 'module',
-    filename: 'webtorrent.min.js',
+    filename: 'z-torrent.min.js',
     library: {
-      type: 'module'
-    }
+      type: 'module',
+    },
   },
   mode: 'production',
   target: 'web',
   experiments: {
-    outputModule: true
+    outputModule: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      process: '/polyfills/process-fast.js'
+      process: polyfillProcess,
     }),
     new webpack.DefinePlugin({
-      global: 'globalThis'
-    })
+      global: 'globalThis',
+    }),
   ],
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin({
-      terserOptions: {
-        format: {
-          comments: false
-        }
-      },
-      extractComments: false
-    })]
-  }
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          format: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
+  },
 }

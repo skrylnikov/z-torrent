@@ -35,13 +35,11 @@ const hasOwnProperty = Object.prototype.hasOwnProperty
  * @param {function} opts.filter        black/whitelist fn for disallowing/allowing torrents
  */
 class Server extends EventEmitter {
-  constructor (opts = {}) {
+  constructor(opts = {}) {
     super()
     debug('new server %s', JSON.stringify(opts))
 
-    this.intervalMs = opts.interval
-      ? opts.interval
-      : 10 * 60 * 1000 // 10 min
+    this.intervalMs = opts.interval ? opts.interval : 10 * 60 * 1000 // 10 min
 
     this._trustProxy = !!opts.trustProxy
     if (typeof opts.filter === 'function') this._filter = opts.filter
@@ -62,7 +60,9 @@ class Server extends EventEmitter {
     // start an http tracker unless the user explictly says no
     if (opts.http !== false) {
       this.http = http.createServer(isObject(opts.http) ? opts.http : undefined)
-      this.http.on('error', err => { this._onError(err) })
+      this.http.on('error', (err) => {
+        this._onError(err)
+      })
       this.http.on('listening', onListening)
 
       // Add default http request handler on next tick to give user the chance to add
@@ -80,19 +80,27 @@ class Server extends EventEmitter {
       this.udp4 = this.udp = dgram.createSocket({
         type: 'udp4',
         reuseAddr: true,
-        ...(isObject(opts.udp) ? opts.udp : undefined)
+        ...(isObject(opts.udp) ? opts.udp : undefined),
       })
-      this.udp4.on('message', (msg, rinfo) => { this.onUdpRequest(msg, rinfo) })
-      this.udp4.on('error', err => { this._onError(err) })
+      this.udp4.on('message', (msg, rinfo) => {
+        this.onUdpRequest(msg, rinfo)
+      })
+      this.udp4.on('error', (err) => {
+        this._onError(err)
+      })
       this.udp4.on('listening', onListening)
 
       this.udp6 = dgram.createSocket({
         type: 'udp6',
         reuseAddr: true,
-        ...(isObject(opts.udp) ? opts.udp : undefined)
+        ...(isObject(opts.udp) ? opts.udp : undefined),
       })
-      this.udp6.on('message', (msg, rinfo) => { this.onUdpRequest(msg, rinfo) })
-      this.udp6.on('error', err => { this._onError(err) })
+      this.udp6.on('message', (msg, rinfo) => {
+        this.onUdpRequest(msg, rinfo)
+      })
+      this.udp6.on('error', (err) => {
+        this._onError(err)
+      })
       this.udp6.on('listening', onListening)
     }
 
@@ -101,7 +109,9 @@ class Server extends EventEmitter {
       const noServer = isObject(opts.ws) && opts.ws.noServer
       if (!this.http && !noServer) {
         this.http = http.createServer()
-        this.http.on('error', err => { this._onError(err) })
+        this.http.on('error', (err) => {
+          this._onError(err)
+        })
         this.http.on('listening', onListening)
 
         // Add default http request handler on next tick to give user the chance to add
@@ -120,7 +130,7 @@ class Server extends EventEmitter {
         server: noServer ? undefined : this.http,
         perMessageDeflate: false,
         clientTracking: false,
-        ...(isObject(opts.ws) ? opts.ws : undefined)
+        ...(isObject(opts.ws) ? opts.ws : undefined),
       })
 
       this.ws.address = () => {
@@ -130,7 +140,9 @@ class Server extends EventEmitter {
         return this.http.address()
       }
 
-      this.ws.on('error', err => { this._onError(err) })
+      this.ws.on('error', (err) => {
+        this._onError(err)
+      })
       this.ws.on('connection', (socket, req) => {
         // Note: socket.upgradeReq was removed in ws@3.0.0, so re-add it.
         // https://github.com/websockets/ws/pull/1099
@@ -142,7 +154,9 @@ class Server extends EventEmitter {
     if (opts.stats !== false) {
       if (!this.http) {
         this.http = http.createServer()
-        this.http.on('error', err => { this._onError(err) })
+        this.http.on('error', (err) => {
+          this._onError(err)
+        })
         this.http.on('listening', onListening)
       }
 
@@ -154,7 +168,7 @@ class Server extends EventEmitter {
         let activeTorrents = 0
         const allPeers = {}
 
-        function countPeers (filterFunction) {
+        function countPeers(filterFunction) {
           let count = 0
           let key
 
@@ -167,7 +181,7 @@ class Server extends EventEmitter {
           return count
         }
 
-        function groupByClient () {
+        function groupByClient() {
           const clients = {}
           for (const key in allPeers) {
             if (hasOwnProperty.call(allPeers, key)) {
@@ -178,7 +192,8 @@ class Server extends EventEmitter {
               }
               const client = clients[peer.client.client]
               // If the client is not known show 8 chars from peerId as version
-              const version = peer.client.version || Buffer.from(peer.peerId, 'hex').toString().substring(0, 8)
+              const version =
+                peer.client.version || Buffer.from(peer.peerId, 'hex').toString().substring(0, 8)
               if (!client[version]) {
                 client[version] = 0
               }
@@ -188,7 +203,7 @@ class Server extends EventEmitter {
           return clients
         }
 
-        function printClients (clients) {
+        function printClients(clients) {
           let html = '<ul>\n'
           for (const name in clients) {
             if (hasOwnProperty.call(clients, name)) {
@@ -205,12 +220,12 @@ class Server extends EventEmitter {
         }
 
         if (req.method === 'GET' && (req.url === '/stats' || req.url === '/stats.json')) {
-          infoHashes.forEach(infoHash => {
+          infoHashes.forEach((infoHash) => {
             const peers = this.torrents[infoHash].peers
             const keys = peers.keys
             if (keys.length > 0) activeTorrents++
 
-            keys.forEach(peerId => {
+            keys.forEach((peerId) => {
               // Don't mark the peer as most recently used for stats
               const peer = peers.peek(peerId)
               if (peer == null) return // peers.peek() can evict the peer
@@ -220,7 +235,7 @@ class Server extends EventEmitter {
                   ipv4: false,
                   ipv6: false,
                   seeder: false,
-                  leecher: false
+                  leecher: false,
                 }
               }
 
@@ -241,11 +256,11 @@ class Server extends EventEmitter {
             })
           })
 
-          const isSeederOnly = peer => peer.seeder && peer.leecher === false
-          const isLeecherOnly = peer => peer.leecher && peer.seeder === false
-          const isSeederAndLeecher = peer => peer.seeder && peer.leecher
-          const isIPv4 = peer => peer.ipv4
-          const isIPv6 = peer => peer.ipv6
+          const isSeederOnly = (peer) => peer.seeder && peer.leecher === false
+          const isLeecherOnly = (peer) => peer.leecher && peer.seeder === false
+          const isSeederAndLeecher = (peer) => peer.seeder && peer.leecher
+          const isIPv4 = (peer) => peer.ipv4
+          const isIPv6 = (peer) => peer.ipv6
 
           const stats = {
             torrents: infoHashes.length,
@@ -256,7 +271,7 @@ class Server extends EventEmitter {
             peersSeederAndLeecher: countPeers(isSeederAndLeecher),
             peersIPv4: countPeers(isIPv4),
             peersIPv6: countPeers(isIPv6),
-            clients: groupByClient()
+            clients: groupByClient(),
           }
 
           if (req.url === '/stats.json' || req.headers.accept === 'application/json') {
@@ -264,7 +279,8 @@ class Server extends EventEmitter {
             res.end(JSON.stringify(stats))
           } else if (req.url === '/stats') {
             res.setHeader('Content-Type', 'text/html')
-            res.end(`
+            res.end(
+              `
               <h1>${stats.torrents} torrents (${stats.activeTorrents} active)</h1>
               <h2>Connected Peers: ${stats.peersAll}</h2>
               <h3>Peers Seeding Only: ${stats.peersSeederOnly}</h3>
@@ -274,7 +290,8 @@ class Server extends EventEmitter {
               <h3>IPv6 Peers: ${stats.peersIPv6}</h3>
               <h3>Clients:</h3>
               ${printClients(stats.clients)}
-            `.replace(/^\s+/gm, '')) // trim left
+            `.replace(/^\s+/gm, '')
+            ) // trim left
           }
         }
       })
@@ -282,7 +299,7 @@ class Server extends EventEmitter {
 
     let num = !!this.http + !!this.udp4 + !!this.udp6
     const self = this
-    function onListening () {
+    function onListening() {
       num -= 1
       if (num === 0) {
         self.listening = true
@@ -292,11 +309,11 @@ class Server extends EventEmitter {
     }
   }
 
-  _onError (err) {
+  _onError(err) {
     this.emit('error', err)
   }
 
-  listen (...args) /* port, hostname, onlistening */{
+  listen(...args) /* port, hostname, onlistening */ {
     if (this._listenCalled || this.listening) throw new Error('server already listening')
     this._listenCalled = true
 
@@ -308,8 +325,8 @@ class Server extends EventEmitter {
 
     debug('listen (port: %o hostname: %o)', port, hostname)
 
-    const httpPort = isObject(port) ? (port.http || 0) : port
-    const udpPort = isObject(port) ? (port.udp || 0) : port
+    const httpPort = isObject(port) ? port.http || 0 : port
+    const udpPort = isObject(port) ? port.udp || 0 : port
 
     // binding to :: only receives IPv4 connections if the bindv6only sysctl is set 0,
     // which is the default on many operating systems
@@ -322,7 +339,7 @@ class Server extends EventEmitter {
     if (this.udp6) this.udp6.bind(udpPort, udp6Hostname)
   }
 
-  close (cb = noop) {
+  close(cb = noop) {
     debug('close')
 
     this.listening = false
@@ -350,16 +367,16 @@ class Server extends EventEmitter {
     else cb(null)
   }
 
-  createSwarm (infoHash, cb) {
+  createSwarm(infoHash, cb) {
     if (ArrayBuffer.isView(infoHash)) infoHash = infoHash.toString('hex')
 
     process.nextTick(() => {
-      const swarm = this.torrents[infoHash] = new Server.Swarm(infoHash, this)
+      const swarm = (this.torrents[infoHash] = new Server.Swarm(infoHash, this))
       cb(null, swarm)
     })
   }
 
-  getSwarm (infoHash, cb) {
+  getSwarm(infoHash, cb) {
     if (ArrayBuffer.isView(infoHash)) infoHash = infoHash.toString('hex')
 
     process.nextTick(() => {
@@ -367,7 +384,7 @@ class Server extends EventEmitter {
     })
   }
 
-  onHttpRequest (req, res, opts = {}) {
+  onHttpRequest(req, res, opts = {}) {
     opts.trustProxy = opts.trustProxy || this._trustProxy
 
     let params
@@ -376,9 +393,11 @@ class Server extends EventEmitter {
       params.httpReq = req
       params.httpRes = res
     } catch (err) {
-      res.end(bencode.encode({
-        'failure reason': err.message
-      }))
+      res.end(
+        bencode.encode({
+          'failure reason': err.message,
+        })
+      )
 
       // even though it's an error for the client, it's just a warning for the server.
       // don't crash the server because a client sent bad data :)
@@ -390,7 +409,7 @@ class Server extends EventEmitter {
       if (err) {
         this.emit('warning', err)
         response = {
-          'failure reason': err.message
+          'failure reason': err.message,
         }
       }
       if (this.destroyed) return res.end()
@@ -404,7 +423,7 @@ class Server extends EventEmitter {
     })
   }
 
-  onUdpRequest (msg, rinfo) {
+  onUdpRequest(msg, rinfo) {
     let params
     try {
       params = parseUdpRequest(msg, rinfo)
@@ -419,7 +438,7 @@ class Server extends EventEmitter {
         this.emit('warning', err)
         response = {
           action: common.ACTIONS.ERROR,
-          'failure reason': err.message
+          'failure reason': err.message,
         }
       }
       if (this.destroyed) return
@@ -430,7 +449,7 @@ class Server extends EventEmitter {
       const buf = makeUdpPacket(response)
 
       try {
-        const udp = (rinfo.family === 'IPv4') ? this.udp4 : this.udp6
+        const udp = rinfo.family === 'IPv4' ? this.udp4 : this.udp6
         udp.send(buf, 0, buf.length, rinfo.port, rinfo.address)
       } catch (err) {
         this.emit('warning', err)
@@ -442,21 +461,21 @@ class Server extends EventEmitter {
     })
   }
 
-  onWebSocketConnection (socket, opts = {}) {
+  onWebSocketConnection(socket, opts = {}) {
     opts.trustProxy = opts.trustProxy || this._trustProxy
 
     socket.peerId = null // as hex
     socket.infoHashes = [] // swarms that this socket is participating in
-    socket.onSend = err => {
+    socket.onSend = (err) => {
       this._onWebSocketSend(socket, err)
     }
 
-    socket.onMessageBound = params => {
+    socket.onMessageBound = (params) => {
       this._onWebSocketRequest(socket, opts, params)
     }
     socket.on('message', socket.onMessageBound)
 
-    socket.onErrorBound = err => {
+    socket.onErrorBound = (err) => {
       this._onWebSocketError(socket, err)
     }
     socket.on('error', socket.onErrorBound)
@@ -467,13 +486,16 @@ class Server extends EventEmitter {
     socket.on('close', socket.onCloseBound)
   }
 
-  _onWebSocketRequest (socket, opts, params) {
+  _onWebSocketRequest(socket, opts, params) {
     try {
       params = parseWebSocketRequest(socket, opts, params)
     } catch (err) {
-      socket.send(JSON.stringify({
-        'failure reason': err.message
-      }), socket.onSend)
+      socket.send(
+        JSON.stringify({
+          'failure reason': err.message,
+        }),
+        socket.onSend
+      )
 
       // even though it's an error for the client, it's just a warning for the server.
       // don't crash the server because a client sent bad data :)
@@ -486,11 +508,14 @@ class Server extends EventEmitter {
     this._onRequest(params, (err, response) => {
       if (this.destroyed || socket.destroyed) return
       if (err) {
-        socket.send(JSON.stringify({
-          action: params.action === common.ACTIONS.ANNOUNCE ? 'announce' : 'scrape',
-          'failure reason': err.message,
-          info_hash: hex2bin(params.info_hash)
-        }), socket.onSend)
+        socket.send(
+          JSON.stringify({
+            action: params.action === common.ACTIONS.ANNOUNCE ? 'announce' : 'scrape',
+            'failure reason': err.message,
+            info_hash: hex2bin(params.info_hash),
+          }),
+          socket.onSend
+        )
 
         this.emit('warning', err)
         return
@@ -523,13 +548,16 @@ class Server extends EventEmitter {
         debug('got %s offers from %s', params.offers.length, params.peer_id)
         debug('got %s peers from swarm %s', peers.length, params.info_hash)
         peers.forEach((peer, i) => {
-          peer.socket.send(JSON.stringify({
-            action: 'announce',
-            offer: params.offers[i].offer,
-            offer_id: params.offers[i].offer_id,
-            peer_id: hex2bin(params.peer_id),
-            info_hash: hex2bin(params.info_hash)
-          }), peer.socket.onSend)
+          peer.socket.send(
+            JSON.stringify({
+              action: 'announce',
+              offer: params.offers[i].offer,
+              offer_id: params.offers[i].offer_id,
+              peer_id: hex2bin(params.peer_id),
+              info_hash: hex2bin(params.info_hash),
+            }),
+            peer.socket.onSend
+          )
           debug('sent offer to %s from %s', peer.peerId, params.peer_id)
         })
       }
@@ -556,13 +584,16 @@ class Server extends EventEmitter {
             return this.emit('warning', new Error('no peer with that `to_peer_id`'))
           }
 
-          toPeer.socket.send(JSON.stringify({
-            action: 'announce',
-            answer: params.answer,
-            offer_id: params.offer_id,
-            peer_id: hex2bin(params.peer_id),
-            info_hash: hex2bin(params.info_hash)
-          }), toPeer.socket.onSend)
+          toPeer.socket.send(
+            JSON.stringify({
+              action: 'announce',
+              answer: params.answer,
+              offer_id: params.offer_id,
+              peer_id: hex2bin(params.peer_id),
+              info_hash: hex2bin(params.info_hash),
+            }),
+            toPeer.socket.onSend
+          )
           debug('sent answer to %s from %s', toPeer.peerId, params.peer_id)
 
           done()
@@ -573,23 +604,23 @@ class Server extends EventEmitter {
     })
   }
 
-  _onWebSocketSend (socket, err) {
+  _onWebSocketSend(socket, err) {
     if (err) this._onWebSocketError(socket, err)
   }
 
-  _onWebSocketClose (socket) {
+  _onWebSocketClose(socket) {
     debug('websocket close %s', socket.peerId)
     socket.destroyed = true
 
     if (socket.peerId) {
-      socket.infoHashes.slice(0).forEach(infoHash => {
+      socket.infoHashes.slice(0).forEach((infoHash) => {
         const swarm = this.torrents[infoHash]
         if (swarm) {
           swarm.announce({
             type: 'ws',
             event: 'stopped',
             numwant: 0,
-            peer_id: socket.peerId
+            peer_id: socket.peerId,
           })
         }
       })
@@ -618,13 +649,13 @@ class Server extends EventEmitter {
     socket.onCloseBound = null
   }
 
-  _onWebSocketError (socket, err) {
+  _onWebSocketError(socket, err) {
     debug('websocket error %s', err.message || err)
     this.emit('warning', err)
     this._onWebSocketClose(socket)
   }
 
-  _onRequest (params, cb) {
+  _onRequest(params, cb) {
     if (params && params.action === common.ACTIONS.CONNECT) {
       cb(null, { action: common.ACTIONS.CONNECT })
     } else if (params && params.action === common.ACTIONS.ANNOUNCE) {
@@ -636,11 +667,11 @@ class Server extends EventEmitter {
     }
   }
 
-  _onAnnounce (params, cb) {
+  _onAnnounce(params, cb) {
     const self = this
 
     if (this._filter) {
-      this._filter(params.info_hash, params, err => {
+      this._filter(params.info_hash, params, (err) => {
         // Presence of `err` means that this announce request is disallowed
         if (err) return cb(err)
 
@@ -657,7 +688,7 @@ class Server extends EventEmitter {
     }
 
     // Get existing swarm, or create one if one does not exist
-    function getOrCreateSwarm (cb) {
+    function getOrCreateSwarm(cb) {
       self.getSwarm(params.info_hash, (err, swarm) => {
         if (err) return cb(err)
         if (swarm) return cb(null, swarm)
@@ -668,7 +699,7 @@ class Server extends EventEmitter {
       })
     }
 
-    function announce (swarm) {
+    function announce(swarm) {
       if (!params.event || params.event === 'empty') params.event = 'update'
       swarm.announce(params, (err, response) => {
         if (err) return cb(err)
@@ -680,15 +711,23 @@ class Server extends EventEmitter {
           const peers = response.peers
 
           // Find IPv4 peers
-          response.peers = string2compact(peers.filter(peer => common.IPV4_RE.test(peer.ip)).map(peer => `${peer.ip}:${peer.port}`))
+          response.peers = string2compact(
+            peers
+              .filter((peer) => common.IPV4_RE.test(peer.ip))
+              .map((peer) => `${peer.ip}:${peer.port}`)
+          )
           // Find IPv6 peers
-          response.peers6 = string2compact(peers.filter(peer => common.IPV6_RE.test(peer.ip)).map(peer => `[${peer.ip}]:${peer.port}`))
+          response.peers6 = string2compact(
+            peers
+              .filter((peer) => common.IPV6_RE.test(peer.ip))
+              .map((peer) => `[${peer.ip}]:${peer.port}`)
+          )
         } else if (params.compact === 0) {
           // IPv6 peers are not separate for non-compact responses
-          response.peers = response.peers.map(peer => ({
+          response.peers = response.peers.map((peer) => ({
             'peer id': hex2bin(peer.peerId),
             ip: peer.ip,
-            port: peer.port
+            port: peer.port,
           }))
         } // else, return full peer objects (used for websocket responses)
 
@@ -697,61 +736,64 @@ class Server extends EventEmitter {
     }
   }
 
-  _onScrape (params, cb) {
+  _onScrape(params, cb) {
     if (params.info_hash == null) {
       // if info_hash param is omitted, stats for all torrents are returned
       // TODO: make this configurable!
       params.info_hash = Object.keys(this.torrents)
     }
 
-    series(params.info_hash.map(infoHash => cb => {
-      this.getSwarm(infoHash, (err, swarm) => {
-        if (err) return cb(err)
-        if (swarm) {
-          swarm.scrape(params, (err, scrapeInfo) => {
-            if (err) return cb(err)
-            cb(null, {
-              infoHash,
-              complete: (scrapeInfo && scrapeInfo.complete) || 0,
-              incomplete: (scrapeInfo && scrapeInfo.incomplete) || 0
+    series(
+      params.info_hash.map((infoHash) => (cb) => {
+        this.getSwarm(infoHash, (err, swarm) => {
+          if (err) return cb(err)
+          if (swarm) {
+            swarm.scrape(params, (err, scrapeInfo) => {
+              if (err) return cb(err)
+              cb(null, {
+                infoHash,
+                complete: (scrapeInfo && scrapeInfo.complete) || 0,
+                incomplete: (scrapeInfo && scrapeInfo.incomplete) || 0,
+              })
             })
-          })
-        } else {
-          cb(null, { infoHash, complete: 0, incomplete: 0 })
-        }
-      })
-    }), (err, results) => {
-      if (err) return cb(err)
+          } else {
+            cb(null, { infoHash, complete: 0, incomplete: 0 })
+          }
+        })
+      }),
+      (err, results) => {
+        if (err) return cb(err)
 
-      const response = {
-        action: common.ACTIONS.SCRAPE,
-        files: {},
-        flags: { min_request_interval: Math.ceil(this.intervalMs / 1000) }
+        const response = {
+          action: common.ACTIONS.SCRAPE,
+          files: {},
+          flags: { min_request_interval: Math.ceil(this.intervalMs / 1000) },
+        }
+
+        results.forEach((result) => {
+          response.files[hex2bin(result.infoHash)] = {
+            complete: result.complete || 0,
+            incomplete: result.incomplete || 0,
+            downloaded: result.complete || 0, // TODO: this only provides a lower-bound
+          }
+        })
+
+        cb(null, response)
       }
-
-      results.forEach(result => {
-        response.files[hex2bin(result.infoHash)] = {
-          complete: result.complete || 0,
-          incomplete: result.incomplete || 0,
-          downloaded: result.complete || 0 // TODO: this only provides a lower-bound
-        }
-      })
-
-      cb(null, response)
-    })
+    )
   }
 }
 
 Server.Swarm = Swarm
 
-function makeUdpPacket (params) {
+function makeUdpPacket(params) {
   let packet
   switch (params.action) {
     case common.ACTIONS.CONNECT: {
       packet = Buffer.concat([
         common.toUInt32(common.ACTIONS.CONNECT),
         common.toUInt32(params.transactionId),
-        params.connectionId
+        params.connectionId,
       ])
       break
     }
@@ -762,14 +804,14 @@ function makeUdpPacket (params) {
         common.toUInt32(params.interval),
         common.toUInt32(params.incomplete),
         common.toUInt32(params.complete),
-        params.peers
+        params.peers,
       ])
       break
     }
     case common.ACTIONS.SCRAPE: {
       const scrapeResponse = [
         common.toUInt32(common.ACTIONS.SCRAPE),
-        common.toUInt32(params.transactionId)
+        common.toUInt32(params.transactionId),
       ]
       for (const infoHash in params.files) {
         const file = params.files[infoHash]
@@ -786,7 +828,7 @@ function makeUdpPacket (params) {
       packet = Buffer.concat([
         common.toUInt32(common.ACTIONS.ERROR),
         common.toUInt32(params.transactionId || 0),
-        Buffer.from(String(params['failure reason']))
+        Buffer.from(String(params['failure reason'])),
       ])
       break
     }
@@ -796,15 +838,15 @@ function makeUdpPacket (params) {
   return packet
 }
 
-function isObject (obj) {
+function isObject(obj) {
   return typeof obj === 'object' && obj !== null
 }
 
-function toNumber (x) {
+function toNumber(x) {
   x = Number(x)
   return x >= 0 ? x : false
 }
 
-function noop () {}
+function noop() {}
 
 export default Server

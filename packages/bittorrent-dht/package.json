@@ -22,6 +22,9 @@
     "record-cache": "^1.2.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/debug": "^4.1.0",
+    "@types/tape": "^5.6.0",
     "@webtorrent/semantic-release-config": "1.0.10",
     "bittorrent-dht-sodium": "1.2.0",
     "ip": "1.1.9",
@@ -45,18 +48,30 @@
     "node": ">=12.20.0"
   },
   "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    "import": "./index.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/webtorrent/bittorrent-dht.git"
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
   },
   "scripts": {
+    "build": "rolldown -c",
     "update-authors": "./tools/update-authors.sh",
-    "test": "standard && tape test/*.js",
-    "test-live": "tape test/live/*.js"
+    "test": "tsx test/*.ts test/live/*.ts",
+    "test-live": "tsx test/live/*.ts",
+    "prepublishOnly": "npm run build",
+    "size": "size-limit"
   },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "80 KB"
+    }
+  ],
   "funding": [
     {
       "type": "github",

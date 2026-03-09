@@ -63,7 +63,7 @@
 - Paul Sharypov (pavloniym@gmail.com)
 - Cas (6506529+ThaUnknown@users.noreply.github.com)
 - Tom Snelling (tomsnelling8@gmail.com)
-- Cas_ (6506529+ThaUnknown@users.noreply.github.com)
+- Cas\_ (6506529+ThaUnknown@users.noreply.github.com)
 - Arsène Fougerouse (arsene582@gmail.com)
 - Brad Marsden (silentbot1@gmail.com)
 - krazak (krazak@vt.edu)

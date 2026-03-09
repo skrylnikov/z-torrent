@@ -1,0 +1,9 @@
+services:
+  tracker:
+    image: ghcr.io/skrylnikov/bittorrent-tracker:latest
+    ports:
+      - "8000:8000/tcp"
+      - "8000:8000/udp"
+    restart: unless-stopped
+    environment:
+      - PORT=${PORT:-8000}

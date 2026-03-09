@@ -10,32 +10,26 @@
   "browser": {
     "fs": false
   },
-  "bin": "./bin/cmd.js",
+  "bin": {
+    "parse-torrent": "./dist/bin/cmd.js"
+  },
   "bugs": {
     "url": "https://github.com/webtorrent/parse-torrent/issues"
-  },
-  "standard": {
-    "globals": [
-      "Blob"
-    ]
   },
   "type": "module",
   "dependencies": {
     "bencode": "^4.0.0",
     "cross-fetch-ponyfill": "^1.0.3",
     "get-stdin": "^9.0.0",
-    "magnet-uri": "^7.0.7",
+    "magnet-uri": "workspace:*",
     "queue-microtask": "^1.2.3",
     "uint8-util": "^2.2.5"
   },
   "devDependencies": {
+    "@types/tape": "^5.6.0",
     "@webtorrent/semantic-release-config": "1.0.10",
-    "brfs": "2.0.2",
     "semantic-release": "21.1.2",
-    "standard": "^17.1.0",
-    "tape": "5.9.0",
-    "webtorrent-fixtures": "2.0.2",
-    "xtend": "4.0.2"
+    "tape": "5.9.0"
   },
   "keywords": [
     ".torrent",
@@ -48,18 +42,32 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=12.20.0"
+    "node": ">=18.0.0"
   },
   "exports": {
-    "import": "./index.js"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/webtorrent/parse-torrent.git"
   },
   "scripts": {
-    "test": "standard && tape test/*.js test/node/*.js"
+    "build": "rolldown -c",
+    "test": "tsx test/*.ts test/node/*.ts",
+    "size": "size-limit"
   },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "30 KB"
+    }
+  ],
   "funding": [
     {
       "type": "github",

@@ -2,12 +2,12 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('explicitly set nodeId', t => {
+test('explicitly set nodeId', (t) => {
   const nodeId = common.randomId()
 
   const dht = new DHT({
     nodeId,
-    bootstrap: false
+    bootstrap: false,
   })
 
   common.failOnWarningOrError(t, dht)
@@ -17,7 +17,7 @@ test('explicitly set nodeId', t => {
   t.end()
 })
 
-test('call `addNode` with nodeId argument', t => {
+test('call `addNode` with nodeId argument', (t) => {
   t.plan(3)
 
   const dht = new DHT({ bootstrap: false })
@@ -25,7 +25,7 @@ test('call `addNode` with nodeId argument', t => {
 
   const nodeId = common.randomId()
 
-  dht.on('node', node => {
+  dht.on('node', (node) => {
     t.equal(node.host, '127.0.0.1')
     t.equal(node.port, 9999)
     t.deepEqual(node.id, nodeId)
@@ -35,7 +35,7 @@ test('call `addNode` with nodeId argument', t => {
   dht.addNode({ host: '127.0.0.1', port: 9999, id: nodeId })
 })
 
-test('call `addNode` without nodeId argument', t => {
+test('call `addNode` without nodeId argument', (t) => {
   t.plan(3)
 
   const dht1 = new DHT({ bootstrap: false })
@@ -50,7 +50,7 @@ test('call `addNode` without nodeId argument', t => {
     // If `nodeId` is undefined, then the peer will be pinged to learn their node id.
     dht2.addNode({ host: '127.0.0.1', port })
 
-    dht2.on('node', node => {
+    dht2.on('node', (node) => {
       t.equal(node.host, '127.0.0.1')
       t.equal(node.port, port)
       t.deepEqual(node.id, dht1.nodeId)
@@ -60,7 +60,7 @@ test('call `addNode` without nodeId argument', t => {
   })
 })
 
-test('call `addNode` without nodeId argument, and invalid addr', t => {
+test('call `addNode` without nodeId argument, and invalid addr', (t) => {
   t.plan(1)
 
   const dht = new DHT({ bootstrap: false })
@@ -81,7 +81,7 @@ test('call `addNode` without nodeId argument, and invalid addr', t => {
   }, 2000)
 })
 
-test('`addNode` only emits events for new nodes', t => {
+test('`addNode` only emits events for new nodes', (t) => {
   t.plan(1)
   let togo = 1
 
@@ -103,7 +103,7 @@ test('`addNode` only emits events for new nodes', t => {
   }, 100)
 })
 
-test('send message while binding (listen)', t => {
+test('send message while binding (listen)', (t) => {
   t.plan(1)
 
   const a = new DHT({ bootstrap: false })
@@ -111,7 +111,7 @@ test('send message while binding (listen)', t => {
     const port = a.address().port
     const b = new DHT({ bootstrap: false })
     b.listen()
-    b._sendPing({ host: '127.0.0.1', port }, err => {
+    b._sendPing({ host: '127.0.0.1', port }, (err) => {
       t.error(err)
       a.destroy()
       b.destroy()

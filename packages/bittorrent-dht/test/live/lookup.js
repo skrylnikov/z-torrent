@@ -4,23 +4,23 @@ import DHT from '../../index.js'
 const pride = '1E69917FBAA2C767BCA463A96B5572785C6D8A12'.toLowerCase() // Pride & Prejudice
 const leaves = 'D2474E86C95B19B8BCFDB92BC12C9D44667CFA36'.toLowerCase() // Leaves of Grass
 
-test('Default bootstrap server returns at least one node', t => {
+test('Default bootstrap server returns at least one node', (t) => {
   t.plan(1)
 
   const dht = new DHT()
 
-  dht.once('node', node => {
+  dht.once('node', (node) => {
     t.pass('Found at least one other DHT node')
     dht.destroy()
   })
 })
 
-test('Default bootstrap server returns a peer for one torrent', t => {
+test('Default bootstrap server returns a peer for one torrent', (t) => {
   t.plan(4)
 
   const dht = new DHT()
 
-  dht.once('node', node => {
+  dht.once('node', (node) => {
     t.pass('Found at least one other DHT node')
   })
 
@@ -37,7 +37,7 @@ test('Default bootstrap server returns a peer for one torrent', t => {
   })
 })
 
-test('Default bootstrap server returns a peer for two torrents (simultaneously)', t => {
+test('Default bootstrap server returns a peer for two torrents (simultaneously)', (t) => {
   t.plan(3)
 
   const dht = new DHT()
@@ -66,13 +66,13 @@ test('Default bootstrap server returns a peer for two torrents (simultaneously)'
   })
 })
 
-test.only('Find peers before ready is emitted', t => {
+test.only('Find peers before ready is emitted', (t) => {
   t.plan(3)
 
   const dht = new DHT()
   const then = Date.now()
 
-  dht.once('node', node => {
+  dht.once('node', (node) => {
     t.pass('Found at least one other DHT node')
   })
 

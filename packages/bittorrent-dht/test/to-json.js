@@ -3,7 +3,7 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('dht.toJSON: re-use dht nodes with `bootstrap` option', t => {
+test('dht.toJSON: re-use dht nodes with `bootstrap` option', (t) => {
   t.plan(1)
 
   const dht1 = new DHT({ bootstrap: false })
@@ -22,7 +22,7 @@ test('dht.toJSON: re-use dht nodes with `bootstrap` option', t => {
   })
 })
 
-test('dht.toJSON: re-use dht nodes by calling dht.addNode', t => {
+test('dht.toJSON: re-use dht nodes by calling dht.addNode', (t) => {
   t.plan(1)
 
   const dht1 = new DHT({ bootstrap: false })
@@ -33,7 +33,7 @@ test('dht.toJSON: re-use dht nodes by calling dht.addNode', t => {
   dht1.on('ready', () => {
     const dht2 = new DHT({ bootstrap: false })
 
-    dht1.toJSON().nodes.forEach(node => {
+    dht1.toJSON().nodes.forEach((node) => {
       dht2.addNode(node)
     })
 
@@ -45,7 +45,7 @@ test('dht.toJSON: re-use dht nodes by calling dht.addNode', t => {
   })
 })
 
-test('dht.toJSON: BEP44 immutable value', t => {
+test('dht.toJSON: BEP44 immutable value', (t) => {
   t.plan(10)
 
   const dht1 = new DHT({ bootstrap: false })
@@ -63,7 +63,7 @@ test('dht.toJSON: BEP44 immutable value', t => {
     dht2.once('node', ready)
   })
 
-  function ready () {
+  function ready() {
     const value = common.fill(500, 'abc')
     dht1.put(value, (_, hash) => {
       const json1 = dht1.toJSON()
@@ -83,7 +83,7 @@ test('dht.toJSON: BEP44 immutable value', t => {
   }
 })
 
-test('dht.toJSON: BEP44 mutable value', t => {
+test('dht.toJSON: BEP44 mutable value', (t) => {
   t.plan(5)
 
   const keypair = ed.keygen()
@@ -102,13 +102,13 @@ test('dht.toJSON: BEP44 mutable value', t => {
     dht2.once('node', ready)
   })
 
-  function ready () {
+  function ready() {
     const value = common.fill(500, 'abc')
     const opts = {
       k: keypair.pk,
       sign: common.sign(keypair),
       seq: 0,
-      v: value
+      v: value,
     }
 
     dht1.put(opts, (_, hash) => {

@@ -30,7 +30,7 @@ const debug = Debug('bittorrent-tracker:client')
  * @param {object} opts.proxyOpts                proxy options (useful in node.js)
  */
 class Client extends EventEmitter {
-  constructor (opts = {}) {
+  constructor(opts = {}) {
     super()
 
     if (!opts.peerId) throw new Error('Option `peerId` is required')
@@ -38,15 +38,12 @@ class Client extends EventEmitter {
     if (!opts.announce) throw new Error('Option `announce` is required')
     if (!process.browser && !opts.port) throw new Error('Option `port` is required')
 
-    this.peerId = typeof opts.peerId === 'string'
-      ? opts.peerId
-      : arr2hex(opts.peerId)
+    this.peerId = typeof opts.peerId === 'string' ? opts.peerId : arr2hex(opts.peerId)
     this._peerIdBuffer = hex2arr(this.peerId)
     this._peerIdBinary = hex2bin(this.peerId)
 
-    this.infoHash = typeof opts.infoHash === 'string'
-      ? opts.infoHash.toLowerCase()
-      : arr2hex(opts.infoHash)
+    this.infoHash =
+      typeof opts.infoHash === 'string' ? opts.infoHash.toLowerCase() : arr2hex(opts.infoHash)
     this._infoHashBuffer = hex2arr(this.infoHash)
     this._infoHashBinary = hex2bin(this.infoHash)
 
@@ -64,12 +61,15 @@ class Client extends EventEmitter {
     // See: https://github.com/webtorrent/webtorrent-hybrid/issues/46
     this._wrtc = typeof opts.wrtc === 'function' ? opts.wrtc() : opts.wrtc
 
-    let announce = typeof opts.announce === 'string'
-      ? [opts.announce]
-      : opts.announce == null ? [] : opts.announce
+    let announce =
+      typeof opts.announce === 'string'
+        ? [opts.announce]
+        : opts.announce == null
+          ? []
+          : opts.announce
 
     // Remove trailing slash from trackers to catch duplicates
-    announce = announce.map(announceUrl => {
+    announce = announce.map((announceUrl) => {
       if (ArrayBuffer.isView(announceUrl)) announceUrl = arr2text(announceUrl)
       if (announceUrl[announceUrl.length - 1] === '/') {
         announceUrl = announceUrl.substring(0, announceUrl.length - 1)
@@ -81,14 +81,14 @@ class Client extends EventEmitter {
 
     const webrtcSupport = this._wrtc !== false && (!!this._wrtc || Peer.WEBRTC_SUPPORT)
 
-    const nextTickWarn = err => {
+    const nextTickWarn = (err) => {
       queueMicrotask(() => {
         this.emit('warning', err)
       })
     }
 
     this._trackers = announce
-      .map(announceUrl => {
+      .map((announceUrl) => {
         let parsedUrl
         try {
           parsedUrl = common.parseUrl(announceUrl)
@@ -104,15 +104,17 @@ class Client extends EventEmitter {
         }
 
         const protocol = parsedUrl.protocol
-        if ((protocol === 'http:' || protocol === 'https:') &&
-            typeof HTTPTracker === 'function') {
+        if ((protocol === 'http:' || protocol === 'https:') && typeof HTTPTracker === 'function') {
           return new HTTPTracker(this, announceUrl)
         } else if (protocol === 'udp:' && typeof UDPTracker === 'function') {
           return new UDPTracker(this, announceUrl)
         } else if ((protocol === 'ws:' || protocol === 'wss:') && webrtcSupport) {
           // Skip ws:// trackers on https:// sites because they throw SecurityError
-          if (protocol === 'ws:' && typeof window !== 'undefined' &&
-              window.location.protocol === 'https:') {
+          if (
+            protocol === 'ws:' &&
+            typeof window !== 'undefined' &&
+            window.location.protocol === 'https:'
+          ) {
             nextTickWarn(new Error(`Unsupported tracker protocol: ${announceUrl}`))
             return null
           }
@@ -132,14 +134,14 @@ class Client extends EventEmitter {
    * @param {number=} opts.downloaded
    * @param {number=} opts.left (if not set, calculated automatically)
    */
-  start (opts) {
+  start(opts) {
     opts = this._defaultAnnounceOpts(opts)
     opts.event = 'started'
     debug('send `start` %o', opts)
     this._announce(opts)
 
     // start announcing on intervals
-    this._trackers.forEach(tracker => {
+    this._trackers.forEach((tracker) => {
       tracker.setInterval()
     })
   }
@@ -152,7 +154,7 @@ class Client extends EventEmitter {
    * @param {number=} opts.numwant
    * @param {number=} opts.left (if not set, calculated automatically)
    */
-  stop (opts) {
+  stop(opts) {
     opts = this._defaultAnnounceOpts(opts)
     opts.event = 'stopped'
     debug('send `stop` %o', opts)
@@ -167,7 +169,7 @@ class Client extends EventEmitter {
    * @param {number=} opts.numwant
    * @param {number=} opts.left (if not set, calculated automatically)
    */
-  complete (opts) {
+  complete(opts) {
     if (!opts) opts = {}
     opts = this._defaultAnnounceOpts(opts)
     opts.event = 'completed'
@@ -183,15 +185,15 @@ class Client extends EventEmitter {
    * @param {number=} opts.numwant
    * @param {number=} opts.left (if not set, calculated automatically)
    */
-  update (opts) {
+  update(opts) {
     opts = this._defaultAnnounceOpts(opts)
     if (opts.event) delete opts.event
     debug('send `update` %o', opts)
     this._announce(opts)
   }
 
-  _announce (opts) {
-    this._trackers.forEach(tracker => {
+  _announce(opts) {
+    this._trackers.forEach((tracker) => {
       // tracker should not modify `opts` object, it's passed to all trackers
       tracker.announce(opts)
     })
@@ -201,28 +203,28 @@ class Client extends EventEmitter {
    * Send a scrape request to the trackers.
    * @param {Object} opts
    */
-  scrape (opts) {
+  scrape(opts) {
     debug('send `scrape`')
     if (!opts) opts = {}
-    this._trackers.forEach(tracker => {
+    this._trackers.forEach((tracker) => {
       // tracker should not modify `opts` object, it's passed to all trackers
       tracker.scrape(opts)
     })
   }
 
-  setInterval (intervalMs) {
+  setInterval(intervalMs) {
     debug('setInterval %d', intervalMs)
-    this._trackers.forEach(tracker => {
+    this._trackers.forEach((tracker) => {
       tracker.setInterval(intervalMs)
     })
   }
 
-  destroy (cb) {
+  destroy(cb) {
     if (this.destroyed) return
     this.destroyed = true
     debug('destroy')
 
-    const tasks = this._trackers.map(tracker => cb => {
+    const tasks = this._trackers.map((tracker) => (cb) => {
       tracker.destroy(cb)
     })
 
@@ -232,7 +234,7 @@ class Client extends EventEmitter {
     this._getAnnounceOpts = null
   }
 
-  _defaultAnnounceOpts (opts = {}) {
+  _defaultAnnounceOpts(opts = {}) {
     if (opts.numwant == null) opts.numwant = common.DEFAULT_ANNOUNCE_PEERS
 
     if (opts.uploaded == null) opts.uploaded = 0
@@ -262,7 +264,7 @@ Client.scrape = (opts, cb) => {
   const clientOpts = Object.assign({}, opts, {
     infoHash: Array.isArray(opts.infoHash) ? opts.infoHash[0] : opts.infoHash,
     peerId: text2arr('01234567890123456789'), // dummy value
-    port: 6881 // dummy value
+    port: 6881, // dummy value
   })
 
   const client = new Client(clientOpts)
@@ -271,7 +273,7 @@ Client.scrape = (opts, cb) => {
 
   let len = Array.isArray(opts.infoHash) ? opts.infoHash.length : 1
   const results = {}
-  client.on('scrape', data => {
+  client.on('scrape', (data) => {
     len -= 1
     results[data.infoHash] = data
     if (len === 0) {

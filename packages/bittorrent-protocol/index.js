@@ -26,17 +26,18 @@ const MESSAGE_RESERVED = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 const MESSAGE_PORT = [0x00, 0x00, 0x00, 0x03, 0x09, 0x00, 0x00]
 
 // BEP6 Fast Extension
-const MESSAGE_HAVE_ALL = new Uint8Array([0x00, 0x00, 0x00, 0x01, 0x0E])
-const MESSAGE_HAVE_NONE = new Uint8Array([0x00, 0x00, 0x00, 0x01, 0x0F])
+const MESSAGE_HAVE_ALL = new Uint8Array([0x00, 0x00, 0x00, 0x01, 0x0e])
+const MESSAGE_HAVE_NONE = new Uint8Array([0x00, 0x00, 0x00, 0x01, 0x0f])
 
-const DH_PRIME = 'ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a63a36210000000000090563'
+const DH_PRIME =
+  'ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a63a36210000000000090563'
 const DH_GENERATOR = 2
 const VC = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 const CRYPTO_PROVIDE = new Uint8Array([0x00, 0x00, 0x01, 0x02])
 const CRYPTO_SELECT = new Uint8Array([0x00, 0x00, 0x00, 0x02]) // always try to choose RC4 encryption instead of plaintext
 
-function xor (a, b) {
-  for (let len = a.length; len--;) a[len] ^= b[len]
+function xor(a, b) {
+  for (let len = a.length; len--; ) a[len] ^= b[len]
   return a
 }
 /**
@@ -44,7 +45,7 @@ function xor (a, b) {
  * @param {number} at
  * @returns number
  */
-function getUint32 (buffer, at = 0) {
+function getUint32(buffer, at = 0) {
   return (buffer[at] << 24) | (buffer[at + 1] << 16) | (buffer[at + 2] << 8) | buffer[at + 3]
 }
 
@@ -53,15 +54,15 @@ function getUint32 (buffer, at = 0) {
  * @param {number} at
  * @param {number} value
  */
-function setUint32 (buffer, at, value) {
-  buffer[at] = (value >>> 24) & 0xFF
-  buffer[at + 1] = (value >>> 16) & 0xFF
-  buffer[at + 2] = (value >>> 8) & 0xFF
-  buffer[at + 3] = value & 0xFF
+function setUint32(buffer, at, value) {
+  buffer[at] = (value >>> 24) & 0xff
+  buffer[at + 1] = (value >>> 16) & 0xff
+  buffer[at + 2] = (value >>> 8) & 0xff
+  buffer[at + 3] = value & 0xff
 }
 
 class Request {
-  constructor (piece, offset, length, callback) {
+  constructor(piece, offset, length, callback) {
     this.piece = piece
     this.offset = offset
     this.length = length
@@ -70,19 +71,19 @@ class Request {
 }
 
 class HaveAllBitField {
-  constructor () {
+  constructor() {
     this.buffer = new Uint8Array() // dummy
   }
 
-  get (index) {
+  get(index) {
     return true
   }
 
-  set (index) {}
+  set(index) {}
 }
 
 class Wire extends Duplex {
-  constructor (type = null, retries = 0, peEnabled = false) {
+  constructor(type = null, retries = 0, peEnabled = false) {
     super()
 
     this._debugId = arr2hex(randomBytes(4))
@@ -183,7 +184,7 @@ class Wire extends Duplex {
    * Set whether to send a "keep-alive" ping (sent every 55s)
    * @param {boolean} enable
    */
-  setKeepAlive (enable) {
+  setKeepAlive(enable) {
     this._debug('setKeepAlive %s', enable)
     clearInterval(this._keepAliveInterval)
     if (enable === false) return
@@ -197,21 +198,21 @@ class Wire extends Duplex {
    * @param {number} ms
    * @param {boolean=} unref (should the timer be unref'd? default: false)
    */
-  setTimeout (ms, unref) {
+  setTimeout(ms, unref) {
     this._debug('setTimeout ms=%d unref=%s', ms, unref)
     this._timeoutMs = ms
     this._timeoutUnref = !!unref
     this._resetTimeout(true)
   }
 
-  destroy () {
+  destroy() {
     if (this.destroyed) return
     this._debug('destroy')
     this.end()
     return this
   }
 
-  end (data) {
+  end(data) {
     if (this.destroyed || this.destroying) return
     this._debug('end')
     this._onUninterested()
@@ -223,7 +224,7 @@ class Wire extends Duplex {
    * Use the specified protocol extension.
    * @param  {function} Extension
    */
-  use (Extension) {
+  use(Extension) {
     const name = Extension.prototype.name
     if (!name) {
       throw new Error('Extension class requires a "name" property on the prototype')
@@ -233,7 +234,7 @@ class Wire extends Duplex {
     const ext = this._nextExt
     const handler = new Extension(this)
 
-    function noop () {}
+    function noop() {}
 
     if (typeof handler.onHandshake !== 'function') {
       handler.onHandshake = noop
@@ -259,12 +260,12 @@ class Wire extends Duplex {
   /**
    * Message "keep-alive": <len=0000>
    */
-  keepAlive () {
+  keepAlive() {
     this._debug('keep-alive')
     this._push(MESSAGE_KEEP_ALIVE)
   }
 
-  sendPe1 () {
+  sendPe1() {
     if (this._peEnabled) {
       const padALen = Math.floor(Math.random() * 513)
       const padA = randomBytes(padALen)
@@ -272,13 +273,13 @@ class Wire extends Duplex {
     }
   }
 
-  sendPe2 () {
+  sendPe2() {
     const padBLen = Math.floor(Math.random() * 513)
     const padB = randomBytes(padBLen)
     this._push(concat([hex2arr(this._myPubKey), padB]))
   }
 
-  async sendPe3 (infoHash) {
+  async sendPe3(infoHash) {
     await this.setEncrypt(this._sharedSecret, infoHash)
 
     const hash1Buffer = await hash(hex2arr(this._utfToHex('req1') + this._sharedSecret))
@@ -304,7 +305,7 @@ class Wire extends Duplex {
     this._push(concat([hash1Buffer, hashesXorBuffer, vcAndProvideBuffer]))
   }
 
-  async sendPe4 (infoHash) {
+  async sendPe4(infoHash) {
     await this.setEncrypt(this._sharedSecret, infoHash)
 
     const padDLen = new DataView(randomBytes(2).buffer).getUint16(0) % 512
@@ -328,7 +329,7 @@ class Wire extends Duplex {
    * @param  {Uint8Array|string} peerId
    * @param  {Object} extensions
    */
-  handshake (infoHash, peerId, extensions) {
+  handshake(infoHash, peerId, extensions) {
     let infoHashBuffer
     let peerIdBuffer
     if (typeof infoHash === 'string') {
@@ -358,7 +359,7 @@ class Wire extends Duplex {
     this.extensions = {
       extended: true,
       dht: !!(extensions && extensions.dht),
-      fast: !!(extensions && extensions.fast)
+      fast: !!(extensions && extensions.fast),
     }
 
     reserved[5] |= 0x10 // enable extended message
@@ -386,7 +387,7 @@ class Wire extends Duplex {
    * `this.extendedHandshake` and `this.extendedMapping` before the extended handshake
    * is sent to the remote peer.
    */
-  _sendExtendedHandshake () {
+  _sendExtendedHandshake() {
     // Create extended message object from registered extensions
     const msg = Object.assign({}, this.extendedHandshake)
     msg.m = {}
@@ -403,7 +404,7 @@ class Wire extends Duplex {
   /**
    * Message "choke": <len=0001><id=0>
    */
-  choke () {
+  choke() {
     if (this.amChoking) return
     this.amChoking = true
     this._debug('choke')
@@ -413,7 +414,8 @@ class Wire extends Duplex {
       // BEP6: If a peer sends a choke, it MUST reject all requests from the peer to whom the choke
       // was sent except it SHOULD NOT reject requests for pieces that are in the allowed fast set.
       let allowedCount = 0
-      while (this.peerRequests.length > allowedCount) { // until only allowed requests are left
+      while (this.peerRequests.length > allowedCount) {
+        // until only allowed requests are left
         const request = this.peerRequests[allowedCount] // first non-allowed request
         if (this.allowedFastSet.includes(request.piece)) {
           ++allowedCount // count request as allowed
@@ -431,7 +433,7 @@ class Wire extends Duplex {
   /**
    * Message "unchoke": <len=0001><id=1>
    */
-  unchoke () {
+  unchoke() {
     if (!this.amChoking) return
     this.amChoking = false
     this._debug('unchoke')
@@ -441,7 +443,7 @@ class Wire extends Duplex {
   /**
    * Message "interested": <len=0001><id=2>
    */
-  interested () {
+  interested() {
     if (this.amInterested) return
     this.amInterested = true
     this._debug('interested')
@@ -451,7 +453,7 @@ class Wire extends Duplex {
   /**
    * Message "uninterested": <len=0001><id=3>
    */
-  uninterested () {
+  uninterested() {
     if (!this.amInterested) return
     this.amInterested = false
     this._debug('uninterested')
@@ -462,7 +464,7 @@ class Wire extends Duplex {
    * Message "have": <len=0005><id=4><piece index>
    * @param  {number} index
    */
-  have (index) {
+  have(index) {
     this._debug('have %d', index)
     this._message(4, [index], null)
   }
@@ -471,7 +473,7 @@ class Wire extends Duplex {
    * Message "bitfield": <len=0001+X><id=5><bitfield>
    * @param  {BitField|Buffer} bitfield
    */
-  bitfield (bitfield) {
+  bitfield(bitfield) {
     this._debug('bitfield')
     if (!ArrayBuffer.isView(bitfield)) bitfield = bitfield.buffer
     this._message(5, [], bitfield)
@@ -484,7 +486,7 @@ class Wire extends Duplex {
    * @param  {number}   length
    * @param  {function} cb
    */
-  request (index, offset, length, cb) {
+  request(index, offset, length, cb) {
     if (!cb) cb = () => {}
     if (this._finished) return cb(new Error('wire is closed'))
 
@@ -507,7 +509,7 @@ class Wire extends Duplex {
    * @param  {number} offset
    * @param  {Uint8Array} buffer
    */
-  piece (index, offset, buffer) {
+  piece(index, offset, buffer) {
     this._debug('piece index=%d offset=%d', index, offset)
     this._message(7, [index, offset], buffer)
     this.uploaded += buffer.length
@@ -521,7 +523,7 @@ class Wire extends Duplex {
    * @param  {number} offset
    * @param  {number} length
    */
-  cancel (index, offset, length) {
+  cancel(index, offset, length) {
     this._debug('cancel index=%d offset=%d length=%d', index, offset, length)
     this._callback(
       this._pull(this.requests, index, offset, length),
@@ -535,7 +537,7 @@ class Wire extends Duplex {
    * Message: "port" <len=0003><id=9><listen-port>
    * @param {Number} port
    */
-  port (port) {
+  port(port) {
     this._debug('port %d', port)
     const message = new Uint8Array(MESSAGE_PORT)
     const view = new DataView(message.buffer)
@@ -547,16 +549,16 @@ class Wire extends Duplex {
    * Message: "suggest" <len=0x0005><id=0x0D><piece index> (BEP6)
    * @param {number} index
    */
-  suggest (index) {
+  suggest(index) {
     if (!this.hasFast) throw Error('fast extension is disabled')
     this._debug('suggest %d', index)
-    this._message(0x0D, [index], null)
+    this._message(0x0d, [index], null)
   }
 
   /**
    * Message: "have-all" <len=0x0001><id=0x0E> (BEP6)
    */
-  haveAll () {
+  haveAll() {
     if (!this.hasFast) throw Error('fast extension is disabled')
     this._debug('have-all')
     this._push(MESSAGE_HAVE_ALL)
@@ -565,7 +567,7 @@ class Wire extends Duplex {
   /**
    * Message: "have-none" <len=0x0001><id=0x0F> (BEP6)
    */
-  haveNone () {
+  haveNone() {
     if (!this.hasFast) throw Error('fast extension is disabled')
     this._debug('have-none')
     this._push(MESSAGE_HAVE_NONE)
@@ -577,7 +579,7 @@ class Wire extends Duplex {
    * @param  {number}   offset
    * @param  {number}   length
    */
-  reject (index, offset, length) {
+  reject(index, offset, length) {
     if (!this.hasFast) throw Error('fast extension is disabled')
     this._debug('reject index=%d offset=%d length=%d', index, offset, length)
     this._pull(this.peerRequests, index, offset, length)
@@ -588,7 +590,7 @@ class Wire extends Duplex {
    * Message: "allowed-fast" <len=0x0005><id=0x11><piece index> (BEP6)
    * @param {number} index
    */
-  allowedFast (index) {
+  allowedFast(index) {
     if (!this.hasFast) throw Error('fast extension is disabled')
     this._debug('allowed-fast %d', index)
     if (!this.allowedFastSet.includes(index)) this.allowedFastSet.push(index)
@@ -600,7 +602,7 @@ class Wire extends Duplex {
    * @param  {number|string} ext
    * @param  {Object} obj
    */
-  extended (ext, obj) {
+  extended(ext, obj) {
     this._debug('extended ext=%s', ext)
     if (typeof ext === 'string' && this.peerExtendedMapping[ext]) {
       ext = this.peerExtendedMapping[ext]
@@ -623,13 +625,17 @@ class Wire extends Duplex {
    * @param {string} infoHash:  A hex-encoded info hash
    * @returns boolean, true if encryption setting succeeds, false if it fails.
    */
-  async setEncrypt (sharedSecret, infoHash) {
+  async setEncrypt(sharedSecret, infoHash) {
     if (!this.type.startsWith('tcp')) return false
 
     const outgoing = this.type === 'tcpOutgoing'
 
-    const keyAGenerator = new RC4([...await hash(hex2arr(this._utfToHex('keyA') + sharedSecret + infoHash))])
-    const keyBGenerator = new RC4([...await hash(hex2arr(this._utfToHex('keyB') + sharedSecret + infoHash))])
+    const keyAGenerator = new RC4([
+      ...(await hash(hex2arr(this._utfToHex('keyA') + sharedSecret + infoHash))),
+    ])
+    const keyBGenerator = new RC4([
+      ...(await hash(hex2arr(this._utfToHex('keyB') + sharedSecret + infoHash))),
+    ])
 
     this._encryptGenerator = outgoing ? keyAGenerator : keyBGenerator
     this._decryptGenerator = outgoing ? keyBGenerator : keyAGenerator
@@ -648,21 +654,21 @@ class Wire extends Duplex {
   /**
    * Send a message to the remote peer.
    */
-  _message (id, numbers, data) {
+  _message(id, numbers, data) {
     const dataLength = data ? data.length : 0
-    const buffer = new Uint8Array(5 + (4 * numbers.length))
+    const buffer = new Uint8Array(5 + 4 * numbers.length)
 
     setUint32(buffer, 0, buffer.length + dataLength - 4)
     buffer[4] = id
     for (let i = 0; i < numbers.length; i++) {
-      setUint32(buffer, 5 + (4 * i), numbers[i])
+      setUint32(buffer, 5 + 4 * i, numbers[i])
     }
 
     this._push(buffer)
     if (data) this._push(data)
   }
 
-  _push (data) {
+  _push(data) {
     if (this._finished) return
     if (this._encryptionMethod === 2 && this._cryptoHandshakeDone) {
       data = this._encrypt(data)
@@ -674,30 +680,30 @@ class Wire extends Duplex {
   // INCOMING MESSAGES
   //
 
-  _onKeepAlive () {
+  _onKeepAlive() {
     this._debug('got keep-alive')
     this.emit('keep-alive')
   }
 
-  _onPe1 (pubKeyBuffer) {
+  _onPe1(pubKeyBuffer) {
     this._peerPubKey = arr2hex(pubKeyBuffer)
     this._sharedSecret = this._dh.computeSecret(this._peerPubKey, 'hex', 'hex')
     this.emit('pe1')
   }
 
-  _onPe2 (pubKeyBuffer) {
+  _onPe2(pubKeyBuffer) {
     this._peerPubKey = arr2hex(pubKeyBuffer)
     this._sharedSecret = this._dh.computeSecret(this._peerPubKey, 'hex', 'hex')
     this.emit('pe2')
   }
 
-  async _onPe3 (hashesXorBuffer) {
+  async _onPe3(hashesXorBuffer) {
     const hash3 = await hash(hex2arr(this._utfToHex('req3') + this._sharedSecret))
     const sKeyHash = arr2hex(xor(hash3, hashesXorBuffer))
     this.emit('pe3', sKeyHash)
   }
 
-  _onPe3Encrypted (vcBuffer, peerProvideBuffer) {
+  _onPe3Encrypted(vcBuffer, peerProvideBuffer) {
     if (!equal(vcBuffer, VC)) {
       this._debug('Error: verification constant did not match')
       this.destroy()
@@ -717,7 +723,7 @@ class Wire extends Duplex {
     }
   }
 
-  _onPe4 (peerSelectBuffer) {
+  _onPe4(peerSelectBuffer) {
     this._encryptionMethod = peerSelectBuffer[3]
     if (!CRYPTO_PROVIDE.includes(this._encryptionMethod)) {
       this._debug('Error: peer selected invalid crypto method')
@@ -728,7 +734,7 @@ class Wire extends Duplex {
     this.emit('pe4')
   }
 
-  _onHandshake (infoHashBuffer, peerIdBuffer, extensions) {
+  _onHandshake(infoHashBuffer, peerIdBuffer, extensions) {
     const infoHash = arr2hex(infoHashBuffer)
     const peerId = arr2hex(peerIdBuffer)
 
@@ -750,14 +756,13 @@ class Wire extends Duplex {
       this._ext[name].onHandshake(infoHash, peerId, extensions)
     }
 
-    if (extensions.extended && this._handshakeSent &&
-        !this._extendedHandshakeSent) {
+    if (extensions.extended && this._handshakeSent && !this._extendedHandshakeSent) {
       // outgoing connection
       this._sendExtendedHandshake()
     }
   }
 
-  _onChoke () {
+  _onChoke() {
     this.peerChoking = true
     this._debug('got choke')
     this.emit('choke')
@@ -769,25 +774,25 @@ class Wire extends Duplex {
     }
   }
 
-  _onUnchoke () {
+  _onUnchoke() {
     this.peerChoking = false
     this._debug('got unchoke')
     this.emit('unchoke')
   }
 
-  _onInterested () {
+  _onInterested() {
     this.peerInterested = true
     this._debug('got interested')
     this.emit('interested')
   }
 
-  _onUninterested () {
+  _onUninterested() {
     this.peerInterested = false
     this._debug('got uninterested')
     this.emit('uninterested')
   }
 
-  _onHave (index) {
+  _onHave(index) {
     if (this.peerPieces.get(index)) return
     this._debug('got have %d', index)
 
@@ -795,13 +800,13 @@ class Wire extends Duplex {
     this.emit('have', index)
   }
 
-  _onBitField (buffer) {
+  _onBitField(buffer) {
     this.peerPieces = new BitField(buffer)
     this._debug('got bitfield')
     this.emit('bitfield', this.peerPieces)
   }
 
-  _onRequest (index, offset, length) {
+  _onRequest(index, offset, length) {
     if (this.amChoking && !(this.hasFast && this.allowedFastSet.includes(index))) {
       // BEP6: If a peer receives a request from a peer its choking, the peer receiving
       // the request SHOULD send a reject unless the piece is in the allowed fast set.
@@ -813,7 +818,13 @@ class Wire extends Duplex {
     const respond = (err, buffer) => {
       if (request !== this._pull(this.peerRequests, index, offset, length)) return
       if (err) {
-        this._debug('error satisfying request index=%d offset=%d length=%d (%s)', index, offset, length, err.message)
+        this._debug(
+          'error satisfying request index=%d offset=%d length=%d (%s)',
+          index,
+          offset,
+          length,
+          err.message
+        )
         if (this.hasFast) this.reject(index, offset, length)
         return
       }
@@ -825,7 +836,7 @@ class Wire extends Duplex {
     this.emit('request', index, offset, length, respond)
   }
 
-  _onPiece (index, offset, buffer) {
+  _onPiece(index, offset, buffer) {
     this._debug('got piece index=%d offset=%d', index, offset)
     this._callback(this._pull(this.requests, index, offset, buffer.length), null, buffer)
     this.downloaded += buffer.length
@@ -834,18 +845,18 @@ class Wire extends Duplex {
     this.emit('piece', index, offset, buffer)
   }
 
-  _onCancel (index, offset, length) {
+  _onCancel(index, offset, length) {
     this._debug('got cancel index=%d offset=%d length=%d', index, offset, length)
     this._pull(this.peerRequests, index, offset, length)
     this.emit('cancel', index, offset, length)
   }
 
-  _onPort (port) {
+  _onPort(port) {
     this._debug('got port %d', port)
     this.emit('port', port)
   }
 
-  _onSuggest (index) {
+  _onSuggest(index) {
     if (!this.hasFast) {
       // BEP6: the peer MUST close the connection
       this._debug('Error: got suggest whereas fast extension is disabled')
@@ -856,7 +867,7 @@ class Wire extends Duplex {
     this.emit('suggest', index)
   }
 
-  _onHaveAll () {
+  _onHaveAll() {
     if (!this.hasFast) {
       // BEP6: the peer MUST close the connection
       this._debug('Error: got have-all whereas fast extension is disabled')
@@ -868,7 +879,7 @@ class Wire extends Duplex {
     this.emit('have-all')
   }
 
-  _onHaveNone () {
+  _onHaveNone() {
     if (!this.hasFast) {
       // BEP6: the peer MUST close the connection
       this._debug('Error: got have-none whereas fast extension is disabled')
@@ -879,7 +890,7 @@ class Wire extends Duplex {
     this.emit('have-none')
   }
 
-  _onReject (index, offset, length) {
+  _onReject(index, offset, length) {
     if (!this.hasFast) {
       // BEP6: the peer MUST close the connection
       this._debug('Error: got reject whereas fast extension is disabled')
@@ -895,7 +906,7 @@ class Wire extends Duplex {
     this.emit('reject', index, offset, length)
   }
 
-  _onAllowedFast (index) {
+  _onAllowedFast(index) {
     if (!this.hasFast) {
       // BEP6: the peer MUST close the connection
       this._debug('Error: got allowed-fast whereas fast extension is disabled')
@@ -904,11 +915,12 @@ class Wire extends Duplex {
     }
     this._debug('got allowed-fast %d', index)
     if (!this.peerAllowedFastSet.includes(index)) this.peerAllowedFastSet.push(index)
-    if (this.peerAllowedFastSet.length > ALLOWED_FAST_SET_MAX_LENGTH) this.peerAllowedFastSet.shift()
+    if (this.peerAllowedFastSet.length > ALLOWED_FAST_SET_MAX_LENGTH)
+      this.peerAllowedFastSet.shift()
     this.emit('allowed-fast', index)
   }
 
-  _onExtended (ext, buf) {
+  _onExtended(ext, buf) {
     if (ext === 0) {
       let info
       try {
@@ -945,7 +957,7 @@ class Wire extends Duplex {
     }
   }
 
-  _onTimeout () {
+  _onTimeout() {
     this._debug('request timed out')
     this._callback(this.requests.shift(), new Error('request has timed out'), null)
     this.emit('timeout')
@@ -960,7 +972,7 @@ class Wire extends Duplex {
    * @param  {Uint8Array} data
    * @param  {function} cb
    */
-  _write (data, cb) {
+  _write(data, cb) {
     if (this._encryptionMethod === 2 && this._cryptoHandshakeDone) {
       data = this._decrypt(data)
     }
@@ -974,9 +986,12 @@ class Wire extends Duplex {
       const index = this._buffer[0].indexOf(this._cryptoSyncPattern)
       if (index !== -1) {
         this._buffer[0] = this._buffer[0].slice(index + this._cryptoSyncPattern.length)
-        this._bufferSize -= (index + this._cryptoSyncPattern.length)
+        this._bufferSize -= index + this._cryptoSyncPattern.length
         this._cryptoSyncPattern = null
-      } else if (this._bufferSize + data.length > this._waitMaxBytes + this._cryptoSyncPattern.length) {
+      } else if (
+        this._bufferSize + data.length >
+        this._waitMaxBytes + this._cryptoSyncPattern.length
+      ) {
         this._debug('Error: could not resynchronize')
         this.destroy()
         return
@@ -990,9 +1005,7 @@ class Wire extends Duplex {
         const buffer = this._buffer[0]
 
         this._bufferSize -= this._parserSize
-        this._buffer = this._bufferSize
-          ? [buffer.subarray(this._parserSize)]
-          : []
+        this._buffer = this._bufferSize ? [buffer.subarray(this._parserSize)] : []
         this._parser(buffer.subarray(0, this._parserSize))
       }
     }
@@ -1000,7 +1013,7 @@ class Wire extends Duplex {
     cb(null) // Signal that we're ready for more data
   }
 
-  _callback (request, err, buffer) {
+  _callback(request, err, buffer) {
     if (!request) return
 
     this._resetTimeout(!this.peerChoking && !this._finished)
@@ -1008,7 +1021,7 @@ class Wire extends Duplex {
     request.callback(err, buffer)
   }
 
-  _resetTimeout (setAgain) {
+  _resetTimeout(setAgain) {
     if (!setAgain || !this._timeoutMs || !this.requests.length) {
       clearTimeout(this._timeout)
       this._timeout = null
@@ -1038,12 +1051,12 @@ class Wire extends Duplex {
    * @param  {number} size
    * @param  {function} parser
    */
-  _parse (size, parser) {
+  _parse(size, parser) {
     this._parserSize = size
     this._parser = parser
   }
 
-  _parseUntil (pattern, maxBytes) {
+  _parseUntil(pattern, maxBytes) {
     this._cryptoSyncPattern = pattern
     this._waitMaxBytes = maxBytes
   }
@@ -1053,7 +1066,7 @@ class Wire extends Duplex {
    * waited for in order to have the whole message.
    * @param  {Uint8Array} buffer
    */
-  _onMessageLength (buffer) {
+  _onMessageLength(buffer) {
     const length = getUint32(buffer)
     if (length > 0) {
       this._parse(length, this._onMessage)
@@ -1067,7 +1080,7 @@ class Wire extends Duplex {
    * Handle a message from the remote peer.
    * @param  {Uint8Array} buffer
    */
-  _onMessage (buffer) {
+  _onMessage(buffer) {
     this._parse(4, this._onMessageLength)
     switch (buffer[0]) {
       case 0:
@@ -1083,37 +1096,21 @@ class Wire extends Duplex {
       case 5:
         return this._onBitField(buffer.subarray(1))
       case 6:
-        return this._onRequest(
-          getUint32(buffer, 1),
-          getUint32(buffer, 5),
-          getUint32(buffer, 9)
-        )
+        return this._onRequest(getUint32(buffer, 1), getUint32(buffer, 5), getUint32(buffer, 9))
       case 7:
-        return this._onPiece(
-          getUint32(buffer, 1),
-          getUint32(buffer, 5),
-          buffer.subarray(9)
-        )
+        return this._onPiece(getUint32(buffer, 1), getUint32(buffer, 5), buffer.subarray(9))
       case 8:
-        return this._onCancel(
-          getUint32(buffer, 1),
-          getUint32(buffer, 5),
-          getUint32(buffer, 9)
-        )
+        return this._onCancel(getUint32(buffer, 1), getUint32(buffer, 5), getUint32(buffer, 9))
       case 9:
         return this._onPort((buffer[1] << 8) | buffer[2])
-      case 0x0D:
+      case 0x0d:
         return this._onSuggest(getUint32(buffer, 1))
-      case 0x0E:
+      case 0x0e:
         return this._onHaveAll()
-      case 0x0F:
+      case 0x0f:
         return this._onHaveNone()
       case 0x10:
-        return this._onReject(
-          getUint32(buffer, 1),
-          getUint32(buffer, 5),
-          getUint32(buffer, 9)
-        )
+        return this._onReject(getUint32(buffer, 1), getUint32(buffer, 5), getUint32(buffer, 9))
       case 0x11:
         return this._onAllowedFast(getUint32(buffer, 1))
       case 20:
@@ -1124,8 +1121,8 @@ class Wire extends Duplex {
     }
   }
 
-  _determineHandshakeType () {
-    this._parse(1, pstrLenBuffer => {
+  _determineHandshakeType() {
+    this._parse(1, (pstrLenBuffer) => {
       const pstrlen = pstrLenBuffer[0]
       if (pstrlen === 19) {
         this._parse(pstrlen + 48, this._onHandshakeBuffer)
@@ -1135,49 +1132,49 @@ class Wire extends Duplex {
     })
   }
 
-  _parsePe1 (pubKeyPrefix) {
-    this._parse(95, pubKeySuffix => {
+  _parsePe1(pubKeyPrefix) {
+    this._parse(95, (pubKeySuffix) => {
       this._onPe1(concat([pubKeyPrefix, pubKeySuffix]))
       this._parsePe3()
     })
   }
 
-  _parsePe2 () {
-    this._parse(96, async pubKey => {
+  _parsePe2() {
+    this._parse(96, async (pubKey) => {
       this._onPe2(pubKey)
       if (!this._setGenerators) {
         // Wait until generators have been set
-        await new Promise(resolve => this.once('_generators', resolve))
+        await new Promise((resolve) => this.once('_generators', resolve))
       }
       this._parsePe4()
     })
   }
 
   // Handles the unencrypted portion of step 4
-  async _parsePe3 () {
+  async _parsePe3() {
     const hash1Buffer = await hash(hex2arr(this._utfToHex('req1') + this._sharedSecret))
     // synchronize on HASH('req1', S)
     this._parseUntil(hash1Buffer, 512)
-    this._parse(20, async buffer => {
+    this._parse(20, async (buffer) => {
       this._onPe3(buffer)
       if (!this._setGenerators) {
         // Wait until generators have been set
-        await new Promise(resolve => this.once('_generators', resolve))
+        await new Promise((resolve) => this.once('_generators', resolve))
       }
       this._parsePe3Encrypted()
     })
   }
 
-  _parsePe3Encrypted () {
-    this._parse(14, buffer => {
+  _parsePe3Encrypted() {
+    this._parse(14, (buffer) => {
       const vcBuffer = this._decryptHandshake(buffer.slice(0, 8))
       const peerProvideBuffer = this._decryptHandshake(buffer.slice(8, 12))
       const padCLen = new DataView(this._decryptHandshake(buffer.slice(12, 14)).buffer).getUint16(0)
-      this._parse(padCLen, padCBuffer => {
+      this._parse(padCLen, (padCBuffer) => {
         padCBuffer = this._decryptHandshake(padCBuffer)
-        this._parse(2, iaLenBuf => {
+        this._parse(2, (iaLenBuf) => {
           const iaLen = new DataView(this._decryptHandshake(iaLenBuf).buffer).getUint16(0)
-          this._parse(iaLen, iaBuffer => {
+          this._parse(iaLen, (iaBuffer) => {
             iaBuffer = this._decryptHandshake(iaBuffer)
             this._onPe3Encrypted(vcBuffer, peerProvideBuffer, padCBuffer, iaBuffer)
             const pstrlen = iaLen ? iaBuffer[0] : null
@@ -1193,16 +1190,16 @@ class Wire extends Duplex {
     })
   }
 
-  _parsePe4 () {
+  _parsePe4() {
     // synchronize on ENCRYPT(VC).
     // since we encrypt using bitwise xor, decryption and encryption are the same operation.
     // calling _decryptHandshake here advances the decrypt generator keystream forward 8 bytes
     const vcBufferEncrypted = this._decryptHandshake(VC)
     this._parseUntil(vcBufferEncrypted, 512)
-    this._parse(6, buffer => {
+    this._parse(6, (buffer) => {
       const peerSelectBuffer = this._decryptHandshake(buffer.slice(0, 4))
       const padDLen = new DataView(this._decryptHandshake(buffer.slice(4, 6)).buffer).getUint16(0)
-      this._parse(padDLen, padDBuf => {
+      this._parse(padDLen, (padDBuf) => {
         this._decryptHandshake(padDBuf)
         this._onPe4(peerSelectBuffer)
         this._parseHandshake(null)
@@ -1213,8 +1210,8 @@ class Wire extends Duplex {
   /**
    * Reads the handshake as specified by the bittorrent wire protocol.
    */
-  _parseHandshake () {
-    this._parse(1, buffer => {
+  _parseHandshake() {
+    this._parse(1, (buffer) => {
       const pstrlen = buffer[0]
       if (pstrlen !== 19) {
         this._debug('Error: wire not speaking BitTorrent protocol (%s)', pstrlen.toString())
@@ -1225,7 +1222,7 @@ class Wire extends Duplex {
     })
   }
 
-  _onHandshakeBuffer (handshake) {
+  _onHandshakeBuffer(handshake) {
     const protocol = handshake.slice(0, 19)
     if (arr2text(protocol) !== 'BitTorrent protocol') {
       this._debug('Error: wire not speaking BitTorrent protocol (%s)', arr2text(protocol))
@@ -1236,12 +1233,12 @@ class Wire extends Duplex {
     this._onHandshake(handshake.slice(8, 28), handshake.slice(28, 48), {
       dht: !!(handshake[7] & 0x01), // see bep_0005
       fast: !!(handshake[7] & 0x04), // see bep_0006
-      extended: !!(handshake[5] & 0x10) // see bep_0010
+      extended: !!(handshake[5] & 0x10), // see bep_0010
     })
     this._parse(4, this._onMessageLength)
   }
 
-  _onFinish () {
+  _onFinish() {
     this._finished = true
 
     this.push(null) // stream cannot be half open, so signal the end of it
@@ -1260,12 +1257,12 @@ class Wire extends Duplex {
     }
   }
 
-  _debug (...args) {
+  _debug(...args) {
     args[0] = `[${this._debugId}] ${args[0]}`
     debug(...args)
   }
 
-  _pull (requests, piece, offset, length) {
+  _pull(requests, piece, offset, length) {
     for (let i = 0; i < requests.length; i++) {
       const req = requests[i]
       if (req.piece === piece && req.offset === offset && req.length === length) {
@@ -1276,7 +1273,7 @@ class Wire extends Duplex {
     return null
   }
 
-  _encryptHandshake (buf) {
+  _encryptHandshake(buf) {
     const crypt = new Uint8Array(buf)
     if (!this._encryptGenerator) {
       this._debug('Warning: Encrypting without any generator')
@@ -1291,7 +1288,7 @@ class Wire extends Duplex {
     return crypt
   }
 
-  _encrypt (buf) {
+  _encrypt(buf) {
     const crypt = new Uint8Array(buf)
 
     if (!this._encryptGenerator || this._encryptionMethod !== 2) {
@@ -1305,7 +1302,7 @@ class Wire extends Duplex {
     return crypt
   }
 
-  _decryptHandshake (buf) {
+  _decryptHandshake(buf) {
     const decrypt = new Uint8Array(buf)
 
     if (!this._decryptGenerator) {
@@ -1320,7 +1317,7 @@ class Wire extends Duplex {
     return decrypt
   }
 
-  _decrypt (buf) {
+  _decrypt(buf) {
     const decrypt = new Uint8Array(buf)
 
     if (!this._decryptGenerator || this._encryptionMethod !== 2) {
@@ -1334,7 +1331,7 @@ class Wire extends Duplex {
     return decrypt
   }
 
-  _utfToHex (str) {
+  _utfToHex(str) {
     return arr2hex(text2arr(str))
   }
 }

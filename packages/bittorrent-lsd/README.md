@@ -45,23 +45,29 @@ lsd.destroy()
 ## api
 
 ### `lsd = new LSD([opts])`
+
 Create a new `lsd` instance.
 
 ### `lsd.start()`
+
 Start listening and sending (every 5 minutes) for local network announces.
 
 ### `lsd.destroy([callback])`
+
 Destroy the LSD. Closes the socket and cleans up resources.
 
 ## events
 
 ### `lsd.on('peer', (peerAddress, infoHash) => { ... })`
+
 Emitted when a potential peer is found. `peerAddress` is of the form `host:port`. `infoHash` is the torrent info hash.
 
 ### `lsd.on('warning', (err) => { ... })`
+
 Emitted when the LSD gets an unexpected message.
 
 ### `lsd.on('error', (err) => { ... })`
+
 Emitted when the LSD has a fatal error.
 
 ## license

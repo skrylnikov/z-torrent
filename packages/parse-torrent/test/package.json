@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "type": "module",
   "browserify": {
-    "transform": ["brfs"]
+    "transform": [
+      "brfs"
+    ]
   }
 }

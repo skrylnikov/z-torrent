@@ -1,13 +1,13 @@
-import benchmark from 'benchmark';
+import benchmark from 'benchmark'
 
 exports.suite = () => {
   const suite = new benchmark.Suite()
   process.nextTick(() => {
     suite
-      .on('error', event => {
+      .on('error', (event) => {
         console.error(event.target.error.stack)
       })
-      .on('cycle', event => {
+      .on('cycle', (event) => {
         console.log(String(event.target))
       })
       // .on('complete', function () {

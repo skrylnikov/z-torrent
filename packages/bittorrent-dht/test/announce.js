@@ -2,13 +2,13 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('`announce` with {host: false}', t => {
+test('`announce` with {host: false}', (t) => {
   t.plan(3)
   const dht = new DHT({ bootstrap: false, host: false })
   common.failOnWarningOrError(t, dht)
 
   const infoHash = common.randomId()
-  dht.announce(infoHash, 6969, err => {
+  dht.announce(infoHash, 6969, (err) => {
     t.pass(err instanceof Error, 'announce should fail')
     dht.lookup(infoHash, (err, n) => {
       t.error(err)
@@ -18,26 +18,26 @@ test('`announce` with {host: false}', t => {
   })
 })
 
-test('`announce` with {host: "127.0.0.1"}', t => {
+test('`announce` with {host: "127.0.0.1"}', (t) => {
   t.plan(3)
   const dht = new DHT({ bootstrap: false, host: '127.0.0.1' })
   common.failOnWarningOrError(t, dht)
 
   const infoHash = common.randomId()
-  dht.announce(infoHash, 6969, err => {
+  dht.announce(infoHash, 6969, (err) => {
     t.pass(err instanceof Error, 'announce should fail')
-    dht.lookup(infoHash, err => {
+    dht.lookup(infoHash, (err) => {
       t.error(err)
       dht.destroy()
     })
 
-    dht.on('peer', peer => {
+    dht.on('peer', (peer) => {
       t.deepEqual(peer, { host: '127.0.0.1', port: 6969 })
     })
   })
 })
 
-test('announce with implied port', t => {
+test('announce with implied port', (t) => {
   t.plan(2)
   const dht1 = new DHT({ bootstrap: false })
   const infoHash = common.randomId()
@@ -45,12 +45,12 @@ test('announce with implied port', t => {
   dht1.listen(() => {
     const dht2 = new DHT({ bootstrap: `127.0.0.1:${dht1.address().port}` })
 
-    dht1.on('announce', peer => {
+    dht1.on('announce', (peer) => {
       t.deepEqual(peer, { host: '127.0.0.1', port: dht2.address().port })
     })
 
     dht2.announce(infoHash, () => {
-      dht2.once('peer', peer => {
+      dht2.once('peer', (peer) => {
         t.deepEqual(peer, { host: '127.0.0.1', port: dht2.address().port })
         dht1.destroy()
         dht2.destroy()
@@ -61,7 +61,7 @@ test('announce with implied port', t => {
   })
 })
 
-test('`announce` and no cache timeout', t => {
+test('`announce` and no cache timeout', (t) => {
   t.plan(2)
   const dht1 = new DHT({ bootstrap: false, maxAge: Infinity })
   const infoHash = common.randomId()
@@ -70,11 +70,11 @@ test('`announce` and no cache timeout', t => {
     const dht2 = new DHT({ bootstrap: `127.0.0.1:${dht1.address().port}`, maxAge: Infinity })
     let cnt = 0
 
-    dht1.on('peer', peer => {
+    dht1.on('peer', (peer) => {
       cnt++
     })
 
-    dht1.once('announce', peer => {
+    dht1.once('announce', (peer) => {
       t.deepEqual(peer, { host: '127.0.0.1', port: 1337 })
 
       dht1.lookup(infoHash, () => {
@@ -92,7 +92,7 @@ test('`announce` and no cache timeout', t => {
   })
 })
 
-test('`announce` and cache timeout', t => {
+test('`announce` and cache timeout', (t) => {
   t.plan(2)
   const dht1 = new DHT({ bootstrap: false, maxAge: 50 })
   const infoHash = common.randomId()
@@ -101,11 +101,11 @@ test('`announce` and cache timeout', t => {
     const dht2 = new DHT({ bootstrap: `127.0.0.1:${dht1.address().port}`, maxAge: 50 })
     let cnt = 0
 
-    dht1.on('peer', peer => {
+    dht1.on('peer', (peer) => {
       cnt++
     })
 
-    dht1.once('announce', peer => {
+    dht1.once('announce', (peer) => {
       t.deepEqual(peer, { host: '127.0.0.1', port: 1337 })
 
       dht1.lookup(infoHash, () => {
@@ -123,7 +123,7 @@ test('`announce` and cache timeout', t => {
   })
 })
 
-test('`announce` twice and cache timeout for one announce', t => {
+test('`announce` twice and cache timeout for one announce', (t) => {
   const dht1 = new DHT({ bootstrap: false, maxAge: 50 })
   const infoHash = common.randomId()
 
@@ -137,7 +137,7 @@ test('`announce` twice and cache timeout for one announce', t => {
           dht2.announce(infoHash, 1338)
         }, 10)
 
-        dht2.on('peer', peer => {
+        dht2.on('peer', (peer) => {
           found[`${peer.host}:${peer.port}`] = true
         })
 

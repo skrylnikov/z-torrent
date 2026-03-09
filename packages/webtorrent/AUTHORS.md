@@ -1,5 +1,7 @@
 # Authors
 
+> **Note:** These are the authors of the original [WebTorrent](https://github.com/webtorrent/webtorrent) library. Z-Torrent is a fork of WebTorrent.
+
 #### Ordered by first contribution.
 
 - Feross Aboukhadijeh (feross@feross.org)
@@ -211,7 +213,7 @@
 - funniray (funniray10@gmail.com)
 - Carl Gorringe (git@gorringe.org)
 - Banou (me@banou.dev)
-- Cas_ (6506529+ThaUnknown@users.noreply.github.com)
+- Cas\_ (6506529+ThaUnknown@users.noreply.github.com)
 - Andréas Livet (andreas.livet@gmail.com)
 - Evan Hahn (me@evanhahn.com)
 - Kende Détár (64217783+detarkende@users.noreply.github.com)

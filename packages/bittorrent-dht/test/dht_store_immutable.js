@@ -2,7 +2,7 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('local immutable put/get', t => {
+test('local immutable put/get', (t) => {
   t.plan(3)
 
   const dht = new DHT({ bootstrap: false })
@@ -20,15 +20,13 @@ test('local immutable put/get', t => {
       )
       dht.get(hash, (err, res) => {
         t.ifError(err)
-        t.equal(res.v.toString('utf8'), value.toString('utf8'),
-          'got back what we put in'
-        )
+        t.equal(res.v.toString('utf8'), value.toString('utf8'), 'got back what we put in')
       })
     })
   })
 })
 
-test('delegated put', t => {
+test('delegated put', (t) => {
   t.plan(5)
 
   const dht1 = new DHT({ bootstrap: false })
@@ -69,11 +67,11 @@ test('delegated put', t => {
     dht3.once('node', ready)
   })
 
-  function ready () {
+  function ready() {
     if (--pending !== 0) return
     const value = common.fill(500, 'abc')
     const opts = {
-      v: value
+      v: value,
     }
 
     dht1.put(opts, (err, hash) => {
@@ -82,7 +80,7 @@ test('delegated put', t => {
       dht2.get(hash, (err, res) => {
         t.error(err)
 
-        dht3.put(res, err => {
+        dht3.put(res, (err) => {
           t.error(err)
 
           dht4.get(hash, (err, res) => {
@@ -95,7 +93,7 @@ test('delegated put', t => {
   }
 })
 
-test('multi-party immutable put/get', t => {
+test('multi-party immutable put/get', (t) => {
   t.plan(4)
 
   const dht1 = new DHT({ bootstrap: false })
@@ -118,7 +116,7 @@ test('multi-party immutable put/get', t => {
     dht1.once('node', ready)
   })
 
-  function ready () {
+  function ready() {
     if (--pending !== 0) return
     const value = common.fill(500, 'abc')
     dht1.put({ v: value }, (err, hash) => {
@@ -131,7 +129,9 @@ test('multi-party immutable put/get', t => {
 
       dht2.get(hash, (err, res) => {
         t.ifError(err)
-        t.equal(res.v.toString('utf8'), value.toString('utf8'),
+        t.equal(
+          res.v.toString('utf8'),
+          value.toString('utf8'),
           'got back what we put in on another node'
         )
       })

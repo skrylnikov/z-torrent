@@ -7,23 +7,16 @@
     "email": "feross@webtorrent.io",
     "url": "https://webtorrent.io"
   },
-  "browserify": {
-    "transform": [
-      "brfs"
-    ]
-  },
   "bugs": {
     "url": "https://github.com/webtorrent/webtorrent-fixtures/issues"
   },
   "type": "module",
   "dependencies": {
-    "brfs": "^2.0.0",
-    "parse-torrent": "^11.0.0"
+    "parse-torrent": "workspace:*"
   },
   "devDependencies": {
     "@webtorrent/semantic-release-config": "1.0.10",
-    "semantic-release": "21.1.2",
-    "standard": "*"
+    "semantic-release": "21.1.2"
   },
   "keywords": [
     "sample torrents",
@@ -36,18 +29,32 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=12.20.0"
+    "node": ">=18.0.0"
   },
   "exports": {
-    "import": "./index.js"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
+  "files": [
+    "dist",
+    "fixtures"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/webtorrent/webtorrent-fixtures.git"
   },
   "scripts": {
-    "test": "standard && node --input-type=module -e \"import './index.js'\""
+    "build": "rolldown -c",
+    "size": "size-limit"
   },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "20 KB"
+    }
+  ],
   "renovate": {
     "extends": [
       "github>webtorrent/renovate-config"

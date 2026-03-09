@@ -91,7 +91,7 @@ WebTorrent is still pretty new, but it's already being used in cool ways:
 - **[CineTimes][cinetimes]** - A streaming website of public domain movies
 - **[Bitlove.org][bitlove]** - Your favorite podcasts via BitTorrent
 - **[Live-torrent][live-torrent]** - Simple implementation of a webtorrent powered live streaming solution ([source code][live-torrent-source])
-- **[CDNBye][CDNBye]** -  CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol.
+- **[CDNBye][CDNBye]** - CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol.
 - **[Files.fm][Files.fm]** - a fast file sharing and freemium cloud storage service that uses P2P technology to accelerate unlimited downloads and file distribution.
 - **[imgest][imgest]** - Serverless shareable image gallery built with JavaScript and WebTorrent.
 - **[Bugout][Bugout]** - build and run back-end web services in a browser tab.
@@ -106,7 +106,7 @@ WebTorrent is still pretty new, but it's already being used in cool ways:
 - **[WebTorrentPlayer][webtorrentplayer]** - High performance, no compromise video player for WebTorrent ([source code][webtorrentplayer-source])
 - **[Storm][storm]** - A beautiful torrent client for desktop.
 - **[atorable-loader][atorable-loader-source]** - Resolves Webpack import/require() of a file into a Webtorrent magnet uri.
-- **[atorable-react][atorable-react]** -  React component that processes a Webtorrent magnet uri for viewing or other custom uses. ([source code][atorable-react-source])
+- **[atorable-react][atorable-react]** - React component that processes a Webtorrent magnet uri for viewing or other custom uses. ([source code][atorable-react-source])
 - **[Iris][iris-messenger]** - Decentralized social networking application. ([source code][iris-messenger-source])
 - **[Miru][miru-source]** - Stream anime torrents, real-time with no waiting for downloads. ([source code][miru-source])
 - **[Haven Torrent Client][haven-torrent-client]** - Simple and Fast Torrent Client for the web. ([source code][haven-torrent-client-source])
@@ -116,10 +116,10 @@ WebTorrent is still pretty new, but it's already being used in cool ways:
 - **[P2PFileShare][P2PFileShare]** - A peer-to-peer file-sharing app that allows users to send and receive files directly from your browser.
 - **[anacrolix/torrent library][anacrolix-torrent-source]** - A full-featured BitTorrent Golang client package. Some popular torrent clients built with it, such as [distribyted][distribyted-source] and [confluence][confluence-source], enable WebTorrent support by default.
 - **[libtorrent library][libtorrent]** has experimental (disabled by default) support for WebTorrent ([tracking][libtorrent-tracking-pr]).
-- ***Your app here – [Send a pull request][pr] with your URL!***
-<!-- - **[PeerCloud][peercloud]** - Serverless websites via WebTorrent ([source code][peercloud-source]) -->
-<!-- - **[Niagara][niagara]** - Video player webtorrent with subtitles (zipped .srt(s)) -->
-<!-- - **[Vique][vique]** - Video player queue to share videos -->
+- **_Your app here – [Send a pull request][pr] with your URL!_**
+  <!-- - **[PeerCloud][peercloud]** - Serverless websites via WebTorrent ([source code][peercloud-source]) -->
+  <!-- - **[Niagara][niagara]** - Video player webtorrent with subtitles (zipped .srt(s)) -->
+  <!-- - **[Vique][vique]** - Video player queue to share videos -->
 
 #### WebTorrent Product Alternatives
 
@@ -261,15 +261,16 @@ It's easy to download a torrent and add it to the page.
 ```js
 const client = new WebTorrent()
 
-const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+const torrentId =
+  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
 
 const controller = await navigator.serviceWorker.register('./sw.min.js', { scope: './' })
 await navigator.serviceWorker.ready
 client.createServer({ controller })
 
-client.add(torrentId, torrent => {
+client.add(torrentId, (torrent) => {
   // Torrents can contain many files. Let's use the .mp4 file
-  const file = torrent.files.find(file => {
+  const file = torrent.files.find((file) => {
     return file.name.endsWith('.mp4')
   })
   file.streamTo(document.querySelector('video')) // append the file to the DOM
@@ -323,7 +324,7 @@ Right now, we know of these WebRTC-capable torrent clients:
 - **[Instant.io][instant.io]** - Simple WebTorrent client in a website
 - **[βTorrent][btorrent]** - Fully-featured browser WebTorrent client ([source code][btorrent-source])
 - **[TorrentMedia][torrentmedia]** - Desktop WebTorrent client
-- *More coming soon – [Send a PR][pr] to add your client to the list!*
+- _More coming soon – [Send a PR][pr] to add your client to the list!_
 
 ### A bit more about `webtorrent-hybrid`
 
@@ -425,7 +426,6 @@ There are many ways to help out!
 
 If you're looking for help getting started, come join us in [Gitter][gitter] or on
 IRC at `#webtorrent` (freenode) and how you can get started.
-
 
 [open-issues]: https://github.com/webtorrent/webtorrent/issues?state=open
 [contributing]: https://github.com/webtorrent/.github/blob/master/CONTRIBUTING.md

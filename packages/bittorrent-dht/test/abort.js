@@ -2,12 +2,12 @@ import test from 'tape'
 import DHT from '../index.js'
 import * as common from './common.js'
 
-test('explicitly set nodeId', t => {
+test('explicitly set nodeId', (t) => {
   const nodeId = common.randomId()
 
   const dht = new DHT({
     nodeId,
-    bootstrap: false
+    bootstrap: false,
   })
 
   common.failOnWarningOrError(t, dht)

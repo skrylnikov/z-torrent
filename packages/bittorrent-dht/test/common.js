@@ -3,8 +3,12 @@ import ed from 'bittorrent-dht-sodium'
 import ip from 'ip'
 
 export const failOnWarningOrError = (t, dht) => {
-  dht.on('warning', err => { t.fail(err) })
-  dht.on('error', err => { t.fail(err) })
+  dht.on('warning', (err) => {
+    t.fail(err)
+  })
+  dht.on('error', (err) => {
+    t.fail(err)
+  })
 }
 
 export const randomHost = () => {
@@ -28,7 +32,7 @@ export const addRandomNodes = (dht, num) => {
     dht.addNode({
       id: randomId(),
       host: randomHost(),
-      port: randomPort()
+      port: randomPort(),
     })
   }
 }
@@ -48,8 +52,8 @@ export const fill = (n, s) => {
   return b
 }
 
-export const sign = keypair => {
-  return buf => {
+export const sign = (keypair) => {
+  return (buf) => {
     return ed.sign(buf, keypair.sk)
   }
 }

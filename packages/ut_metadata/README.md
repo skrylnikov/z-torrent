@@ -33,16 +33,17 @@ Say you're already using `bittorrent-protocol`. Your code might look something l
 import Protocol from 'bittorrent-protocol'
 import net from 'net'
 
-net.createServer(socket => {
-  var wire = new Protocol()
-  socket.pipe(wire).pipe(socket)
+net
+  .createServer((socket) => {
+    var wire = new Protocol()
+    socket.pipe(wire).pipe(socket)
 
-  // handle handshake
-  wire.on('handshake', (infoHash, peerId) => {
-    wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+    // handle handshake
+    wire.on('handshake', (infoHash, peerId) => {
+      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+    })
   })
-
-}).listen(6881)
+  .listen(6881)
 ```
 
 To add support for BEP 9, simply modify your code like this:
@@ -52,39 +53,39 @@ import Protocol from 'bittorrent-protocol'
 import net from 'net'
 import ut_metadata from 'ut_metadata'
 
-net.createServer(socket => {
-  const wire = new Protocol()
-  socket.pipe(wire).pipe(socket)
+net
+  .createServer((socket) => {
+    const wire = new Protocol()
+    socket.pipe(wire).pipe(socket)
 
-  // initialize the extension
-  wire.use(ut_metadata())
+    // initialize the extension
+    wire.use(ut_metadata())
 
-  // all `ut_metadata` functionality can now be accessed at wire.ut_metadata
+    // all `ut_metadata` functionality can now be accessed at wire.ut_metadata
 
-  // ask the peer to send us metadata
-  wire.ut_metadata.fetch()
+    // ask the peer to send us metadata
+    wire.ut_metadata.fetch()
 
-  // 'metadata' event will fire when the metadata arrives and is verified to be correct!
-  wire.ut_metadata.on('metadata', metadata => {
-    // got metadata!
+    // 'metadata' event will fire when the metadata arrives and is verified to be correct!
+    wire.ut_metadata.on('metadata', (metadata) => {
+      // got metadata!
+      // Note: the event will not fire if the peer does not support ut_metadata, if they
+      // don't have metadata yet either, if they repeatedly send invalid data, or if they
+      // simply don't respond.
+    })
 
-    // Note: the event will not fire if the peer does not support ut_metadata, if they
-    // don't have metadata yet either, if they repeatedly send invalid data, or if they
-    // simply don't respond.
+    // optionally, listen to the 'warning' event if you want to know that metadata is
+    // probably not going to arrive for one of the above reasons.
+    wire.ut_metadata.on('warning', (err) => {
+      console.log(err.message)
+    })
+
+    // handle handshake
+    wire.on('handshake', (infoHash, peerId) => {
+      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+    })
   })
-
-  // optionally, listen to the 'warning' event if you want to know that metadata is
-  // probably not going to arrive for one of the above reasons.
-  wire.ut_metadata.on('warning', err => {
-    console.log(err.message)
-  })
-
-  // handle handshake
-  wire.on('handshake', (infoHash, peerId) => {
-    wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
-  })
-
-}).listen(6881)
+  .listen(6881)
 ```
 
 ### api
@@ -119,7 +120,7 @@ Fired when metadata is available and verified to be correct. Called with a singl
 parameter of type Buffer.
 
 ```js
-wire.ut_metadata.on('metadata', metadata => {
+wire.ut_metadata.on('metadata', (metadata) => {
   console.log(Buffer.isBuffer(metadata)) // true
 })
 ```
@@ -131,12 +132,13 @@ simply don't respond.
 #### `ut_metadata.on('warning', function (err) {})`
 
 Fired if:
- - the peer does not support ut_metadata
- - the peer doesn't have metadata yet
- - the peer repeatedly sent invalid data
+
+- the peer does not support ut_metadata
+- the peer doesn't have metadata yet
+- the peer repeatedly sent invalid data
 
 ```js
-wire.ut_metadata.on('warning', err => {
+wire.ut_metadata.on('warning', (err) => {
   console.log(err.message)
 })
 ```
