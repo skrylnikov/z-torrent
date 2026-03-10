@@ -1,5 +1,5 @@
 /*! z-torrent. MIT License. Fork of WebTorrent by Feross Aboukhadijeh and WebTorrent LLC */
-import EventEmitter from 'events'
+import { EventEmitter } from 'eventemitter3'
 import path from 'path'
 import createTorrent, { parseInput } from 'create-torrent'
 import debugFactory from 'debug'
@@ -15,9 +15,12 @@ import { ThrottleGroup } from 'speed-limiter'
 import NatAPI from '@silentbot1/nat-api' // browser exclude
 import ConnPool from './lib/conn-pool.js' // browser exclude
 import Torrent from './lib/torrent.js'
+import FileIterator from './lib/file-iterator.js'
 import { NodeServer, BrowserServer } from './lib/server.js'
 
 import VERSION from '../version.cjs'
+
+export { FileIterator }
 
 const debug = debugFactory('webtorrent')
 
@@ -160,8 +163,8 @@ export default class WebTorrent extends EventEmitter {
         }
       })
 
-      // Ignore warning when there are > 10 torrents in the client
-      this.dht.setMaxListeners(0)
+      // Ignore warning when there are > 10 torrents (eventemitter3 has no setMaxListeners)
+      if (typeof this.dht?.setMaxListeners === 'function') this.dht.setMaxListeners(0)
 
       this.dht.listen(this.dhtPort)
     } else {
@@ -411,8 +414,9 @@ export default class WebTorrent extends EventEmitter {
             const existingTorrent = await this.get(torrentBuf)
             if (existingTorrent) {
               console.warn('A torrent with the same id is already being seeded')
-              torrent._destroy()
-              if (typeof onseed === 'function') onseed(existingTorrent)
+              this._remove(torrent, null, () => {
+                if (typeof onseed === 'function') onseed(existingTorrent)
+              })
             } else {
               torrent._onTorrentId(torrentBuf)
             }

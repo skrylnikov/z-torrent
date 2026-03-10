@@ -3,11 +3,14 @@
   "version": "0.0.0",
   "description": "Example for embedding bittorrent-tracker server in express.js",
   "scripts": {
-    "server": "./server.js"
+    "server": "bun run server.ts"
   },
   "author": "Astro <astro@spaceboyz.net>",
   "license": "MIT",
   "dependencies": {
     "express": "^4.10.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21"
   }
 }

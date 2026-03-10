@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import { Readable } from 'streamx'
 import { chunkStoreRead } from 'chunk-store-iterator'
 import mime from 'mime/lite.js'

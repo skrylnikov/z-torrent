@@ -1,7 +1,8 @@
 import bencode from 'bencode'
 import Debug from 'debug'
 import dgram, { RemoteInfo } from 'dgram'
-import EventEmitter from 'events'
+import { EventEmitter } from 'eventemitter3'
+import queueMicrotask from 'queue-microtask'
 import http, { IncomingMessage, ServerResponse, Server as HttpServer } from 'http'
 import peerid from 'bittorrent-peerid'
 import series from 'run-series'
@@ -154,7 +155,7 @@ class Server extends EventEmitter {
       })
       this.http.on('listening', onListening)
 
-      process.nextTick(() => {
+      queueMicrotask(() => {
         this.http!.on('request', (req, res) => {
           if (res.headersSent) return
           this.onHttpRequest(req, res)
@@ -201,7 +202,7 @@ class Server extends EventEmitter {
         })
         this.http.on('listening', onListening)
 
-        process.nextTick(() => {
+        queueMicrotask(() => {
           this.http!.on('request', (_req, res) => {
             if (res.headersSent) return
             res.statusCode = 404
@@ -438,7 +439,7 @@ class Server extends EventEmitter {
   createSwarm(infoHash: string | Uint8Array, cb: (err: Error | null, swarm: Swarm) => void): void {
     if (ArrayBuffer.isView(infoHash)) infoHash = (infoHash as Buffer).toString('hex')
 
-    process.nextTick(() => {
+    queueMicrotask(() => {
       const swarm = (this.torrents[infoHash as string] = new Server.Swarm(infoHash as string, this))
       cb(null, swarm)
     })
@@ -450,7 +451,7 @@ class Server extends EventEmitter {
   ): void {
     if (ArrayBuffer.isView(infoHash)) infoHash = (infoHash as Buffer).toString('hex')
 
-    process.nextTick(() => {
+    queueMicrotask(() => {
       cb(null, this.torrents[infoHash as string])
     })
   }

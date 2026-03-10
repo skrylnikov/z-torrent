@@ -19,6 +19,7 @@
     "url": "https://github.com/webtorrent/webtorrent/issues"
   },
   "dependencies": {
+    "eventemitter3": "^5.0.4",
     "@silentbot1/nat-api": "^0.4.9",
     "@thaunknown/simple-peer": "^10.0.11",
     "@webtorrent/http-node": "^1.3.0",
@@ -70,8 +71,6 @@
     "airtap-system": "^0.1.0",
     "babelify": "10.0.0",
     "bittorrent-tracker": "workspace:*",
-    "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.1",
     "disc": "1.3.3",
     "finalhandler": "2.1.1",
     "network-address": "1.1.2",
@@ -81,12 +80,9 @@
     "run-series": "1.1.9",
     "semantic-release": "22.0.12",
     "serve-static": "2.2.0",
-    "stream-browserify": "^3.0.0",
     "tap-parser": "^16.0.1",
     "tap-spec": "^5.0.0",
     "tape": "^5.9.0",
-    "tsx": "^4.21.0",
-    "timers-browserify": "^2.0.12",
     "webtorrent-fixtures": "workspace:*"
   },
   "optionalDependencies": {
@@ -152,10 +148,10 @@
     "size-disc": "npm run build-js && cat ./dist/z-torrent.min.js | discify --open",
     "size-js": "npm run build-js && cat ./dist/z-torrent.min.js | gzip | wc -c",
     "test": "npm run test-node",
-    "test-browser": "airtap --concurrency 1 --all -- test/*.ts test/browser/*.ts | tap-spec",
-    "test-browser-local": "airtap --preset local -- test/*.ts test/browser/*.ts | tap-spec",
-    "test-node": "tsx test/*.ts test/node/*.ts | tap-spec",
-    "test-single": "tsx test/node/client-deselect.ts | tap-spec",
+    "test-browser": "airtap --concurrency 1 --all -- test/*.test.ts test/browser/*.test.ts | tap-spec",
+    "test-browser-local": "airtap --preset local -- test/*.test.ts test/browser/*.test.ts | tap-spec",
+    "test-node": "bun test test/ test/node/",
+    "test-single": "bun test test/node/client-deselect.test.ts",
     "update-authors": "./scripts/update-authors.sh"
   },
   "renovate": {

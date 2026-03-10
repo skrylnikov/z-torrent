@@ -1,5 +1,5 @@
 import Debug from 'debug'
-import EventEmitter from 'events'
+import { EventEmitter } from 'eventemitter3'
 import once from 'once'
 import parallel from 'run-parallel'
 import Peer from '@thaunknown/simple-peer/lite.js'

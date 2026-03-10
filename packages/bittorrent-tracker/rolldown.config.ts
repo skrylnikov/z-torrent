@@ -39,8 +39,6 @@ export default defineConfig({
     'ws',
     'bufferutil',
     'utf-8-validate',
-    'events',
-    'querystring',
     'crypto',
   ],
   platform: 'node',

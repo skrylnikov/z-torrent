@@ -56,6 +56,12 @@ export default function getFiles(
     if (Array.isArray(files)) fileArray = files.flat(Infinity) as FileInfo[]
     else fileArray = [files]
 
+    fileArray.sort((a, b) => {
+      const pathA = Array.isArray(a.path) ? a.path.join('/') : a.path
+      const pathB = Array.isArray(b.path) ? b.path.join('/') : b.path
+      return pathA.localeCompare(pathB)
+    })
+
     const basePath = keepRoot ? corePath.dirname(path) : path
     let normalizedPath = basePath
     if (!normalizedPath.endsWith(corePath.sep)) normalizedPath += corePath.sep

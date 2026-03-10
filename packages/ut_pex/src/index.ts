@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import compact2string from 'compact2string'
 import string2compact from 'string2compact'
 import bencode from 'bencode'

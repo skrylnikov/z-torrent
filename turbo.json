@@ -9,6 +9,10 @@
       "dependsOn": ["build"],
       "outputs": []
     },
+    "test-live": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
     "lint": {
       "dependsOn": ["build"],
       "outputs": []

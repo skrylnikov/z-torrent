@@ -396,7 +396,7 @@ class BrowserServer extends ServerBase {
   wrapRequest(event: MessageEvent): void {
     const req = event.data
 
-    if (!req?.type === 'z-torrent' || !req.url) return
+    if (req?.type !== 'z-torrent' || !req.url) return
 
     const [port] = event.ports
     this.onRequest(req, ({ status, headers, body }) => {

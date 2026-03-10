@@ -1,9 +1,9 @@
-import type net from 'net'
+import net from 'net'
 import debugFactory from 'debug'
 import queueMicrotask from 'queue-microtask'
 
 import Peer from './peer.js'
-import type utpType from './utp.cjs'
+import utp from './utp.cjs'
 
 const debug = debugFactory('webtorrent:conn-pool')
 
@@ -48,7 +48,6 @@ export default class ConnPool {
     }
 
     // Setup TCP
-    const net = require('net')
     this.tcpServer = net.createServer()
     this.tcpServer.on('connection', this._onTCPConnectionBound)
     this.tcpServer.on('error', this._onTCPError)
@@ -58,7 +57,6 @@ export default class ConnPool {
       debug('creating tcpServer in port %s', (this.tcpServer.address() as any).port)
       if (this._client.utp) {
         // Setup uTP
-        const utp: typeof utpType = require('./utp.cjs')
         this.utpServer = utp.createServer()
         this.utpServer.on('connection', this._onUTPConnectionBound)
         this.utpServer.on('listening', this._onListening)

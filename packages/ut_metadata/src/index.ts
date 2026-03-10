@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import bencode from 'bencode'
 import BitField from 'bitfield'
 import Debug from 'debug'

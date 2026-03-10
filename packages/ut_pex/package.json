@@ -13,15 +13,14 @@
   "type": "module",
   "dependencies": {
     "bencode": "^4.0.0",
+    "eventemitter3": "^5.0.4",
     "compact2string": "^1.4.1",
     "string2compact": "workspace:*"
   },
   "devDependencies": {
-    "@types/tape": "^5.6.0",
     "@webtorrent/semantic-release-config": "1.0.10",
     "bittorrent-protocol": "workspace:*",
-    "semantic-release": "21.1.2",
-    "tape": "5.9.0"
+    "semantic-release": "21.1.2"
   },
   "keywords": [
     "PEX",
@@ -52,7 +51,7 @@
   },
   "scripts": {
     "build": "rolldown -c",
-    "test": "tsx test/*.ts",
+    "test": "bun test",
     "size": "size-limit"
   },
   "size-limit": [

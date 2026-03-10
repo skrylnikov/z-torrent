@@ -1,5 +1,5 @@
+import queueMicrotask from 'queue-microtask'
 import { Server } from '../index.js'
-import type { Test } from 'tape'
 
 interface ServerOptions {
   serverType: 'http' | 'udp' | 'ws'
@@ -15,7 +15,6 @@ interface MockWebsocketTrackerClient {
 }
 
 export const createServer = (
-  t: Test,
   opts: ServerOptions | string,
   cb: (server: Server, announceUrl: string) => void
 ): void => {
@@ -33,10 +32,10 @@ export const createServer = (
   const server = new Server(serverOpts)
 
   server.on('error', (err) => {
-    t.error(err)
+    throw err
   })
   server.on('warning', (err) => {
-    t.error(err)
+    throw err
   })
 
   server.listen(0, () => {
@@ -60,7 +59,7 @@ export const mockWebsocketTracker = (client: MockWebsocketTrackerClient): void =
     for (let i = 0; i < numwant; i++) {
       offers.push({ fake_offer: `fake_offer_${i}` })
     }
-    process.nextTick(() => {
+    queueMicrotask(() => {
       cb(offers)
     })
   }

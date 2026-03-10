@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import { Transform, pipeline } from 'streamx'
 import arrayRemove from 'unordered-array-remove'
 import debugFactory from 'debug'

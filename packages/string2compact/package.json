@@ -16,11 +16,9 @@
     "ipaddr.js": "2.0.1"
   },
   "devDependencies": {
-    "@types/tape": "^5.6.0",
     "@webtorrent/semantic-release-config": "1.0.10",
     "compact2string": "1.4.1",
-    "semantic-release": "21.1.2",
-    "tape": "5.9.0"
+    "semantic-release": "21.1.2"
   },
   "keywords": [
     "binary",
@@ -53,7 +51,7 @@
   },
   "scripts": {
     "build": "rolldown -c",
-    "test": "tsx test/*.ts",
+    "test": "bun test",
     "size": "size-limit"
   },
   "size-limit": [

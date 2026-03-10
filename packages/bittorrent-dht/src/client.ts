@@ -1,14 +1,15 @@
 /// <reference types="node" />
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import bencode from 'bencode'
+import queueMicrotask from 'queue-microtask'
 import Debug from 'debug'
 import KBucket from 'k-bucket'
 import krpc, { KRpc, KRpcNode, KRpcMessage, KRpcPeer } from 'k-rpc'
 import low from 'last-one-wins'
 import LRU from 'lru'
-import randombytes from 'randombytes'
 import records from 'record-cache'
-import crypto from 'crypto'
+import { randomBytes } from 'uint8-util'
+import sha1Hash from 'sync-sha1/rawSha1.js'
 
 const debug = Debug('bittorrent-dht')
 
@@ -94,6 +95,17 @@ class DHT extends EventEmitter {
   ) {
     super()
 
+    // Bootstrap ноды: router.bittorrent.com и router.utorrent.com перестали отвечать в 2024
+    if (opts.bootstrap !== false && !opts.bootstrap) {
+      opts.bootstrap = [
+        'dht.transmissionbt.com:6881',
+        'dht.libtorrent.org:25401',
+        'router.bitcomet.com:6881',
+        // 'router.bittorrent.com:6881',
+        // 'router.utorrent.com:6881',
+      ]
+    }
+
     this._tables = new LRU({
       maxAge: ROTATE_INTERVAL,
       max: opts.maxTables || 1000,
@@ -109,7 +121,17 @@ class DHT extends EventEmitter {
     this._secrets = null
     this._hash = opts.hash || sha1
     this._hashLength = this._hash(Buffer.from('')).length
-    this._rpc = opts.krpc || krpc(Object.assign({ idLength: this._hashLength }, opts))
+    this._rpc =
+      opts.krpc ||
+      krpc(
+        Object.assign(
+          {
+            idLength: this._hashLength,
+            timeout: 2000, // Увеличено с 2s — bootstrap ноды часто отвечают медленно
+          },
+          opts,
+        ),
+      )
     this._rpc.on('query', onquery)
     this._rpc.on('node', onnode)
     this._rpc.on('warning', onwarning)
@@ -138,7 +160,7 @@ class DHT extends EventEmitter {
       onping({ older, swap }, noop)
     })
 
-    process.nextTick(bootstrap as () => void)
+    queueMicrotask(bootstrap as () => void)
 
     this._debug('new DHT %s', this.nodeId)
 
@@ -318,7 +340,11 @@ class DHT extends EventEmitter {
         }
 
         self.updateBucketTimestamp()
-        cb(null, { host: (node?.host || node?.address)!, port: node!.port })
+        cb(null, {
+          id: pong.r.id,
+          host: (node?.host || node?.address)!,
+          port: node!.port,
+        })
       }
     )
   }
@@ -474,7 +500,7 @@ class DHT extends EventEmitter {
         salt: value.salt,
       }
       value = createGetResponse(this._rpc.id, null, tableVal)
-      return process.nextTick(done)
+      return queueMicrotask(done)
     }
 
     this._closest(
@@ -576,7 +602,7 @@ class DHT extends EventEmitter {
     let aborted = false
 
     this._debug('lookup %s', infoHash)
-    process.nextTick(emit)
+    queueMicrotask(emit)
     this._closest(
       infoHash,
       {
@@ -620,7 +646,7 @@ class DHT extends EventEmitter {
 
   destroy(cb?: () => void) {
     if (this.destroyed) {
-      if (cb) process.nextTick(cb)
+      if (cb) queueMicrotask(cb)
       return
     }
     this.destroyed = true
@@ -794,7 +820,7 @@ class DHT extends EventEmitter {
 
   _bootstrap(populate: boolean) {
     const self = this
-    if (!populate) return process.nextTick(ready)
+    if (!populate) return queueMicrotask(ready)
 
     this._rpc.populate(
       self._rpc.id,
@@ -885,18 +911,18 @@ class DHT extends EventEmitter {
 
   _rotateSecrets() {
     if (!this._secrets) {
-      this._secrets = [randombytes(this._hashLength), randombytes(this._hashLength)]
+      this._secrets = [randomBytes(this._hashLength), randomBytes(this._hashLength)]
     } else {
       this._secrets[1] = this._secrets[0]
-      this._secrets[0] = randombytes(this._hashLength)
+      this._secrets[0] = randomBytes(this._hashLength)
     }
   }
 }
 
 function noop() {}
 
-function sha1(buf: Buffer): Buffer {
-  return crypto.createHash('sha1').update(buf).digest()
+function sha1(buf: Buffer | Uint8Array): Buffer {
+  return Buffer.from(sha1Hash(buf instanceof Uint8Array ? buf : new Uint8Array(buf)))
 }
 
 function createGetResponse(

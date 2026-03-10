@@ -1,6 +1,6 @@
 /*! parse-torrent. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import bencode from 'bencode'
-import { createHash } from 'node:crypto'
+import sha1 from 'sync-sha1/rawSha1.js'
 import fs from 'fs'
 import fetch from 'cross-fetch-ponyfill'
 import magnet, { encode } from 'magnet-uri'
@@ -79,7 +79,7 @@ async function parseTorrentRemote(
   } else if (/^https?:/.test(torrentId as string)) {
     try {
       const res = await fetch(torrentId as string, {
-        headers: { 'user-agent': 'WebTorrent (https://webtorrent.io)' },
+        headers: { 'user-agent': 'Z-Torrent (https://github.com/webtorrent/webtorrent)', ...(opts?.headers as object) },
         signal: AbortSignal.timeout(30 * 1000),
         ...opts,
       })
@@ -88,7 +88,7 @@ async function parseTorrentRemote(
     } catch (err) {
       return cb!(new Error(`Error downloading torrent: ${(err as Error).message}`))
     }
-  } else if (typeof fs.readFile === 'function' && typeof torrentId === 'string') {
+  } else if (typeof fs.readFile === 'function' && typeof torrentId === 'string' && torrentId.length > 0) {
     fs.readFile(torrentId, (err, torrentBuf) => {
       if (err) return cb!(new Error('Invalid torrent identifier'))
       parseOrThrow(torrentBuf)
@@ -139,7 +139,9 @@ function decodeTorrentFile(torrent: Uint8Array | Record<string, unknown>): Insta
     announce: [],
   }
 
-  result.infoHashBuffer = new Uint8Array(createHash('sha1').update(result.infoBuffer).digest())
+  result.infoHashBuffer = sha1(
+    result.infoBuffer instanceof Uint8Array ? result.infoBuffer : new Uint8Array(result.infoBuffer)
+  )
   result.infoHash = arr2hex(result.infoHashBuffer)
 
   if (info.private !== undefined) result.private = !!info.private

@@ -11,10 +11,7 @@
     "url": "https://github.com/webtorrent/torrent-piece/issues"
   },
   "type": "module",
-  "devDependencies": {
-    "@types/tape": "^5.6.0",
-    "tape": "5.9.0"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0"
   },
@@ -43,7 +40,7 @@
   },
   "scripts": {
     "build": "rolldown -c",
-    "test": "tsx test/*.ts",
+    "test": "bun test",
     "size": "size-limit"
   },
   "size-limit": [

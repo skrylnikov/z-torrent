@@ -1,5 +1,5 @@
 import debugFactory from 'debug'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import type File from './file.js'
 import type Torrent from './torrent.js'
 

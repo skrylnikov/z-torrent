@@ -3,12 +3,12 @@ import ed from 'bittorrent-dht-sodium'
 import ip from 'ip'
 import type DHT from '../src/client.js'
 
-export const failOnWarningOrError = (t: any, dht: DHT) => {
+export const failOnWarningOrError = (dht: DHT) => {
   dht.on('warning', (err) => {
-    t.fail(err)
+    throw err
   })
   dht.on('error', (err) => {
-    t.fail(err)
+    throw err
   })
 }
 

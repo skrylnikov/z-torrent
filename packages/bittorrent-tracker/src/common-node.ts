@@ -3,8 +3,13 @@
  * These are separate from common.js so they can be skipped when bundling for the browser.
  */
 
-import querystring from 'querystring'
 import { concat } from 'uint8-util'
+
+/** Parsed query string - compatible with Node's querystring.ParsedUrlQuery */
+export type ParsedUrlQuery = Record<string, string | string[] | undefined>
+
+/** Input for stringify - compatible with Node's querystring.ParsedUrlQueryInput */
+export type ParsedUrlQueryInput = Record<string, string | number | boolean | string[] | undefined>
 
 export const IPV4_RE = /^[\d.]+$/
 export const IPV6_RE = /^[\da-fA-F:]+$/
@@ -59,25 +64,46 @@ export function toUInt32(n: number): Uint8Array {
 }
 
 /**
- * `querystring.parse` using `unescape` instead of decodeURIComponent, since bittorrent
+ * Parse query string using `unescape` instead of decodeURIComponent, since bittorrent
  * clients send non-UTF8 querystrings
  */
-export const querystringParse = (q: string): querystring.ParsedUrlQuery =>
-  querystring.parse(q, '&', '=', { decodeURIComponent: unescape })
+export function querystringParse(q: string): ParsedUrlQuery {
+  const result: ParsedUrlQuery = {}
+  if (!q) return result
+  for (const part of q.split('&')) {
+    const eq = part.indexOf('=')
+    const key = eq === -1 ? unescape(part) : unescape(part.slice(0, eq))
+    const value = eq === -1 ? '' : unescape(part.slice(eq + 1))
+    if (key in result) {
+      const existing = result[key]
+      result[key] = Array.isArray(existing) ? [...existing, value] : [existing as string, value]
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
 
 /**
- * `querystring.stringify` using `escape` instead of encodeURIComponent, since bittorrent
+ * Stringify query object using `escape` instead of encodeURIComponent, since bittorrent
  * clients send non-UTF8 querystrings
  */
-export const querystringStringify = (obj: querystring.ParsedUrlQueryInput): string => {
-  let ret = querystring.stringify(obj, '&', '=', {
-    encodeURIComponent: escape,
-  })
-  ret = ret.replace(
-    /[@*/+]/g,
-    (
-      char // `escape` doesn't encode the characters @*/+ so we do it manually
-    ) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
-  )
-  return ret
+export function querystringStringify(obj: ParsedUrlQueryInput): string {
+  const parts: string[] = []
+  for (const key of Object.keys(obj)) {
+    const value = obj[key]
+    if (value === undefined) continue
+    const encodedKey = (escape as (s: string) => string)(key).replace(
+      /[@*/+]/g,
+      (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        parts.push(`${encodedKey}=${(escape as (s: string) => string)(String(v)).replace(/[@*/+]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`)
+      }
+    } else {
+      parts.push(`${encodedKey}=${(escape as (s: string) => string)(String(value)).replace(/[@*/+]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`)
+    }
+  }
+  return parts.join('&')
 }
