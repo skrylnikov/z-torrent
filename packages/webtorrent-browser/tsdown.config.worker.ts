@@ -6,7 +6,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   entry: {
-    'z-torrent.min': 'src/index.ts',
     'sw.min': 'src/lib/worker.ts',
   },
   platform: 'browser',

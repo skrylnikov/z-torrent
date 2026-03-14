@@ -1,11 +1,11 @@
 /*! bittorrent-protocol. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import bencode from 'bencode'
 import BitField from 'bitfield'
-import crypto from 'crypto'
 import Debug from 'debug'
 import RC4 from 'rc4'
 import { Duplex } from 'streamx'
 import { hash, concat, equal, hex2arr, arr2hex, text2arr, arr2text, randomBytes } from 'uint8-util'
+import { createDiffieHellman } from './dh-browser.js'
 import throughput from 'throughput'
 import arrayRemove from 'unordered-array-remove'
 
@@ -173,7 +173,7 @@ class Wire extends Duplex {
   _bufferSize: number
 
   _peEnabled: boolean
-  _dh: crypto.DiffieHellman | null
+  _dh: ReturnType<typeof createDiffieHellman> | null
   _myPubKey: string | null
   _peerPubKey: string | null
   _sharedSecret: string | null
@@ -258,7 +258,7 @@ class Wire extends Duplex {
 
     this._peEnabled = peEnabled
     if (peEnabled) {
-      this._dh = crypto.createDiffieHellman(DH_PRIME, 'hex', DH_GENERATOR) // crypto object used to generate keys/secret
+      this._dh = createDiffieHellman(DH_PRIME, 'hex', DH_GENERATOR)
       this._myPubKey = this._dh.generateKeys('hex') // my DH public key
     } else {
       this._dh = null
