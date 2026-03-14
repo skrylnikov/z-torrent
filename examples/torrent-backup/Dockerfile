@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . .
 
 RUN bun install --frozen-lockfile
+RUN bun run build --filter=z-torrent
 
 WORKDIR /app/examples/torrent-backup
 
