@@ -13,6 +13,12 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
   vite: {
+    build: {
+      commonjsOptions: {
+        transformMixedEsModules: true,
+        include: [/node_modules/, /webtorrent-browser/],
+      },
+    },
     plugins: [
       nodePolyfills({
         include: ['stream', 'util', 'buffer'],
@@ -37,8 +43,7 @@ export default defineConfig({
       },
     },
     optimizeDeps: {
-      include: ['webrtc-polyfill', '@thaunknown/simple-peer'],
-      exclude: ['z-torrent-browser'],
+      include: ['z-torrent-browser', 'webrtc-polyfill', '@thaunknown/simple-peer'],
     },
   },
 })
