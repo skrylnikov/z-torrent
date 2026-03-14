@@ -69,7 +69,7 @@
     "url": "git://github.com/webtorrent/create-torrent.git"
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "test": "bun test",
     "test:browser": "bun test test/browser/",
     "size": "size-limit"

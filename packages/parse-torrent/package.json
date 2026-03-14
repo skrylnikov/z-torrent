@@ -57,7 +57,7 @@
     "url": "git://github.com/webtorrent/parse-torrent.git"
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "test": "bun test test/ test/node/",
     "size": "size-limit"
   },

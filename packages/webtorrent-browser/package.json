@@ -1,0 +1,36 @@
+{
+  "name": "z-torrent-browser",
+  "description": "Z-Torrent browser build — WebRTC, Service Worker, Web API bindings",
+  "version": "2.8.5",
+  "type": "module",
+  "private": true,
+  "main": "dist/z-torrent.min.js",
+  "exports": {
+    ".": "./dist/z-torrent.min.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown -c tsdown.config.ts"
+  },
+  "dependencies": {
+    "z-torrent-core": "workspace:*",
+    "@thaunknown/simple-peer": "^10.0.11",
+    "bittorrent-tracker": "workspace:*",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "memory-chunk-store": "^1.3.5"
+  },
+  "devDependencies": {
+    "tsdown": "^0.21.2"
+  },
+  "peerDependencies": {
+    "webrtc-polyfill": "^1.1.5"
+  },
+  "peerDependenciesMeta": {
+    "webrtc-polyfill": {
+      "optional": true
+    }
+  }
+}

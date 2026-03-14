@@ -94,7 +94,6 @@
     "@types/ws": "^8.5.13",
     "@webtorrent/semantic-release-config": "1.0.10",
     "magnet-uri": "workspace:*",
-    "rolldown": "^1.0.0-beta.1",
     "semantic-release": "21.1.2",
     "typescript": "^5.7.2",
     "undici": "^6.16.1",
@@ -113,7 +112,7 @@
     "url": "git://github.com/webtorrent/bittorrent-tracker.git"
   },
   "scripts": {
-    "build": "tsc && rolldown -c rolldown.config.ts",
+    "build": "tsc && tsdown -c tsdown.config.ts",
     "preversion": "npm run update-authors",
     "prepublishOnly": "npm run build",
     "test": "bun test",

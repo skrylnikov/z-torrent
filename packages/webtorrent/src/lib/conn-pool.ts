@@ -1,8 +1,8 @@
 import net from 'net'
 import debugFactory from 'debug'
 import queueMicrotask from 'queue-microtask'
+import { Peer } from 'z-torrent-core'
 
-import Peer from './peer.js'
 import utp from './utp.cjs'
 
 const debug = debugFactory('webtorrent:conn-pool')
@@ -174,7 +174,7 @@ export default class ConnPool {
     }
   }
 
-  static UTP_SUPPORT = false
+  static UTP_SUPPORT = typeof utp?.createServer === 'function'
 }
 
 function noop(): void {}

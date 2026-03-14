@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Z-Torrent Sintel Demo - Stream torrents in the browser" />
+    <title>Z-Torrent — Sintel Demo</title>
+  </head>
+  <body>
+    <main>
+      <section id="hero" class="hero">
+        <div class="hero-content">
+          <h1>Z-Torrent</h1>
+          <p class="tagline">Streaming torrent client for the web</p>
+        </div>
+
+        <div id="videoWrap" class="video-wrap">
+          <div class="videoOverlay"></div>
+          <div class="video"></div>
+        </div>
+
+        <div id="progressBar" class="progress-bar"></div>
+
+        <div class="stats">
+          <div class="stats-row">
+            <span class="show-leech">Downloading</span>
+            <span class="show-seed">Seeding</span>
+            <a href="/sintel.torrent" class="torrent-link">sintel.torrent</a>
+            <span class="show-leech">from</span>
+            <span class="show-seed">to</span>
+            <span id="numPeers" class="stat-value">0 peers</span>
+          </div>
+          <div class="stats-row">
+            <span id="downloaded" class="stat-value">0 B</span>
+            of <span id="total" class="stat-value">0 B</span>
+            — <span id="remaining">Connecting...</span>
+          </div>
+        </div>
+
+        <div class="torrent-graph"></div>
+      </section>
+    </main>
+
+    <script>
+      import { initTorrentDemo } from '../scripts/torrent-demo';
+      document.addEventListener('DOMContentLoaded', () => initTorrentDemo());
+    </script>
+  </body>
+</html>

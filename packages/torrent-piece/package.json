@@ -39,7 +39,7 @@
     "url": "git://github.com/webtorrent/torrent-piece.git"
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "test": "bun test",
     "size": "size-limit"
   },

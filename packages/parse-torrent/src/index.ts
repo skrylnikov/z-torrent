@@ -1,10 +1,8 @@
 /*! parse-torrent. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import bencode from 'bencode'
 import sha1 from 'sync-sha1/rawSha1.js'
-import fs from 'fs'
 import fetch from 'cross-fetch-ponyfill'
 import magnet, { encode } from 'magnet-uri'
-import path from 'path'
 import { hash, arr2hex, text2arr, arr2text } from 'uint8-util'
 import queueMicrotask from 'queue-microtask'
 import type { Instance } from './types.js'
@@ -88,11 +86,19 @@ async function parseTorrentRemote(
     } catch (err) {
       return cb!(new Error(`Error downloading torrent: ${(err as Error).message}`))
     }
-  } else if (typeof fs.readFile === 'function' && typeof torrentId === 'string' && torrentId.length > 0) {
-    fs.readFile(torrentId, (err, torrentBuf) => {
-      if (err) return cb!(new Error('Invalid torrent identifier'))
-      parseOrThrow(torrentBuf)
-    })
+  } else if (typeof torrentId === 'string' && torrentId.length > 0) {
+    import('fs')
+      .then((fs) => {
+        if (typeof fs.readFile === 'function') {
+          fs.readFile(torrentId, (err: Error | null, torrentBuf: Buffer) => {
+            if (err) return cb!(new Error('Invalid torrent identifier'))
+            parseOrThrow(torrentBuf)
+          })
+        } else {
+          cb!(new Error('Invalid torrent identifier'))
+        }
+      })
+      .catch(() => cb!(new Error('Invalid torrent identifier')))
   } else {
     queueMicrotask(() => {
       cb!(new Error('Invalid torrent identifier'))
@@ -183,7 +189,7 @@ function decodeTorrentFile(torrent: Uint8Array | Record<string, unknown>): Insta
       .map((p) => (ArrayBuffer.isView(p) ? arr2text(p as Uint8Array) : (p as string)))
     sum += file.length as number
     return {
-      path: path.join.apply(null, [path.sep].concat(parts)).slice(1),
+      path: parts.join('/'),
       name: parts[parts.length - 1],
       length: file.length as number,
       offset: sum - (file.length as number),

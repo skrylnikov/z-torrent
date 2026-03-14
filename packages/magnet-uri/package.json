@@ -62,7 +62,7 @@
     "url": "git://github.com/webtorrent/magnet-uri.git"
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "test": "bun test",
     "size": "size-limit"
   },

@@ -1,0 +1,6 @@
+services:
+  sintel-landing:
+    image: ghcr.io/skrylnikov/z-torrent-sintel-landing:latest
+    ports:
+      - "3000:80"
+    restart: unless-stopped

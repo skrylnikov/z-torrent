@@ -19,7 +19,7 @@
     "url": "https://github.com/webtorrent/webtorrent/issues"
   },
   "dependencies": {
-    "eventemitter3": "^5.0.4",
+    "z-torrent-core": "workspace:*",
     "@silentbot1/nat-api": "^0.4.9",
     "@thaunknown/simple-peer": "^10.0.11",
     "@webtorrent/http-node": "^1.3.0",
@@ -34,6 +34,7 @@
     "cross-fetch-ponyfill": "^1.0.3",
     "debug": "^4.4.3",
     "escape-html": "^1.0.3",
+    "eventemitter3": "^5.0.4",
     "fs-chunk-store": "^5.0.0",
     "fsa-chunk-store": "^1.3.0",
     "immediate-chunk-store": "^2.2.0",
@@ -48,6 +49,7 @@
     "queue-microtask": "^1.2.3",
     "random-iterate": "^1.0.1",
     "range-parser": "^1.2.1",
+    "readable-stream": "^4.7.0",
     "run-parallel": "^1.2.0",
     "run-parallel-limit": "^1.1.0",
     "speed-limiter": "^1.0.2",
@@ -58,12 +60,14 @@
     "uint8-util": "^2.2.5",
     "unordered-array-remove": "^1.0.2",
     "ut_metadata": "workspace:*",
-    "ut_pex": "workspace:*"
+    "ut_pex": "workspace:*",
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@babel/core": "7.28.5",
     "@babel/plugin-syntax-import-assertions": "7.27.1",
     "@babel/preset-env": "7.28.5",
+    "@rolldown/plugin-node-polyfills": "^1.0.3",
     "@webtorrent/semantic-release-config": "1.0.10",
     "airtap": "4.0.4",
     "airtap-manual": "1.0.0",
@@ -71,6 +75,8 @@
     "airtap-system": "^0.1.0",
     "babelify": "10.0.0",
     "bittorrent-tracker": "workspace:*",
+    "crypto-browserify": "^3.12.1",
+    "stream-browserify": "^3.0.0",
     "disc": "1.3.3",
     "finalhandler": "2.1.1",
     "network-address": "1.1.2",
@@ -138,15 +144,12 @@
     "url": "git://github.com/webtorrent/webtorrent.git"
   },
   "scripts": {
-    "build": "rolldown -c && rolldown -c rolldown.config.worker.ts",
-    "build-browser": "rolldown -c rolldown.config.browser.ts && rolldown -c rolldown.config.worker.ts",
-    "build-js": "rolldown -c rolldown.config.browser.ts",
-    "build-js-worker": "rolldown -c rolldown.config.worker.ts",
+    "build": "tsdown",
     "prepublishOnly": "npm run build && npm run update-authors",
     "preversion": "npm run build && npm run update-authors",
     "size": "size-limit",
-    "size-disc": "npm run build-js && cat ./dist/z-torrent.min.js | discify --open",
-    "size-js": "npm run build-js && cat ./dist/z-torrent.min.js | gzip | wc -c",
+    "size-disc": "echo 'Use z-torrent-browser for browser build'",
+    "size-js": "echo 'Use z-torrent-browser for browser build'",
     "test": "npm run test-node",
     "test-browser": "airtap --concurrency 1 --all -- test/*.test.ts test/browser/*.test.ts | tap-spec",
     "test-browser-local": "airtap --preset local -- test/*.test.ts test/browser/*.test.ts | tap-spec",

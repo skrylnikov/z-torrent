@@ -1,0 +1,13 @@
+services:
+  torrent-backup:
+    image: ghcr.io/skrylnikov/z-torrent-torrent-backup:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - torrent-downloads:/app/examples/torrent-backup/downloads
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  torrent-downloads:

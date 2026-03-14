@@ -50,7 +50,7 @@
     "url": "git://github.com/webtorrent/string2compact.git"
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "test": "bun test",
     "size": "size-limit"
   },

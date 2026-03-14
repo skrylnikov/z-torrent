@@ -117,8 +117,8 @@ class Client extends EventEmitter {
       .map((url: string) => {
         try {
           const parsed = common.parseUrl(url)
-          const portNum = parseInt(parsed.port, 10)
-          if (isNaN(portNum) || portNum < 0 || portNum > 65535) {
+          const portNum = parsed.port ? parseInt(parsed.port, 10) : NaN
+          if (parsed.port !== '' && (isNaN(portNum) || portNum < 0 || portNum > 65535)) {
             nextTickWarn(new Error(`Invalid tracker port: ${url}`))
             return null
           }

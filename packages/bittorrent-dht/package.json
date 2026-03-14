@@ -63,7 +63,7 @@
     }
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "update-authors": "./tools/update-authors.sh",
     "test": "bun test test/*.test.ts",
     "test-live": "bun test test/live/",

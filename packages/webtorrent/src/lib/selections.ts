@@ -15,6 +15,75 @@ export interface NotificationItem extends MinimalSelectionItem {
   notify: () => void
 }
 
+export function isLowerIntersecting(
+  newItem: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return newItem.from <= existing.to + 1 && newItem.from > existing.from && newItem.to > existing.to
+}
+
+export function isUpperIntersecting(
+  newItem: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return newItem.to >= existing.from - 1 && newItem.to < existing.to && newItem.from < existing.from
+}
+
+export function isInsideExisting(
+  newItem: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  const existingIntervalSize = existing.to - existing.from
+  const newItemIntervalSize = newItem.to - newItem.from
+  return (
+    newItem.from >= existing.from &&
+    newItem.to <= existing.to &&
+    newItemIntervalSize < existingIntervalSize
+  )
+}
+
+export function isCoveringExisting(
+  newItem: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return newItem.from <= existing.from && newItem.to >= existing.to
+}
+
+export const isIntersecting =
+  (newItem: MinimalSelectionItem, existing: MinimalSelectionItem) => (): boolean =>
+    isLowerIntersecting(newItem, existing) ||
+    isUpperIntersecting(newItem, existing) ||
+    isInsideExisting(newItem, existing) ||
+    isCoveringExisting(newItem, existing)
+
+function _isLowerIntersecting(
+  item: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return item.from <= existing.from && item.to >= existing.from && item.to < existing.to
+}
+
+function _isUpperIntersecting(
+  item: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return item.from > existing.from && item.from <= existing.to && item.to >= existing.to
+}
+
+function _isInsideExisting(
+  item: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return item.from > existing.from && item.to < existing.to
+}
+
+function _isCoveringExisting(
+  item: MinimalSelectionItem,
+  existing: MinimalSelectionItem
+): boolean {
+  return item.from <= existing.from && item.to >= existing.to
+}
+
 export class Selections {
   private _items: SelectionItem[] = []
 
@@ -29,11 +98,11 @@ export class Selections {
           break
         }
       } else {
-        if (isLowerIntersecting(item, existing)) {
+        if (_isLowerIntersecting(item, existing)) {
           existing.to = Math.max(item.from - 1, 0)
-        } else if (isUpperIntersecting(item, existing)) {
+        } else if (_isUpperIntersecting(item, existing)) {
           existing.from = item.to + 1
-        } else if (isInsideExisting(item, existing)) {
+        } else if (_isInsideExisting(item, existing)) {
           const replacingItems: SelectionItem[] = []
           const existingStart = { ...existing, to: Math.max(item.from - 1, 0) }
           if (existingStart.to - existingStart.from >= 0 && item.from !== 0)
@@ -42,7 +111,7 @@ export class Selections {
           if (existingEnd.to - existingEnd.from >= 0) replacingItems.push(existingEnd)
           this._items.splice(i, 1, ...replacingItems)
           i = i - 1 + replacingItems.length
-        } else if (isCoveringExisting(item, existing)) {
+        } else if (_isCoveringExisting(item, existing)) {
           this._items.splice(i, 1)
           i--
         }
@@ -132,44 +201,3 @@ export class Selections {
     }
   }
 }
-
-export function isLowerIntersecting(
-  newItem: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
-  return newItem.from <= existing.to + 1 && newItem.from > existing.from && newItem.to > existing.to
-}
-
-export function isUpperIntersecting(
-  newItem: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
-  return newItem.to >= existing.from - 1 && newItem.to < existing.to && newItem.from < existing.from
-}
-
-export function isInsideExisting(
-  newItem: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
-  const existingIntervalSize = existing.to - existing.from
-  const newItemIntervalSize = newItem.to - newItem.from
-  return (
-    newItem.from >= existing.from &&
-    newItem.to <= existing.to &&
-    newItemIntervalSize < existingIntervalSize
-  )
-}
-
-export function isCoveringExisting(
-  newItem: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
-  return newItem.from <= existing.from && newItem.to >= existing.to
-}
-
-export const isIntersecting =
-  (newItem: MinimalSelectionItem, existing: MinimalSelectionItem) => (): boolean =>
-    isLowerIntersecting(newItem, existing) ||
-    isUpperIntersecting(newItem, existing) ||
-    isInsideExisting(newItem, existing) ||
-    isCoveringExisting(newItem, existing)

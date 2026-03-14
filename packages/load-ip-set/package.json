@@ -54,7 +54,7 @@
     "url": "git://github.com/webtorrent/load-ip-set.git"
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "tsdown",
     "test": "bun test",
     "size": "size-limit"
   },

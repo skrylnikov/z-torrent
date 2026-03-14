@@ -255,7 +255,8 @@ class utMetadata extends EventEmitter {
 
 ;(utMetadata as any).prototype.name = 'ut_metadata'
 
-export default (metadata?: Uint8Array) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TS4094 workaround for dts emit with private class members
+export default (metadata?: Uint8Array): any => {
   class UtMetadataWithMetadata extends utMetadata {
     constructor(wire: Wire) {
       super(wire, metadata)

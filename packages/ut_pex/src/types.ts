@@ -19,7 +19,7 @@ interface PeerInfo {
   flags?: number
 }
 
-interface Wire {
+export interface Wire {
   extended(name: string, data: unknown): void
   destroy(): void
 }

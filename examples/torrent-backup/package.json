@@ -1,0 +1,19 @@
+{
+  "name": "torrent-backup",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "prettier-bytes": "^1.0.0",
+    "utp-native": "^2.5.3",
+    "z-torrent": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

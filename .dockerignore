@@ -1,6 +1,9 @@
 # Dependencies (reinstalled in container)
 node_modules
 
+# Download directories (mounted as volumes at runtime)
+**/downloads
+
 # Git
 .git
 .github

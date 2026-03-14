@@ -1,0 +1,172 @@
+:root {
+  --bg-primary: #1a1f2e;
+  --bg-secondary: #252b3b;
+  --accent: #30a247;
+  --accent-hover: #35b44f;
+  --text: #e8eaed;
+  --text-muted: rgba(255, 255, 255, 0.7);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hero.loading .hero-content {
+  opacity: 0.5;
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.tagline {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.video-wrap {
+  position: relative;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+}
+
+.video-wrap .video {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-wrap .video video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.video-wrap.canplay .videoOverlay {
+  pointer-events: none;
+}
+
+.video-wrap.canplay.muted .videoOverlay {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar {
+  height: 5px;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.4s ease-in-out;
+}
+
+.stats {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.stats-row {
+  margin-bottom: 0.5rem;
+}
+
+.torrent-link {
+  color: var(--accent);
+  text-decoration: none;
+  margin: 0 0.25rem;
+}
+
+.torrent-link:hover {
+  text-decoration: underline;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.show-seed {
+  display: none;
+}
+
+.show-leech {
+  display: inline;
+}
+
+body.is-seed .show-seed {
+  display: inline;
+}
+
+body.is-seed .show-leech {
+  display: none;
+}
+
+body.is-seed {
+  --bg-primary: #154820;
+}
+
+.torrent-graph {
+  min-height: 300px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+}
+
+.btn.large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}

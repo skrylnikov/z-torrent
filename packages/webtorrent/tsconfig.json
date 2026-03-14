@@ -2,10 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "lib": ["ES2022", "DOM"],
     "types": ["node"]
   },
-  "include": ["index.ts", "lib/**/*.ts", "polyfills/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test", "scripts"]
 }

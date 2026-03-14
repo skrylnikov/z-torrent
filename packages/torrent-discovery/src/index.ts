@@ -3,7 +3,7 @@ import Debug from 'debug'
 import DHT from 'bittorrent-dht'
 import { EventEmitter } from 'eventemitter3'
 import parallel from 'run-parallel'
-import { Client as Tracker } from 'bittorrent-tracker'
+import Tracker from 'bittorrent-tracker/client'
 import LSD from 'bittorrent-lsd'
 
 const debug = Debug('torrent-discovery')

@@ -1,0 +1,25 @@
+{
+  "name": "sintel-landing",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0",
+    "build": "node scripts/copy-sw.mjs && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@thaunknown/simple-peer": "^10.0.11",
+    "astro": "^5.0.0",
+    "crypto-browserify": "^3.12.0",
+    "d3": "^7.9.0",
+    "prettier-bytes": "^1.0.0",
+    "throttleit": "^2.0.0",
+    "webrtc-polyfill": "^1.1.5",
+    "z-torrent-browser": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite-plugin-node-polyfills": "^0.25.0"
+  }
+}
