@@ -1,0 +1,82 @@
+{
+  "name": "@z-torrent/ut-metadata",
+  "description": "Extension for Peers to Send Metadata Files (BEP 9)",
+  "version": "0.0.1",
+  "author": {
+    "name": "WebTorrent LLC",
+    "email": "feross@webtorrent.io",
+    "url": "https://webtorrent.io"
+  },
+  "bugs": {
+    "url": "https://github.com/webtorrent/ut_metadata/issues"
+  },
+  "type": "module",
+  "dependencies": {
+    "bencode": "^4.0.0",
+    "eventemitter3": "^5.0.4",
+    "bitfield": "^4.0.0",
+    "debug": "^4.2.0",
+    "uint8-util": "^2.1.3"
+  },
+  "devDependencies": {
+    "@z-torrent/protocol": "workspace:*",
+    "@z-torrent/fixtures": "workspace:*"
+  },
+  "keywords": [
+    "Extension for Peers to Send Metadata Files",
+    "bep",
+    "bep 9",
+    "bep_0009",
+    "bittorrent",
+    "metadata",
+    "p2p",
+    "torrent",
+    "ut_metadata"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/ut-metadata"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "bun test",
+    "size": "size-limit"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "25 KB"
+    }
+  ],
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/feross"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/feross"
+    },
+    {
+      "type": "consulting",
+      "url": "https://feross.org/support"
+    }
+  ]
+}

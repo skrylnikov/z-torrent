@@ -17,10 +17,7 @@ export default defineConfig({
     },
     resolve: {
       alias: {
-        'z-torrent-browser': resolve(
-          __dirname,
-          '../../packages/webtorrent-browser/dist/z-torrent.min.js'
-        ),
+        'z-torrent-browser': resolve(__dirname, '../../packages/browser/dist/z-torrent.min.js'),
       },
     },
     optimizeDeps: {

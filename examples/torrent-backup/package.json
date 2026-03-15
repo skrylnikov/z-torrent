@@ -11,7 +11,7 @@
     "dotenv": "^16.4.5",
     "prettier-bytes": "^1.0.0",
     "utp-native": "^2.5.3",
-    "z-torrent": "workspace:*"
+    "@z-torrent/node": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

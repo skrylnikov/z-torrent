@@ -1,0 +1,56 @@
+{
+  "name": "@z-torrent/fixtures",
+  "description": "Sample torrent files for the WebTorrent test suite",
+  "version": "0.0.1",
+  "private": true,
+  "author": {
+    "name": "WebTorrent, LLC",
+    "email": "feross@webtorrent.io",
+    "url": "https://webtorrent.io"
+  },
+  "bugs": {
+    "url": "https://github.com/webtorrent/webtorrent-fixtures/issues"
+  },
+  "type": "module",
+  "dependencies": {
+    "@z-torrent/parse": "workspace:*"
+  },
+  "keywords": [
+    "sample torrents",
+    "test",
+    "test fixtures",
+    "torrent",
+    "torrent files",
+    "webtorrent",
+    "webtorrent test"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "fixtures"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/fixtures"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "size": "size-limit"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "20 KB"
+    }
+  ]
+}

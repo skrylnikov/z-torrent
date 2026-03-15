@@ -16,7 +16,7 @@
     "prettier-bytes": "^1.0.0",
     "throttleit": "^2.0.0",
     "webrtc-polyfill": "^1.1.5",
-    "z-torrent-browser": "workspace:*"
+    "@z-torrent/browser": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

@@ -5,7 +5,7 @@ import { spawnSync } from 'child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '../../..')
-const webtorrentBrowserDir = join(root, 'packages/webtorrent-browser')
+const webtorrentBrowserDir = join(root, 'packages/browser')
 const publicDir = join(__dirname, '../public')
 
 // Ensure browser build exists (z-torrent-browser)

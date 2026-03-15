@@ -1,0 +1,68 @@
+{
+  "name": "@z-torrent/utils",
+  "description": "Utility functions for Z-Torrent",
+  "version": "0.0.1",
+  "type": "module",
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./addr-ip-port": {
+      "import": "./dist/addr-ip-port.js",
+      "types": "./dist/addr-ip-port.d.ts"
+    },
+    "./string-compact": {
+      "import": "./dist/string-compact.js",
+      "types": "./dist/string-compact.d.ts"
+    },
+    "./piece": {
+      "import": "./dist/piece.js",
+      "types": "./dist/piece.d.ts"
+    },
+    "./load-ip-set": {
+      "import": "./dist/load-ip-set.js",
+      "types": "./dist/load-ip-set.d.ts"
+    },
+    "./ip-set": {
+      "import": "./dist/ip-set.js",
+      "types": "./dist/ip-set.d.ts"
+    },
+    "./netmask": {
+      "import": "./dist/netmask.js",
+      "types": "./dist/netmask.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "torrent",
+    "bittorrent",
+    "webtorrent",
+    "z-torrent",
+    "utils"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/utils"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ipaddr.js": "2.3.0",
+    "uint8-util": "^2.2.6"
+  }
+}

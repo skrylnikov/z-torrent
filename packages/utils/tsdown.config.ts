@@ -1,0 +1,19 @@
+import { defineConfig } from 'tsdown'
+
+export default defineConfig({
+  entry: [
+    'src/index.ts',
+    'src/addr-ip-port.ts',
+    'src/string-compact.ts',
+    'src/piece.ts',
+    'src/load-ip-set.ts',
+    'src/ip-set.ts',
+    'src/netmask.ts',
+  ],
+  platform: 'node',
+  format: 'esm',
+  sourcemap: true,
+  dts: true,
+  hash: false,
+  fixedExtension: false,
+})

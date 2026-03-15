@@ -1,0 +1,98 @@
+{
+  "name": "@z-torrent/create",
+  "description": "Create .torrent files",
+  "version": "0.0.1",
+  "author": {
+    "name": "WebTorrent LLC",
+    "email": "feross@webtorrent.io",
+    "url": "https://webtorrent.io"
+  },
+  "type": "module",
+  "bin": {
+    "create-torrent": "./dist/bin/cmd.js"
+  },
+  "bugs": {
+    "url": "https://github.com/webtorrent/create-torrent/issues"
+  },
+  "browser": {
+    "./dist/get-files.js": false,
+    "is-file": false
+  },
+  "dependencies": {
+    "@z-torrent/utils": "workspace:*",
+    "bencode": "^4.0.0",
+    "block-iterator": "^1.1.1",
+    "fast-readable-async-iterator": "^2.0.0",
+    "is-file": "^1.0.0",
+    "join-async-iterator": "^1.1.1",
+    "junk": "^4.0.1",
+    "minimist": "^1.2.8",
+    "piece-length": "^2.0.1",
+    "run-parallel": "^1.2.0",
+    "uint8-util": "^2.2.5"
+  },
+  "devDependencies": {
+    "@z-torrent/parse": "workspace:*",
+    "@z-torrent/fixtures": "workspace:*"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    ".torrent",
+    "bittorrent",
+    "create",
+    "create torrent",
+    "make",
+    "new",
+    "peer-to-peer",
+    "torrent",
+    "torrent file",
+    "torrent files",
+    "webtorrent"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/create"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "bun test",
+    "test:browser": "bun test test/browser/",
+    "size": "size-limit"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "50 KB"
+    }
+  ],
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/feross"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/feross"
+    },
+    {
+      "type": "consulting",
+      "url": "https://feross.org/support"
+    }
+  ]
+}

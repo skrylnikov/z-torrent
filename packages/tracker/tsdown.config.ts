@@ -1,0 +1,43 @@
+import { defineConfig } from 'tsdown'
+
+export default defineConfig({
+  entry: {
+    index: './src/index.ts',
+    client: './src/client.ts',
+    server: './src/server.ts',
+    'lib/client/websocket-tracker': './src/client/websocket-tracker.ts',
+    'bin/cmd': './src/bin/cmd.ts',
+  },
+  platform: 'node',
+  format: 'esm',
+  sourcemap: true,
+  dts: true,
+  external: [
+    '@thaunknown/simple-peer',
+    '@thaunknown/simple-peer/lite.js',
+    '@thaunknown/simple-websocket',
+    'bencode',
+    'bittorrent-peerid',
+    'cross-fetch-ponyfill',
+    'debug',
+    'dgram',
+    'http',
+    'ip',
+    'lru',
+    'minimist',
+    'once',
+
+    'random-iterate',
+    'run-parallel',
+    'run-series',
+    'socks',
+    'uint8-util',
+    'unordered-array-remove',
+    'ws',
+    'bufferutil',
+    'utf-8-validate',
+    'crypto',
+  ],
+  hash: false,
+  fixedExtension: false,
+})

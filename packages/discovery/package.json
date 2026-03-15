@@ -1,0 +1,94 @@
+{
+  "name": "@z-torrent/discovery",
+  "description": "Discover BitTorrent and WebTorrent peers",
+  "version": "0.0.1",
+  "author": {
+    "name": "WebTorrent LLC",
+    "email": "feross@webtorrent.io",
+    "url": "https://webtorrent.io"
+  },
+  "browser": {
+    "@z-torrent/dht": false,
+    "@z-torrent/lsd": false
+  },
+  "bugs": {
+    "url": "https://github.com/webtorrent/torrent-discovery/issues"
+  },
+  "type": "module",
+  "dependencies": {
+    "@z-torrent/dht": "workspace:*",
+    "eventemitter3": "^5.0.4",
+    "@z-torrent/tracker": "workspace:*",
+    "@z-torrent/lsd": "workspace:*",
+    "debug": "^4.4.3",
+    "run-parallel": "^1.2.0"
+  },
+  "optionalDependencies": {
+    "webrtc-polyfill": "^1.1.5"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/run-parallel": "^1.1.2",
+    "uint8-util": "^2.2.5"
+  },
+  "keywords": [
+    "webtorrent",
+    "torrent",
+    "bittorrent",
+    "peers",
+    "discovery",
+    "tracker",
+    "dht",
+    "lsd",
+    "trackers",
+    "find peers",
+    "peer-to-peer",
+    "peer discovery"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/discovery"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "bun test",
+    "size": "size-limit"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "120 KB"
+    }
+  ],
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/feross"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/feross"
+    },
+    {
+      "type": "consulting",
+      "url": "https://feross.org/support"
+    }
+  ]
+}
