@@ -23,8 +23,15 @@ const client = new WebTorrentCore({
 // Add a torrent
 const torrent = client.add('magnet:?xt=urn:btih:...')
 
-// Stream files
-torrent.files[0].createReadStream().pipe(destination)
+// Access the first file in the torrent
+const file = torrent.files[0]
+
+// Get a ReadableStream for the file's contents (Web Streams API)
+const stream = await file.stream()
+
+// Or get the full contents as a Blob or ArrayBuffer
+const blob = await file.blob()
+const arrayBuffer = await file.arrayBuffer()
 ```
 
 ## Features
