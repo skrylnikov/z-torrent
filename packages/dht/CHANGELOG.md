@@ -1,5 +1,24 @@
 ## [11.0.11](https://github.com/webtorrent/bittorrent-dht/compare/v11.0.10...v11.0.11) (2025-09-14)
 
+## 0.0.2
+
+### Patch Changes
+
+- [#1](https://github.com/skrylnikov/z-torrent/pull/1) [`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Added
+  - LICENSE (MIT) and README.md files to @z-torrent/core package
+  - LICENSE (MIT) file to @z-torrent/browser package
+
+  Changed
+  - Added files field to all package.json files to explicitly define npm publish contents:
+    - All updated packages now include: dist, README.md, and LICENSE
+    - Packages that have a CHANGELOG.md file also include it in the published contents
+    - @z-torrent/node and @z-torrent/dht: also include AUTHORS.md
+    - @z-torrent/tracker: also includes AUTHORS.md and CONTRIBUTING.md
+    - @z-torrent/fixtures: also includes fixtures directory
+
+  Removed
+  - Deleted 12 .npmignore files (redundant when using files field in package.json)
+
 ### Bug Fixes
 
 - **deps:** update dependency debug to ^4.4.3 ([#315](https://github.com/webtorrent/bittorrent-dht/issues/315)) ([26e16da](https://github.com/webtorrent/bittorrent-dht/commit/26e16dafd8c444a12261bccf86e6d9fdd9022194))

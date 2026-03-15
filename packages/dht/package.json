@@ -2,7 +2,7 @@
   "name": "@z-torrent/dht",
   "description": "Simple, robust, BitTorrent DHT implementation",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": {
     "name": "WebTorrent LLC",
     "email": "feross@webtorrent.io",

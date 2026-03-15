@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/browser",
   "description": "Z-Torrent browser build — WebRTC, Service Worker, Web API bindings",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "main": "dist/z-torrent.min.js",
   "exports": {
