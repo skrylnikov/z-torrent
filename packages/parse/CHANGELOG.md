@@ -1,5 +1,27 @@
 ## [11.0.19](https://github.com/webtorrent/parse-torrent/compare/v11.0.18...v11.0.19) (2025-10-07)
 
+## 0.0.2
+
+### Patch Changes
+
+- [#1](https://github.com/skrylnikov/z-torrent/pull/1) [`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Added
+  - LICENSE (MIT) and README.md files to @z-torrent/core package
+  - LICENSE (MIT) file to @z-torrent/browser package
+
+  Changed
+  - Added files field to all package.json files to explicitly define npm publish contents:
+    - All updated packages now include: dist, README.md, and LICENSE
+    - Packages that have a CHANGELOG.md file also include it in the published contents
+    - @z-torrent/node and @z-torrent/dht: also include AUTHORS.md
+    - @z-torrent/tracker: also includes AUTHORS.md and CONTRIBUTING.md
+    - @z-torrent/fixtures: also includes fixtures directory
+
+  Removed
+  - Deleted 12 .npmignore files (redundant when using files field in package.json)
+
+- Updated dependencies [[`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8)]:
+  - @z-torrent/magnet@0.0.2
+
 ### Bug Fixes
 
 - Greatly improve efficiency with torrents with a large number of files ([#198](https://github.com/webtorrent/parse-torrent/issues/198)) ([964e080](https://github.com/webtorrent/parse-torrent/commit/964e0805e1ddb0561b626fab21fda5dd3f82fa3c))

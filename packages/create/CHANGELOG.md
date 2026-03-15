@@ -1,5 +1,27 @@
 # [6.1.0](https://github.com/webtorrent/create-torrent/compare/v6.0.18...v6.1.0) (2025-01-04)
 
+## 0.0.2
+
+### Patch Changes
+
+- [#1](https://github.com/skrylnikov/z-torrent/pull/1) [`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Added
+  - LICENSE (MIT) and README.md files to @z-torrent/core package
+  - LICENSE (MIT) file to @z-torrent/browser package
+
+  Changed
+  - Added files field to all package.json files to explicitly define npm publish contents:
+    - All updated packages now include: dist, README.md, and LICENSE
+    - Packages that have a CHANGELOG.md file also include it in the published contents
+    - @z-torrent/node and @z-torrent/dht: also include AUTHORS.md
+    - @z-torrent/tracker: also includes AUTHORS.md and CONTRIBUTING.md
+    - @z-torrent/fixtures: also includes fixtures directory
+
+  Removed
+  - Deleted 12 .npmignore files (redundant when using files field in package.json)
+
+- Updated dependencies [[`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8)]:
+  - @z-torrent/utils@0.0.2
+
 ### Features
 
 - add maxPieceLength option ([#267](https://github.com/webtorrent/create-torrent/issues/267)) ([1264106](https://github.com/webtorrent/create-torrent/commit/1264106b627fad90faedddb4daec27feb52c138d)), closes [#266](https://github.com/webtorrent/create-torrent/issues/266)

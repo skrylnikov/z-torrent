@@ -1,5 +1,24 @@
 ## [7.0.7](https://github.com/webtorrent/magnet-uri/compare/v7.0.6...v7.0.7) (2025-01-04)
 
+## 0.0.2
+
+### Patch Changes
+
+- [#1](https://github.com/skrylnikov/z-torrent/pull/1) [`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Added
+  - LICENSE (MIT) and README.md files to @z-torrent/core package
+  - LICENSE (MIT) file to @z-torrent/browser package
+
+  Changed
+  - Added files field to all package.json files to explicitly define npm publish contents:
+    - All updated packages now include: dist, README.md, and LICENSE
+    - Packages that have a CHANGELOG.md file also include it in the published contents
+    - @z-torrent/node and @z-torrent/dht: also include AUTHORS.md
+    - @z-torrent/tracker: also includes AUTHORS.md and CONTRIBUTING.md
+    - @z-torrent/fixtures: also includes fixtures directory
+
+  Removed
+  - Deleted 12 .npmignore files (redundant when using files field in package.json)
+
 ### Bug Fixes
 
 - **deps:** update dependency uint8-util to ^2.2.5 ([#78](https://github.com/webtorrent/magnet-uri/issues/78)) ([eac2d64](https://github.com/webtorrent/magnet-uri/commit/eac2d64f50e622574ca4bd91dcd059ed3e768e33))

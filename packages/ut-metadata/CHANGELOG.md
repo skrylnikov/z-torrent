@@ -1,5 +1,24 @@
 ## [4.0.3](https://github.com/webtorrent/ut_metadata/compare/v4.0.2...v4.0.3) (2023-08-10)
 
+## 0.0.2
+
+### Patch Changes
+
+- [#1](https://github.com/skrylnikov/z-torrent/pull/1) [`2955737`](https://github.com/skrylnikov/z-torrent/commit/2955737ff54a17984d6a1e96f2f69dceef3909d8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Added
+  - LICENSE (MIT) and README.md files to @z-torrent/core package
+  - LICENSE (MIT) file to @z-torrent/browser package
+
+  Changed
+  - Added files field to all package.json files to explicitly define npm publish contents:
+    - All updated packages now include: dist, README.md, and LICENSE
+    - Packages that have a CHANGELOG.md file also include it in the published contents
+    - @z-torrent/node and @z-torrent/dht: also include AUTHORS.md
+    - @z-torrent/tracker: also includes AUTHORS.md and CONTRIBUTING.md
+    - @z-torrent/fixtures: also includes fixtures directory
+
+  Removed
+  - Deleted 12 .npmignore files (redundant when using files field in package.json)
+
 ### Bug Fixes
 
 - **deps:** update dependency bencode to v4 ([#103](https://github.com/webtorrent/ut_metadata/issues/103)) ([a5ddef3](https://github.com/webtorrent/ut_metadata/commit/a5ddef33b3147bbb2d27ab9c9d51aba93828bfc3))
