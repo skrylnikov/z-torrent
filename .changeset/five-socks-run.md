@@ -19,11 +19,16 @@ Added
 
 - LICENSE (MIT) and README.md files to @z-torrent/core package
 - LICENSE (MIT) file to @z-torrent/browser package
-  Changed
+
+Changed
+
 - Added files field to all package.json files to explicitly define npm publish contents:
-  - All packages now include: dist, README.md, LICENSE, CHANGELOG.md
+  - All updated packages now include: dist, README.md, and LICENSE
+  - Packages that have a CHANGELOG.md file also include it in the published contents
   - @z-torrent/node and @z-torrent/dht: also include AUTHORS.md
   - @z-torrent/tracker: also includes AUTHORS.md and CONTRIBUTING.md
   - @z-torrent/fixtures: also includes fixtures directory
-    Removed
+
+Removed
+
 - Deleted 12 .npmignore files (redundant when using files field in package.json)
