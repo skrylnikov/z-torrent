@@ -19,11 +19,13 @@
     "format": "prettier --write \"packages/**/*.{js,ts,tsx,json,md}\"",
     "size": "turbo size",
     "deps:count": "bun scripts/count-deps.ts",
+    "changeset": "changeset",
     "version": "changeset version && bun install --lockfile-only",
     "release": "changeset publish",
     "release:check": "changeset status"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
     "@eslint/js": "^10.0.0",
     "@size-limit/file": "^12.0.1",

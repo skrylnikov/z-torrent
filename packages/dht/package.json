@@ -58,6 +58,13 @@
       }
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "AUTHORS.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/skrylnikov/z-torrent.git",
