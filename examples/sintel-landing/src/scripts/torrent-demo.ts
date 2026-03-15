@@ -1,13 +1,14 @@
 import 'webrtc-polyfill' // Required for WebRTC in some browsers
 import { createP2PGraph } from '../lib/p2p-graph'
+import { WSS_TRACKERS } from '../config/trackers'
 import prettierBytes from 'prettier-bytes'
 import throttle from 'throttleit'
 
-// WebTorrent demo torrent: Sintel.mp4 + wss trackers. Local sintel.torrent is a different
-// torrent (4K mkv, no announce) — no peers in browser. Magnet has correct metadata + trackers.
-// Актуальные WSS-трекеры (webtorrent.io, fastcast.nz — NS_ERROR_UNKNOWN_HOST, домены недоступны).
+// WebTorrent demo torrent: Sintel.mp4. WSS trackers from config (client.tracker.announce).
+// Local sintel.torrent is a different torrent (4K mkv, no announce) — no peers in browser.
+// ws/xs — metadata source (webtorrent.io).
 const SINTEL_MAGNET =
-  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=wss%3A%2F%2Ftracker.home.dskr.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel'
 
 function formatRemaining(ms: number): string {
   if (ms === Infinity || ms <= 0) return 'Calculating...'
@@ -71,32 +72,41 @@ async function runDemo(): Promise<void> {
   const { default: WebTorrent } = await import('z-torrent-browser')
   // webSeeds: false — скачивать только через P2P (wss трекеры + WebRTC), не с webtorrent.io
   const client = new WebTorrent({
-    webSeeds: false,
+    // webSeeds: false,
     tracker: {
+      announce: WSS_TRACKERS,
       rtcConfig: {
         iceServers: [
+          { urls: 'stun:turn.z-torrent.xyz:3478' },
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' },
-          { urls: 'stun:stun3.l.google.com:19302' },
-          { urls: 'stun:stun4.l.google.com:19302' },
           { urls: 'stun:stun.cloudflare.com:3478' },
-          { urls: 'stun:stun.stunprotocol.org:3478' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-          { urls: 'stun:stun.nextcloud.com:443' },
-          { urls: "stun:stun.arbuz.ru:3478" },
-          { urls: "stun:stun.chathelp.ru:3478" },
-          { urls: "stun:stun.comtube.ru:3478" },
-          { urls: "stun:stun.demos.ru:3478" },
-          { urls: "stun:stun.kanet.ru:3478" },
-          { urls: "stun:stun.mgn.ru:3478" },
-          { urls: "stun:stun.ooonet.ru:3478" },
           { urls: "stun:stun.skylink.ru:3478" },
           {
-            urls: ['turn:freeturn.net:3478', 'turn:freeturn.net:5349'],
-            username: 'free',
-            credential: 'free',
+            urls: ['turn:turn.z-torrent.xyz:3478', 'turns:turn.z-torrent.xyz:5349'],
+            username: 'z-torrent',
+            credential: '7hEo08aCalKZMllCsU7DUnQ71/gSS0tAQ6hrQnVtL9vCqYc5',
           },
+
+
+          // { urls: 'stun:stun1.l.google.com:19302' },
+          // { urls: 'stun:stun2.l.google.com:19302' },
+          // { urls: 'stun:stun3.l.google.com:19302' },
+          // { urls: 'stun:stun4.l.google.com:19302' },
+          // { urls: 'stun:stun.stunprotocol.org:3478' },
+          // { urls: 'stun:global.stun.twilio.com:3478' },
+          // { urls: 'stun:stun.nextcloud.com:443' },
+          // { urls: "stun:stun.arbuz.ru:3478" },
+          // { urls: "stun:stun.chathelp.ru:3478" },
+          // { urls: "stun:stun.comtube.ru:3478" },
+          // { urls: "stun:stun.demos.ru:3478" },
+          // { urls: "stun:stun.kanet.ru:3478" },
+          // { urls: "stun:stun.mgn.ru:3478" },
+          // { urls: "stun:stun.ooonet.ru:3478" },
+          // {
+          //   urls: ['turn:freeturn.net:3478', 'turn:freeturn.net:5349'],
+          //   username: 'free',
+          //   credential: 'free',
+          // },
         ],
       },
     },

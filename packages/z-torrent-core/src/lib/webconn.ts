@@ -172,7 +172,7 @@ export default class WebConn extends Wire {
             method: 'GET',
             headers: {
               'Cache-Control': 'no-store',
-              'user-agent': `Z-Torrent/${VERSION} (https://github.com/webtorrent/webtorrent)`,
+              'user-agent': `Z-Torrent/0.1 (https://github.com/skrylnikov/z-torrent)`,
               range: `bytes=${start}-${end}`,
             },
             signal: AbortSignal.timeout(SOCKET_TIMEOUT),

@@ -342,7 +342,7 @@ export default class Torrent extends EventEmitter implements TorrentWire, Torren
         this._onParsedTorrent(parsedTorrent!)
       })
     } else {
-      remote(torrentId as any, { headers: { 'user-agent': USER_AGENT } }, (err: Error | null, parsedTorrent: ParsedTorrent) => {
+      remote(torrentId as any, { headers: { 'user-agent': 'Z-Torrent/0.1 (https://github.com/skrylnikov/z-torrent)' } }, (err: Error | null, parsedTorrent: ParsedTorrent) => {
         if (this.destroyed) return
         if (err) return this._destroy(err)
         this._onParsedTorrent(parsedTorrent)
@@ -526,7 +526,7 @@ export default class Torrent extends EventEmitter implements TorrentWire, Torren
     try {
       const res = await fetch(url, {
         method: 'GET',
-        headers: { 'user-agent': USER_AGENT },
+        headers: { 'user-agent': 'Z-Torrent/0.1 (https://github.com/skrylnikov/z-torrent)' },
         signal,
       })
 

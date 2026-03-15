@@ -200,7 +200,7 @@ export default class WebTorrentCore extends EventEmitter implements WebTorrentCl
         opts.blocklist,
         {
           headers: {
-            'user-agent': `Z-Torrent/${VERSION} (https://github.com/webtorrent/webtorrent)`,
+            'user-agent': `Z-Torrent/0.1 (https://github.com/skrylnikov/z-torrent)`,
           },
         },
         (err, ipSet) => {
