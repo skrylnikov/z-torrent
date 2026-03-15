@@ -36,7 +36,10 @@
   },
   "files": [
     "dist",
-    "fixtures"
+    "fixtures",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "repository": {
     "type": "git",

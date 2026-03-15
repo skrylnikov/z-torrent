@@ -101,6 +101,14 @@
     "bufferutil": "^4.0.8",
     "utf-8-validate": "^6.0.4"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "AUTHORS.md",
+    "CONTRIBUTING.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/skrylnikov/z-torrent.git",
