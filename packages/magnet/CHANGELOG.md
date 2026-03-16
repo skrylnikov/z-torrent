@@ -1,5 +1,11 @@
 ## [7.0.7](https://github.com/webtorrent/magnet-uri/compare/v7.0.6...v7.0.7) (2025-01-04)
 
+## 0.0.3
+
+### Patch Changes
+
+- [#3](https://github.com/skrylnikov/z-torrent/pull/3) [`9ac5074`](https://github.com/skrylnikov/z-torrent/commit/9ac5074d5623ee527225f0ec96cd1f4a20d32d9c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix deploy to npm
+
 ## 0.0.2
 
 ### Patch Changes

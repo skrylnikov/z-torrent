@@ -1,5 +1,11 @@
 ## [11.0.11](https://github.com/webtorrent/bittorrent-dht/compare/v11.0.10...v11.0.11) (2025-09-14)
 
+## 0.0.3
+
+### Patch Changes
+
+- [#3](https://github.com/skrylnikov/z-torrent/pull/3) [`9ac5074`](https://github.com/skrylnikov/z-torrent/commit/9ac5074d5623ee527225f0ec96cd1f4a20d32d9c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix deploy to npm
+
 ## 0.0.2
 
 ### Patch Changes
