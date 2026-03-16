@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/utils",
   "description": "Utility functions for Z-Torrent",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "exports": {

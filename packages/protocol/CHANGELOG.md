@@ -1,5 +1,11 @@
 ## [4.1.21](https://github.com/webtorrent/bittorrent-protocol/compare/v4.1.20...v4.1.21) (2025-09-14)
 
+## 0.0.3
+
+### Patch Changes
+
+- [#3](https://github.com/skrylnikov/z-torrent/pull/3) [`9ac5074`](https://github.com/skrylnikov/z-torrent/commit/9ac5074d5623ee527225f0ec96cd1f4a20d32d9c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix deploy to npm
+
 ## 0.0.2
 
 ### Patch Changes
