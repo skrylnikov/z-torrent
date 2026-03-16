@@ -1,5 +1,22 @@
 ## [2.8.5](https://github.com/webtorrent/webtorrent/compare/v2.8.4...v2.8.5) (2025-11-30)
 
+## 0.0.5
+
+### Patch Changes
+
+- [#7](https://github.com/skrylnikov/z-torrent/pull/7) [`2973e65`](https://github.com/skrylnikov/z-torrent/commit/2973e650b85b72725386a83ac5331f8d429e4117) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix release workflow
+
+- Updated dependencies [[`2973e65`](https://github.com/skrylnikov/z-torrent/commit/2973e650b85b72725386a83ac5331f8d429e4117)]:
+  - @z-torrent/core@0.0.5
+  - @z-torrent/create@0.0.5
+  - @z-torrent/dht@0.0.5
+  - @z-torrent/discovery@0.0.5
+  - @z-torrent/parse@0.0.5
+  - @z-torrent/protocol@0.0.5
+  - @z-torrent/ut-metadata@0.0.5
+  - @z-torrent/ut-pex@0.0.5
+  - @z-torrent/utils@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
