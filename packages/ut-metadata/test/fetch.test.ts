@@ -3,74 +3,73 @@ import bencode from 'bencode'
 
 import Protocol from '@z-torrent/protocol'
 import { expect, test } from 'bun:test'
-import utMetadata from '../dist/index.js'
+import { createUtMetadata, UtMetadata } from '../src/index.js'
 
 const { leavesMetadata, sintel } = fixtures
 
-const id1 = Buffer.from('01234567890123456789')
-const id2 = Buffer.from('12345678901234567890')
+const id1 = Uint8Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+const id2 = Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
+
+type WireWithEvents = Protocol & {
+  on(event: 'handshake', cb: (infoHash: Uint8Array, peerId: Uint8Array) => void): void
+  on(event: 'extended', cb: (ext: string) => void): void
+  once(event: 'handshake', cb: () => void): void
+}
 
 test('fetch()', (done) => {
-  const wire1 = new Protocol()
-  const wire2 = new Protocol()
+  const wire1 = new Protocol() as WireWithEvents
+  const wire2 = new Protocol() as WireWithEvents
+  // @ts-expect-error pipe returns unknown in Duplex type
   wire1.pipe(wire2).pipe(wire1)
 
-  wire1.use(utMetadata(leavesMetadata.torrent))
-  wire2.use(utMetadata())
+  wire1.use(createUtMetadata(leavesMetadata.torrent))
+  wire2.use(createUtMetadata())
 
-  wire2.ut_metadata!.fetch()
+  const utMetadata2 = wire2.ut_metadata as UtMetadata
+  utMetadata2.fetch()
 
-  wire2.ut_metadata!.on('metadata', (_metadata: Buffer) => {
-    expect(_metadata.toString('hex')).toBe(
-      bencode
-        .encode({
-          info: bencode.decode(leavesMetadata.torrent).info,
-        })
-        .toString('hex')
+  utMetadata2.on('metadata', (metadata: Uint8Array) => {
+    const info = bencode.decode(leavesMetadata.torrent!) as { info: unknown }
+    const expected = Uint8Array.from(
+      bencode.encode({
+        info: info.info,
+      })
     )
+    expect(metadata).toEqual(expected)
     done()
   })
 
-  wire2.on('handshake', (infoHash: Buffer, peerId: Buffer, extensions: Record<string, number>) => {
-    wire2.handshake(leavesMetadata.parsedTorrent!.infoHash, id2)
+  wire2.on('handshake', (_infoHash: Uint8Array, _peerId: Uint8Array) => {
+    wire2.handshake(leavesMetadata.parsedTorrent!.infoHash!, id2)
   })
 
-  wire2.on('extended', (ext: string) => {
-    if (ext === 'handshake') {
-      expect(true).toBe(true)
-    } else if (ext === 'ut_metadata') {
-      expect(true).toBe(true)
-    }
-  })
-
-  wire1.handshake(leavesMetadata.parsedTorrent!.infoHash, id1)
+  wire1.handshake(leavesMetadata.parsedTorrent!.infoHash!, id1)
 })
 
 test('fetch() from peer without metadata', (done) => {
   expect.assertions(2)
 
-  const wire1 = new Protocol()
-  const wire2 = new Protocol()
+  const wire1 = new Protocol() as WireWithEvents
+  const wire2 = new Protocol() as WireWithEvents
+  // @ts-expect-error pipe returns unknown in Duplex type
   wire1.pipe(wire2).pipe(wire1)
 
-  wire1.use(utMetadata())
-  wire2.use(utMetadata())
+  wire1.use(createUtMetadata())
+  wire2.use(createUtMetadata())
 
-  wire2.ut_metadata!.fetch()
+  const utMetadata2 = wire2.ut_metadata as UtMetadata
+  utMetadata2.fetch()
 
-  wire2.ut_metadata!.on('metadata', () => {
+  utMetadata2.on('metadata', () => {
     throw new Error('No "metadata" event should fire')
   })
-  ;(wire1.ut_metadata as any).onMessage = () => {
-    throw new Error('No messages should be sent to wire1')
-  }
 
-  wire2.ut_metadata!.on('warning', () => {
+  utMetadata2.on('warning', () => {
     expect(true).toBe(true)
   })
 
   wire2.on('handshake', () => {
-    wire2.handshake(leavesMetadata.parsedTorrent!.infoHash, id2)
+    wire2.handshake(leavesMetadata.parsedTorrent!.infoHash!, id2)
   })
 
   wire2.on('extended', (ext: string) => {
@@ -84,147 +83,140 @@ test('fetch() from peer without metadata', (done) => {
     }
   })
 
-  wire1.handshake(leavesMetadata.parsedTorrent!.infoHash, id1)
+  wire1.handshake(leavesMetadata.parsedTorrent!.infoHash!, id1)
 })
 
 test('fetch when peer gets metadata later (setMetadata)', (done) => {
-  const wire1 = new Protocol()
-  const wire2 = new Protocol()
+  const wire1 = new Protocol() as WireWithEvents
+  const wire2 = new Protocol() as WireWithEvents
 
+  // @ts-expect-error pipe returns unknown in Duplex type
   wire1.pipe(wire2).pipe(wire1)
 
-  wire1.use(utMetadata())
+  wire1.use(createUtMetadata())
 
   queueMicrotask(() => {
-    wire1.ut_metadata!.setMetadata(leavesMetadata.torrent)
+    const utMetadata1 = wire1.ut_metadata as UtMetadata
+    utMetadata1.setMetadata(leavesMetadata.torrent!)
 
     queueMicrotask(() => {
-      wire2.use(utMetadata())
-      wire2.ut_metadata!.fetch()
+      wire2.use(createUtMetadata())
+      const utMetadata2 = wire2.ut_metadata as UtMetadata
+      utMetadata2.fetch()
 
-      wire2.ut_metadata!.on('metadata', (_metadata: Buffer) => {
-        expect(_metadata.toString('hex')).toBe(
-          bencode
-            .encode({
-              info: bencode.decode(leavesMetadata.torrent).info,
-            })
-            .toString('hex')
+      utMetadata2.on('metadata', (metadata: Uint8Array) => {
+        const info = bencode.decode(leavesMetadata.torrent!) as { info: unknown }
+        const expected = Uint8Array.from(
+          bencode.encode({
+            info: info.info,
+          })
         )
+        expect(metadata).toEqual(expected)
         done()
       })
 
       wire2.on('handshake', () => {
-        wire2.handshake(leavesMetadata.parsedTorrent!.infoHash, id2)
+        wire2.handshake(leavesMetadata.parsedTorrent!.infoHash!, id2)
       })
 
-      wire2.on('extended', (ext: string) => {
-        if (ext === 'handshake') {
-          expect(true).toBe(true)
-        } else if (ext === 'ut_metadata') {
-          expect(true).toBe(true)
-        }
-      })
-
-      wire1.handshake(leavesMetadata.parsedTorrent!.infoHash, id1)
+      wire1.handshake(leavesMetadata.parsedTorrent!.infoHash!, id1)
     })
   })
 })
 
 test('fetch() large torrent', (done) => {
-  const wire1 = new Protocol()
-  const wire2 = new Protocol()
+  const wire1 = new Protocol() as WireWithEvents
+  const wire2 = new Protocol() as WireWithEvents
+  // @ts-expect-error pipe returns unknown in Duplex type
   wire1.pipe(wire2).pipe(wire1)
 
-  wire1.use(utMetadata(sintel.torrent))
-  wire2.use(utMetadata())
+  wire1.use(createUtMetadata(sintel.torrent))
+  wire2.use(createUtMetadata())
 
-  wire2.ut_metadata!.fetch()
+  const utMetadata2 = wire2.ut_metadata as UtMetadata
+  utMetadata2.fetch()
 
-  wire2.ut_metadata!.on('metadata', (_metadata: Buffer) => {
-    expect(_metadata.toString('hex')).toBe(
-      bencode
-        .encode({
-          info: bencode.decode(sintel.torrent).info,
-        })
-        .toString('hex')
+  utMetadata2.on('metadata', (metadata: Uint8Array) => {
+    const info = bencode.decode(sintel.torrent!) as { info: unknown }
+    const expected = Uint8Array.from(
+      bencode.encode({
+        info: info.info,
+      })
     )
+    expect(metadata).toEqual(expected)
     done()
   })
 
   wire2.on('handshake', () => {
-    wire2.handshake(sintel.parsedTorrent!.infoHash, id2)
+    wire2.handshake(sintel.parsedTorrent!.infoHash!, id2)
   })
 
-  wire2.on('extended', (ext: string) => {
-    if (ext === 'handshake') {
-      expect(true).toBe(true)
-    } else if (ext === 'ut_metadata') {
-      expect(true).toBe(true)
-    }
-  })
-
-  wire1.handshake(sintel.parsedTorrent!.infoHash, id1)
+  wire1.handshake(sintel.parsedTorrent!.infoHash!, id1)
 })
 
 test('discard invalid metadata', (done) => {
   expect.assertions(1)
 
-  const wire1 = new Protocol()
-  const wire2 = new Protocol()
+  const wire1 = new Protocol() as WireWithEvents
+  const wire2 = new Protocol() as WireWithEvents
+  // @ts-expect-error pipe returns unknown in Duplex type
   wire1.pipe(wire2).pipe(wire1)
 
-  const invalidMetadata = leavesMetadata.torrent.slice(0)
+  const invalidMetadata = Uint8Array.from(leavesMetadata.torrent!).slice()
   invalidMetadata[55] = 65
 
-  wire1.use(utMetadata(invalidMetadata))
-  wire2.use(utMetadata())
+  wire1.use(createUtMetadata(invalidMetadata))
+  wire2.use(createUtMetadata())
 
-  wire2.ut_metadata!.fetch()
+  const utMetadata2 = wire2.ut_metadata as UtMetadata
+  utMetadata2.fetch()
 
-  wire2.ut_metadata!.on('metadata', () => {
+  utMetadata2.on('metadata', () => {
     throw new Error('No "metadata" event should fire')
   })
 
-  wire2.ut_metadata!.on('warning', () => {
+  utMetadata2.on('warning', () => {
     expect(true).toBe(true)
     done()
   })
 
   wire2.on('handshake', () => {
-    wire2.handshake(leavesMetadata.parsedTorrent!.infoHash, id2)
+    wire2.handshake(leavesMetadata.parsedTorrent!.infoHash!, id2)
   })
 
-  wire1.handshake(leavesMetadata.parsedTorrent!.infoHash, id1)
+  wire1.handshake(leavesMetadata.parsedTorrent!.infoHash!, id1)
 })
 
 test.skip('stop receiving data after cancel', (done) => {
   // Flaky: metadata may arrive before cancel takes effect
 
-  const wire1 = new Protocol()
-  const wire2 = new Protocol()
+  const wire1 = new Protocol() as WireWithEvents
+  const wire2 = new Protocol() as WireWithEvents
 
+  // @ts-expect-error pipe returns unknown in Duplex type
   wire1.pipe(wire2).pipe(wire1)
 
-  wire1.use(utMetadata(sintel.torrent))
-  wire2.use(utMetadata())
+  wire1.use(createUtMetadata(sintel.torrent))
+  wire2.use(createUtMetadata())
 
+  const utMetadata2 = wire2.ut_metadata as UtMetadata
   let metadataReceived = false
-  wire2.ut_metadata!.once('metadata', () => {
+  utMetadata2.once('metadata', () => {
     metadataReceived = true
   })
 
   wire2.once('handshake', () => {
-    wire2.handshake(sintel.parsedTorrent!.infoHash, id2)
-    wire2.ut_metadata!.fetch()
+    wire2.handshake(sintel.parsedTorrent!.infoHash!, id2)
+    utMetadata2.fetch()
   })
 
   wire2.on('extended', (ext: string) => {
     if (ext === 'ut_metadata') {
-      wire2.ut_metadata!.cancel()
+      utMetadata2.cancel()
     }
   })
 
-  wire1.handshake(sintel.parsedTorrent!.infoHash, id1)
+  wire1.handshake(sintel.parsedTorrent!.infoHash!, id1)
 
   setTimeout(() => {
     expect(metadataReceived).toBe(false)

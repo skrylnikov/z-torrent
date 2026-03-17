@@ -1,46 +1,38 @@
-# ut_metadata [![ci][ci-image]][ci-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
-
-[ci-image]: https://github.com/webtorrent/ut_metadata/actions/workflows/ci.yml/badge.svg?branch=master
-[ci-url]: https://github.com/webtorrent/ut_metadata/actions/workflows/ci.yml
-[npm-image]: https://img.shields.io/npm/v/ut_metadata.svg
-[npm-url]: https://npmjs.org/package/ut_metadata
-[downloads-image]: https://img.shields.io/npm/dm/ut_metadata.svg
-[downloads-url]: https://npmjs.org/package/ut_metadata
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+# @z-torrent/ut-metadata
 
 ### BitTorrent Extension for Peers to Send Metadata Files (BEP 9)
 
-JavaScript implementation of the [Extension for Peers to Send Metadata Files (BEP 9)](http://www.bittorrent.org/beps/bep_0009.html). Use with [bittorrent-protocol](https://www.npmjs.com/package/bittorrent-protocol).
+JavaScript implementation of the [Extension for Peers to Send Metadata Files (BEP 9)](http://www.bittorrent.org/beps/bep_0009.html). Use with [@z-torrent/protocol](https://www.npmjs.com/package/@z-torrent/protocol).
 
 The purpose of this extension is to allow clients to join a swarm and complete a download without the need of downloading a .torrent file first. This extension instead allows clients to download the metadata from peers. It makes it possible to support magnet links, a link on a web page only containing enough information to join the swarm (the info hash).
-
-Works in the browser with [browserify](http://browserify.org/)! This module is used by [WebTorrent](http://webtorrent.io).
 
 ### install
 
 ```
-npm install ut_metadata
+npm install @z-torrent/ut-metadata
 ```
 
 ### usage
 
-This package should be used with [bittorrent-protocol](https://www.npmjs.com/package/bittorrent-protocol), which supports a plugin-like system for extending the protocol with additional functionality.
+This package should be used with [@z-torrent/protocol](https://www.npmjs.com/package/@z-torrent/protocol), which supports a plugin-like system for extending the protocol with additional functionality.
 
-Say you're already using `bittorrent-protocol`. Your code might look something like this:
+Say you're already using `@z-torrent/protocol`. Your code might look something like this:
 
 ```js
-import Protocol from 'bittorrent-protocol'
+import Protocol from '@z-torrent/protocol'
 import net from 'net'
 
 net
   .createServer((socket) => {
-    var wire = new Protocol()
+    const wire = new Protocol()
     socket.pipe(wire).pipe(socket)
 
     // handle handshake
     wire.on('handshake', (infoHash, peerId) => {
-      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+      wire.handshake(
+        new TextEncoder().encode('my info hash'),
+        new TextEncoder().encode('my peer id')
+      )
     })
   })
   .listen(6881)
@@ -49,9 +41,9 @@ net
 To add support for BEP 9, simply modify your code like this:
 
 ```js
-import Protocol from 'bittorrent-protocol'
+import Protocol from '@z-torrent/protocol'
 import net from 'net'
-import ut_metadata from 'ut_metadata'
+import { createUtMetadata } from '@z-torrent/ut-metadata'
 
 net
   .createServer((socket) => {
@@ -59,7 +51,7 @@ net
     socket.pipe(wire).pipe(socket)
 
     // initialize the extension
-    wire.use(ut_metadata())
+    wire.use(createUtMetadata())
 
     // all `ut_metadata` functionality can now be accessed at wire.ut_metadata
 
@@ -82,7 +74,10 @@ net
 
     // handle handshake
     wire.on('handshake', (infoHash, peerId) => {
-      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+      wire.handshake(
+        new TextEncoder().encode('my info hash'),
+        new TextEncoder().encode('my peer id')
+      )
     })
   })
   .listen(6881)
@@ -90,14 +85,17 @@ net
 
 ### api
 
-#### `ut_metadata([metadata])`
+#### `createUtMetadata([metadata])`
 
-Initialize the extension. If you have the torrent metadata (Buffer), pass it into the
-`ut_metadata` constructor so it's made available to the peer.
+Initialize the extension. If you have the torrent metadata (Uint8Array), pass it into the
+`createUtMetadata` constructor so it's made available to the peer.
 
 ```js
-const metadata = fs.readFileSync(__dirname + '/file.torrent')
-wire.use(ut_metadata(metadata))
+import { readFileSync } from 'fs'
+import { createUtMetadata } from '@z-torrent/ut-metadata'
+
+const metadata = readFileSync(__dirname + '/file.torrent')
+wire.use(createUtMetadata(metadata))
 ```
 
 #### `ut_metadata.fetch()`
@@ -117,11 +115,11 @@ call `setMetadata` so the metadata will be available to the peer.
 #### `ut_metadata.on('metadata', function (metadata) {})`
 
 Fired when metadata is available and verified to be correct. Called with a single
-parameter of type Buffer.
+parameter of type Uint8Array.
 
 ```js
 wire.ut_metadata.on('metadata', (metadata) => {
-  console.log(Buffer.isBuffer(metadata)) // true
+  console.log(metadata instanceof Uint8Array) // true
 })
 ```
 
@@ -145,4 +143,4 @@ wire.ut_metadata.on('warning', (err) => {
 
 ### license
 
-MIT. Copyright (c) [Feross Aboukhadijeh](https://feross.org) and [WebTorrent, LLC](https://webtorrent.io).
+MIT. Copyright (c) [Dmitriy Skrylnikov](https://github.com/skrylnikov).

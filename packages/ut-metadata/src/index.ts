@@ -6,15 +6,13 @@ import { hash, arr2text, concat } from 'uint8-util'
 
 const debug = Debug('ut_metadata')
 
-const MAX_METADATA_SIZE = 1e7 // 10 MB
+const MAX_METADATA_SIZE = 1e7
 const BITFIELD_GROW = 1e3
-const PIECE_LENGTH = 1 << 14 // 16 KiB
+const PIECE_LENGTH = 1 << 14
 
 interface Wire {
   extended(name: string, data: unknown): void
-  extendedHandshake: {
-    metadata_size?: number
-  }
+  extendedHandshake: Record<string, unknown>
 }
 
 interface ExtendedHandshake {
@@ -30,61 +28,60 @@ interface MessageDict {
   total_size?: number
 }
 
-class utMetadata extends EventEmitter {
-  static name = 'ut_metadata'
-
+export class UtMetadata extends EventEmitter {
   metadata?: Uint8Array
 
-  private _wire: Wire
-  private _infoHash?: string
-  private _fetching: boolean
-  private _metadataComplete: boolean
-  private _metadataSize: number | null
-  private _numPieces: number = 0
-  private _remainingRejects: number | null
-  private _bitfield: BitField
+  #wire: Wire
+  #infoHash?: string
+  #fetching = false
+  #metadataComplete = false
+  #metadataSize: number | null = null
+  #numPieces = 0
+  #remainingRejects: number | null = null
+  #bitfield: BitField
 
   constructor(wire: Wire, metadata?: Uint8Array) {
     super()
 
-    this._wire = wire
-
-    this._fetching = false
-    this._metadataComplete = false
-    this._metadataSize = null
-    this._remainingRejects = null
-
-    this._bitfield = new BitField(0, { grow: BITFIELD_GROW })
+    this.#wire = wire
+    this.#bitfield = new BitField(0, { grow: BITFIELD_GROW })
 
     if (metadata) {
-      this.setMetadata(metadata)
+      void this.setMetadata(metadata)
     }
   }
 
-  onHandshake(infoHash: string, peerId: string, extensions: unknown): void {
-    this._infoHash = infoHash
+  get name(): string {
+    return 'ut_metadata'
+  }
+
+  onHandshake(infoHash: string, _peerId: string, _extensions: unknown): void {
+    this.#infoHash = infoHash
   }
 
   onExtendedHandshake(handshake: ExtendedHandshake): void {
     if (!handshake.m || !handshake.m.ut_metadata) {
-      return this.emit('warning', new Error('Peer does not support ut_metadata'))
+      this.emit('warning', new Error('Peer does not support ut_metadata'))
+      return
     }
     if (!handshake.metadata_size) {
-      return this.emit('warning', new Error('Peer does not have metadata'))
+      this.emit('warning', new Error('Peer does not have metadata'))
+      return
     }
     if (
       typeof handshake.metadata_size !== 'number' ||
       MAX_METADATA_SIZE < handshake.metadata_size ||
       handshake.metadata_size <= 0
     ) {
-      return this.emit('warning', new Error('Peer gave invalid metadata size'))
+      this.emit('warning', new Error('Peer gave invalid metadata size'))
+      return
     }
 
-    this._metadataSize = handshake.metadata_size
-    this._numPieces = Math.ceil(this._metadataSize / PIECE_LENGTH)
-    this._remainingRejects = this._numPieces * 2
+    this.#metadataSize = handshake.metadata_size
+    this.#numPieces = Math.ceil(this.#metadataSize / PIECE_LENGTH)
+    this.#remainingRejects = this.#numPieces * 2
 
-    this._requestPieces()
+    this.#requestPieces()
   }
 
   onMessage(buf: Uint8Array): void {
@@ -93,7 +90,7 @@ class utMetadata extends EventEmitter {
     try {
       const str = arr2text(buf)
       const trailerIndex = str.indexOf('ee') + 2
-      dict = bencode.decode(str.substring(0, trailerIndex)) as MessageDict
+      dict = bencode.decode(Buffer.from(str.substring(0, trailerIndex))) as MessageDict
       trailer = buf.slice(trailerIndex)
     } catch {
       return
@@ -101,134 +98,134 @@ class utMetadata extends EventEmitter {
 
     switch (dict.msg_type) {
       case 0:
-        this._onRequest(dict.piece)
+        this.#onRequest(dict.piece)
         break
       case 1:
-        this._onData(dict.piece, trailer, dict.total_size!)
+        this.#onData(dict.piece, trailer, dict.total_size!)
         break
       case 2:
-        this._onReject(dict.piece)
+        this.#onReject(dict.piece)
         break
     }
   }
 
   fetch(): void {
-    if (this._metadataComplete) {
+    if (this.#metadataComplete) {
       return
     }
-    this._fetching = true
-    if (this._metadataSize) {
-      this._requestPieces()
+    this.#fetching = true
+    if (this.#metadataSize) {
+      this.#requestPieces()
     }
   }
 
   cancel(): void {
-    this._fetching = false
+    this.#fetching = false
   }
 
   async setMetadata(metadata: Uint8Array): Promise<boolean> {
-    if (this._metadataComplete) return true
+    if (this.#metadataComplete) return true
     debug('set metadata')
 
     try {
-      const decoded = bencode.decode(metadata)
+      const decoded = bencode.decode(Buffer.from(metadata))
       if (decoded && typeof decoded === 'object' && 'info' in decoded) {
-        metadata = bencode.encode((decoded as { info: unknown }).info)
+        metadata = Uint8Array.from(bencode.encode((decoded as { info: unknown }).info))
       }
     } catch {}
 
-    if (this._infoHash && this._infoHash !== (await hash(metadata, 'hex'))) {
+    if (this.#infoHash && this.#infoHash !== (await hash(metadata, 'hex'))) {
       return false
     }
 
     this.cancel()
 
     this.metadata = metadata
-    this._metadataComplete = true
-    this._metadataSize = this.metadata.length
-    this._wire.extendedHandshake.metadata_size = this._metadataSize
+    this.#metadataComplete = true
+    this.#metadataSize = this.metadata.length
+    this.#wire.extendedHandshake.metadata_size = this.#metadataSize
 
     this.emit(
       'metadata',
-      bencode.encode({
-        info: bencode.decode(this.metadata),
-      })
+      Uint8Array.from(
+        bencode.encode({
+          info: bencode.decode(Buffer.from(this.metadata)),
+        })
+      )
     )
 
     return true
   }
 
-  private _send(dict: Record<string, unknown>, trailer?: Uint8Array): void {
-    let buf = bencode.encode(dict)
-    if (trailer) {
-      buf = concat([buf, trailer])
-    }
-    this._wire.extended('ut_metadata', buf)
+  #send(dict: Record<string, unknown>, trailer?: Uint8Array): void {
+    const encoded = Uint8Array.from(bencode.encode(dict))
+    const buf = trailer ? concat([encoded, trailer]) : encoded
+    this.#wire.extended('ut_metadata', buf)
   }
 
-  private _request(piece: number): void {
-    this._send({ msg_type: 0, piece })
+  #request(piece: number): void {
+    this.#send({ msg_type: 0, piece })
   }
 
-  private _data(piece: number, buf: Uint8Array, totalSize?: number): void {
+  #data(piece: number, buf: Uint8Array, totalSize?: number): void {
     const msg: Record<string, unknown> = { msg_type: 1, piece }
     if (typeof totalSize === 'number') {
       msg.total_size = totalSize
     }
-    this._send(msg, buf)
+    this.#send(msg, buf)
   }
 
-  private _reject(piece: number): void {
-    this._send({ msg_type: 2, piece })
+  #reject(piece: number): void {
+    this.#send({ msg_type: 2, piece })
   }
 
-  private _onRequest(piece: number): void {
-    if (!this._metadataComplete || !this.metadata || !this._metadataSize) {
-      this._reject(piece)
+  #onRequest(piece: number): void {
+    if (!this.#metadataComplete || !this.metadata || !this.#metadataSize) {
+      this.#reject(piece)
       return
     }
     const start = piece * PIECE_LENGTH
     let end = start + PIECE_LENGTH
-    if (end > this._metadataSize) {
-      end = this._metadataSize
+    if (end > this.#metadataSize) {
+      end = this.#metadataSize
     }
     const buf = this.metadata.slice(start, end)
-    this._data(piece, buf, this._metadataSize)
+    this.#data(piece, buf, this.#metadataSize)
   }
 
-  private _onData(piece: number, buf: Uint8Array, totalSize: number): void {
-    if (buf.length > PIECE_LENGTH || !this._fetching) {
+  #onData(piece: number, buf: Uint8Array, totalSize: number): void {
+    if (buf.length > PIECE_LENGTH || !this.#fetching) {
       return
     }
     if (!this.metadata) {
-      this.metadata = new Uint8Array(this._metadataSize!)
+      this.metadata = new Uint8Array(this.#metadataSize!)
     }
     this.metadata.set(buf, piece * PIECE_LENGTH)
-    this._bitfield.set(piece)
-    this._checkDone()
+    this.#bitfield.set(piece)
+    this.#checkDone()
   }
 
-  private _onReject(piece: number): void {
-    if (this._remainingRejects! > 0 && this._fetching) {
-      this._request(piece)
-      this._remainingRejects! -= 1
+  #onReject(piece: number): void {
+    if (this.#remainingRejects! > 0 && this.#fetching) {
+      this.#request(piece)
+      this.#remainingRejects! -= 1
     } else {
       this.emit('warning', new Error('Peer sent "reject" too much'))
     }
   }
 
-  private _requestPieces(): void {
-    if (!this._fetching) return
-    this.metadata = new Uint8Array(this._metadataSize!)
-    for (let piece = 0; piece < this._numPieces; piece++) {
-      this._request(piece)
+  #requestPieces(): void {
+    if (!this.#fetching) return
+    this.metadata = new Uint8Array(this.#metadataSize!)
+    for (let piece = 0; piece < this.#numPieces; piece++) {
+      this.#request(piece)
     }
   }
 
-  private async _checkDone(): Promise<void> {
+  async #checkDone(): Promise<void> {
     let done = true
-    for (let piece = 0; piece < this._numPieces; piece++) {
-      if (!this._bitfield.get(piece)) {
+    for (let piece = 0; piece < this.#numPieces; piece++) {
+      if (!this.#bitfield.get(piece)) {
         done = false
         break
       }
@@ -238,30 +235,26 @@ class utMetadata extends EventEmitter {
     const success = await this.setMetadata(this.metadata!)
 
     if (!success) {
-      this._failedMetadata()
+      this.#failedMetadata()
     }
   }
 
-  private _failedMetadata(): void {
-    this._bitfield = new BitField(0, { grow: BITFIELD_GROW })
-    this._remainingRejects! -= this._numPieces
-    if (this._remainingRejects! > 0) {
-      this._requestPieces()
+  #failedMetadata(): void {
+    this.#bitfield = new BitField(0, { grow: BITFIELD_GROW })
+    this.#remainingRejects! -= this.#numPieces
+    if (this.#remainingRejects! > 0) {
+      this.#requestPieces()
     } else {
       this.emit('warning', new Error('Peer sent invalid metadata'))
     }
   }
 }
 
-;(utMetadata as any).prototype.name = 'ut_metadata'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TS4094 workaround for dts emit with private class members
-export default (metadata?: Uint8Array): any => {
-  class UtMetadataWithMetadata extends utMetadata {
+export function createUtMetadata(metadata?: Uint8Array): typeof UtMetadata {
+  class UtMetadataWithMetadata extends UtMetadata {
     constructor(wire: Wire) {
       super(wire, metadata)
     }
   }
-  ;(UtMetadataWithMetadata as any).prototype.name = 'ut_metadata'
   return UtMetadataWithMetadata
 }
