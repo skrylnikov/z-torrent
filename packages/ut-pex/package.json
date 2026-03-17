@@ -4,7 +4,7 @@
   "version": "0.0.5",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
-    "url": "https://github.com/webtorrent/ut_pex/issues"
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "type": "module",
   "dependencies": {

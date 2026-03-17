@@ -15,6 +15,14 @@ const FLAGS = {
   isReachable: 0x10,
 }
 
+function toUint8Array(value: unknown): Uint8Array | null {
+  if (value instanceof Uint8Array) return value
+  if (Array.isArray(value) && value.every((v) => typeof v === 'number')) {
+    return Uint8Array.from(value)
+  }
+  return null
+}
+
 export class UtPex extends EventEmitter {
   get name() {
     return 'ut_pex'
@@ -95,49 +103,59 @@ export class UtPex extends EventEmitter {
       message = bencode.decode(Buffer.from(buf)) as Record<string, unknown>
 
       if (message.added) {
-        const addedBuf = message.added as Uint8Array
-        compact2stringMulti(addedBuf).forEach((peer, idx) => {
-          delete this.#remoteDroppedPeers[peer]
-          if (!(peer in this.#remoteAddedPeers)) {
-            const flags = (message['added.f'] as Uint8Array | undefined)?.[idx]
-            this.#remoteAddedPeers[peer] = { ip: 4, flags }
-            this.emit('peer', peer, this.#decodeFlags(flags))
-          }
-        })
+        const addedBuf = toUint8Array(message.added)
+        if (addedBuf) {
+          const addedFlags = toUint8Array(message['added.f'])
+          compact2stringMulti(addedBuf).forEach((peer, idx) => {
+            delete this.#remoteDroppedPeers[peer]
+            if (!(peer in this.#remoteAddedPeers)) {
+              const flags = addedFlags?.[idx]
+              this.#remoteAddedPeers[peer] = { ip: 4, flags }
+              this.emit('peer', peer, this.#decodeFlags(flags))
+            }
+          })
+        }
       }
 
       if (message.added6) {
-        const added6Buf = message.added6 as Uint8Array
-        compact2stringMulti6(added6Buf).forEach((peer, idx) => {
-          delete this.#remoteDroppedPeers[peer]
-          if (!(peer in this.#remoteAddedPeers)) {
-            const flags = (message['added6.f'] as Uint8Array | undefined)?.[idx]
-            this.#remoteAddedPeers[peer] = { ip: 6, flags }
-            this.emit('peer', peer, this.#decodeFlags(flags))
-          }
-        })
+        const added6Buf = toUint8Array(message.added6)
+        if (added6Buf) {
+          const added6Flags = toUint8Array(message['added6.f'])
+          compact2stringMulti6(added6Buf).forEach((peer, idx) => {
+            delete this.#remoteDroppedPeers[peer]
+            if (!(peer in this.#remoteAddedPeers)) {
+              const flags = added6Flags?.[idx]
+              this.#remoteAddedPeers[peer] = { ip: 6, flags }
+              this.emit('peer', peer, this.#decodeFlags(flags))
+            }
+          })
+        }
       }
 
       if (message.dropped) {
-        const droppedBuf = message.dropped as Uint8Array
-        compact2stringMulti(droppedBuf).forEach((peer) => {
-          delete this.#remoteAddedPeers[peer]
-          if (!(peer in this.#remoteDroppedPeers)) {
-            this.#remoteDroppedPeers[peer] = { ip: 4 }
-            this.emit('dropped', peer)
-          }
-        })
+        const droppedBuf = toUint8Array(message.dropped)
+        if (droppedBuf) {
+          compact2stringMulti(droppedBuf).forEach((peer) => {
+            delete this.#remoteAddedPeers[peer]
+            if (!(peer in this.#remoteDroppedPeers)) {
+              this.#remoteDroppedPeers[peer] = { ip: 4 }
+              this.emit('dropped', peer)
+            }
+          })
+        }
       }
 
       if (message.dropped6) {
-        const dropped6Buf = message.dropped6 as Uint8Array
-        compact2stringMulti6(dropped6Buf).forEach((peer) => {
-          delete this.#remoteAddedPeers[peer]
-          if (!(peer in this.#remoteDroppedPeers)) {
-            this.#remoteDroppedPeers[peer] = { ip: 6 }
-            this.emit('dropped', peer)
-          }
-        })
+        const dropped6Buf = toUint8Array(message.dropped6)
+        if (dropped6Buf) {
+          compact2stringMulti6(dropped6Buf).forEach((peer) => {
+            delete this.#remoteAddedPeers[peer]
+            if (!(peer in this.#remoteDroppedPeers)) {
+              this.#remoteDroppedPeers[peer] = { ip: 6 }
+              this.emit('dropped', peer)
+            }
+          })
+        }
       }
     } catch {
       // drop invalid messages
