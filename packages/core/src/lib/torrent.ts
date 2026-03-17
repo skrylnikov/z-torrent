@@ -21,7 +21,7 @@ import parseTorrent, { toMagnetURI, toTorrentFile, remote } from '@z-torrent/par
 import randomIterate from 'random-iterate'
 import { hash, arr2hex } from 'uint8-util'
 import throughput from 'throughput'
-import utMetadata from '@z-torrent/ut-metadata'
+import { createUtMetadata } from '@z-torrent/ut-metadata'
 import { UtPex } from '@z-torrent/ut-pex'
 
 import File from './file.js'
@@ -701,7 +701,7 @@ export default class Torrent
 
     wire.setKeepAlive(true)
 
-    wire.use(utMetadata(this.metadata))
+    wire.use(createUtMetadata(this.metadata))
     ;(wire as any).ut_metadata.on('warning', (err: Error) => {
       this._debug('ut_metadata warning: %s', err.message)
     })

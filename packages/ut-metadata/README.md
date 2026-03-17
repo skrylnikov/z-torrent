@@ -87,8 +87,7 @@ net
 
 #### `createUtMetadata([metadata])`
 
-Initialize the extension. If you have the torrent metadata (Uint8Array), pass it into the
-`createUtMetadata` constructor so it's made available to the peer.
+Factory function that creates an extension class for use with `wire.use()`. If you have the torrent metadata (Uint8Array), pass it as an argument so it's made available to the peer.
 
 ```js
 import { readFileSync } from 'fs'
@@ -97,6 +96,8 @@ import { createUtMetadata } from '@z-torrent/ut-metadata'
 const metadata = readFileSync(__dirname + '/file.torrent')
 wire.use(createUtMetadata(metadata))
 ```
+
+**Note:** `createUtMetadata` is a factory function, not a constructor. Do not use `new` with it.
 
 #### `ut_metadata.fetch()`
 

@@ -10,10 +10,22 @@ const { leavesMetadata, sintel } = fixtures
 const id1 = Uint8Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 const id2 = Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
 
+type Extensions = {
+  extended: boolean
+  dht: boolean
+  fast: boolean
+}
+
 type WireWithEvents = Protocol & {
-  on(event: 'handshake', cb: (infoHash: Uint8Array, peerId: Uint8Array) => void): void
+  on(
+    event: 'handshake',
+    cb: (infoHash: string, peerId: string, extensions: Extensions) => void
+  ): void
   on(event: 'extended', cb: (ext: string) => void): void
-  once(event: 'handshake', cb: () => void): void
+  once(
+    event: 'handshake',
+    cb: (infoHash: string, peerId: string, extensions: Extensions) => void
+  ): void
 }
 
 test('fetch()', (done) => {
@@ -39,7 +51,7 @@ test('fetch()', (done) => {
     done()
   })
 
-  wire2.on('handshake', (_infoHash: Uint8Array, _peerId: Uint8Array) => {
+  wire2.on('handshake', (_infoHash: string, _peerId: string, _extensions: Extensions) => {
     wire2.handshake(leavesMetadata.parsedTorrent!.infoHash!, id2)
   })
 
