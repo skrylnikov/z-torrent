@@ -93,7 +93,7 @@ Factory function that creates an extension class for use with `wire.use()`. If y
 import { readFileSync } from 'fs'
 import { createUtMetadata } from '@z-torrent/ut-metadata'
 
-const metadata = readFileSync(__dirname + '/file.torrent')
+const metadata = readFileSync(new URL('./file.torrent', import.meta.url))
 wire.use(createUtMetadata(metadata))
 ```
 
