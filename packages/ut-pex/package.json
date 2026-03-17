@@ -2,11 +2,7 @@
   "name": "@z-torrent/ut-pex",
   "description": "Extension for Peer Discovery (PEX)",
   "version": "0.0.5",
-  "author": {
-    "name": "WebTorrent LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
     "url": "https://github.com/webtorrent/ut_pex/issues"
   },
@@ -17,12 +13,15 @@
     "@z-torrent/utils": "workspace:*"
   },
   "devDependencies": {
+    "@types/bencode": "^2.0.4",
     "@z-torrent/protocol": "workspace:*"
   },
   "keywords": [
     "PEX",
     "Peer Exchange",
     "bittorrent",
+    "webtorrent",
+    "z-torrent",
     "discovery",
     "extension",
     "p2p",
@@ -56,26 +55,13 @@
   "scripts": {
     "build": "tsdown",
     "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "size": "size-limit"
   },
   "size-limit": [
     {
       "path": "dist/index.js",
       "limit": "30 KB"
-    }
-  ],
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/feross"
-    },
-    {
-      "type": "patreon",
-      "url": "https://www.patreon.com/feross"
-    },
-    {
-      "type": "consulting",
-      "url": "https://feross.org/support"
     }
   ]
 }
