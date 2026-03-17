@@ -26,13 +26,18 @@ test('wire.use(UtPex)', () => {
 })
 
 test('should ignore when addPeer receives an invalid peer', () => {
-  const wire = createMockWire(() => {})
+  let called = false
+  const wire = createMockWire(() => {
+    called = true
+  })
   const pex = new UtPex(wire)
 
   const peer = '?'
   pex.addPeer(peer)
 
   pex.sendMessage()
+
+  expect(called).toBe(false)
 })
 
 test('should ignore when addPeer receives a peer that remote wire already sent us', () => {
@@ -134,12 +139,17 @@ test('should remove from dropped when addPeer called for same peer', () => {
 })
 
 test('should ignore when dropPeer receives an invalid peer', () => {
-  const wire = createMockWire(() => {})
+  let called = false
+  const wire = createMockWire((_name, _data) => {
+    called = true
+  })
   const pex = new UtPex(wire)
 
   const peer = '?'
   pex.dropPeer(peer)
   pex.sendMessage()
+
+  expect(called).toBe(false)
 })
 
 test('should ignore when dropPeer receives a peer that remote wire already sent us', () => {
