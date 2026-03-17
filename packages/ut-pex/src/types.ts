@@ -14,18 +14,21 @@ export interface DecodedPEXFlags {
   isReachable: boolean
 }
 
-interface PeerInfo {
-  ip: 4 | 6
-  flags?: number
+export interface PEXMessage {
+  added?: Uint8Array
+  'added.f'?: Uint8Array
+  dropped?: Uint8Array
+  added6?: Uint8Array
+  'added6.f'?: Uint8Array
+  dropped6?: Uint8Array
 }
 
 export interface Wire {
-  extended(name: string, data: unknown): void
+  extended(name: string, data: Uint8Array | Record<string, unknown>): void
   destroy(): void
 }
 
-interface ExtendedHandshake {
-  m?: {
-    ut_pex?: number
-  }
+export interface PeerEntry {
+  ip: 4 | 6
+  flags?: number
 }

@@ -22,7 +22,7 @@ import randomIterate from 'random-iterate'
 import { hash, arr2hex } from 'uint8-util'
 import throughput from 'throughput'
 import utMetadata from '@z-torrent/ut-metadata'
-import utPex from '@z-torrent/ut-pex'
+import { UtPex } from '@z-torrent/ut-pex'
 
 import File from './file.js'
 import Peer, { type PeerSwarm, type ThrottleGroups } from './peer.js'
@@ -720,7 +720,7 @@ export default class Torrent
     }
 
     if (this.client.utPex && !(this as any).private) {
-      wire.use(utPex())
+      wire.use(UtPex)
       ;(wire as any).ut_pex.on('peer', (peer: string) => {
         if (!(this.client as any).seedOutgoingConnections && this.done) {
           this._debug(

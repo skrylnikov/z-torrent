@@ -17,7 +17,7 @@ The purpose of this extension is to allow peers to exchange known peers directly
 
 The best description of the (nonstandardized) ut_pex protocol I could find is in section 2.1.4.3 of this [paper](http://www.di.unipi.it/~ricci/XR-EE-LCN_2010_010.pdf).
 
-Works in the browser with [browserify](http://browserify.org/)! This module is used by [WebTorrent](http://webtorrent.io).
+Works in the browser. This module is used by [Z-Torrent](https://z-torrent.xyz).
 
 ## install
 
