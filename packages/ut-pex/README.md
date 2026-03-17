@@ -1,13 +1,4 @@
-# ut_pex [![ci][ci-image]][ci-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
-
-[ci-image]: https://github.com/webtorrent/ut_pex/actions/workflows/ci.yml/badge.svg
-[ci-url]: https://github.com/webtorrent/ut_pex/actions/workflows/ci.yml
-[npm-image]: https://img.shields.io/npm/v/ut_pex.svg
-[npm-url]: https://npmjs.org/package/ut_pex
-[downloads-image]: https://img.shields.io/npm/dm/ut_pex.svg
-[downloads-url]: https://npmjs.org/package/ut_pex
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+# @z-torrent/ut-pex
 
 ### BitTorrent Extension for Peer Discovery (PEX) (BEP11)
 
@@ -22,17 +13,17 @@ Works in the browser. This module is used by [Z-Torrent](https://z-torrent.xyz).
 ## install
 
 ```
-npm install ut_pex
+npm install @z-torrent/ut-pex
 ```
 
 ## usage
 
-This package should be used with [bittorrent-protocol](https://github.com/feross/bittorrent-protocol), which supports a plugin-like system for extending the protocol with additional functionality.
+This package should be used with [@z-torrent/protocol](https://www.npmjs.com/package/@z-torrent/protocol), which supports a plugin-like system for extending the protocol with additional functionality.
 
-Say you're already using `bittorrent-protocol`. Your code might look something like this:
+Say you're already using `@z-torrent/protocol`. Your code might look something like this:
 
 ```js
-import Protocol from 'bittorrent-protocol'
+import Protocol from '@z-torrent/protocol'
 import net from 'net'
 
 net
@@ -42,7 +33,10 @@ net
 
     // handle handshake
     wire.on('handshake', (infoHash, peerId) => {
-      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+      wire.handshake(
+        new TextEncoder().encode('my info hash'),
+        new TextEncoder().encode('my peer id')
+      )
     })
   })
   .listen(6881)
@@ -51,9 +45,9 @@ net
 To add support for PEX, simply modify your code like this:
 
 ```js
-import Protocol from 'bittorrent-protocol'
+import Protocol from '@z-torrent/protocol'
 import net from 'net'
-import ut_pex from 'ut_pex'
+import { UtPex } from '@z-torrent/ut-pex'
 
 net
   .createServer((socket) => {
@@ -61,7 +55,7 @@ net
     socket.pipe(wire).pipe(socket)
 
     // initialize the extension
-    wire.use(ut_pex())
+    wire.use(UtPex)
 
     // all `ut_pex` functionality can now be accessed at wire.ut_pex
 
@@ -76,7 +70,10 @@ net
 
     // handle handshake
     wire.on('handshake', (infoHash, peerId) => {
-      wire.handshake(new Buffer('my info hash'), new Buffer('my peer id'))
+      wire.handshake(
+        new TextEncoder().encode('my info hash'),
+        new TextEncoder().encode('my peer id')
+      )
     })
   })
   .listen(6881)
@@ -210,4 +207,4 @@ const flags = {
 
 ## license
 
-MIT. Copyright (c) Travis Fischer and [WebTorrent, LLC](https://webtorrent.io)
+MIT. Copyright (c) [Dmitriy Skrylnikov](https://github.com/skrylnikov).
