@@ -1,5 +1,5 @@
 ---
-'@z-torrent/magnet': minor
+'@z-torrent/magnet': patch
 '@z-torrent/parse': patch
 ---
 
