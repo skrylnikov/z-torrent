@@ -51,7 +51,9 @@ The `parsed` magnet link object looks like this:
     "udp://tracker.example3.com:6969",
     "udp://tracker.example4.com:80",
     "udp://tracker.example5.com:80"
-  ]
+  ],
+  "peerAddresses": [],
+  "urlList": []
 }
 ```
 
