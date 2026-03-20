@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test'
-import { encode, decode } from '../src/index.js'
+import { magnet } from '../src/index.js'
 
 test('encode: complicated magnet uri (multiple xt params, and as, xs)', () => {
-  const uri = encode({
+  const uri = magnet.encode({
     xt: [
       'urn:ed2k:354B15E68FB8F36D7CD88FF94116CDC1',
       'urn:tree:tiger:7N5OAMRNGMSSEUE3ORHOKWN4WWIQ5X4EBOOTLJY',
@@ -55,22 +55,22 @@ test('encode: simple magnet uri using convenience names', () => {
     keywords: ['hey', 'hey2'],
   }
 
-  const result = encode(obj)
+  const result = magnet.encode(obj)
 
   expect(result).toBe(
     'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36&xt=urn:btmh:1220d2474e86c95b19b8bcfdb92bc12c9d44667cfa36d2474e86c95b19b8bcfdb92b&dn=Leaves+of+Grass+by+Walt+Whitman.epub&tr=udp%3A%2F%2Ftracker.example1.com%3A1337&tr=udp%3A%2F%2Ftracker.example2.com%3A80&tr=udp%3A%2F%2Ftracker.example3.com%3A6969&tr=udp%3A%2F%2Ftracker.example4.com%3A80&tr=udp%3A%2F%2Ftracker.example5.com%3A80&ws=http%3A%2F%2Fdownload.wikimedia.org%2Fmediawiki%2F1.15%2Fmediawiki-1.15.1.tar.gz&kt=hey+hey2'
   )
 
-  expect(decode(result)).toEqual(obj)
+  expect(magnet.decode(result)).toEqual(obj)
 })
 
 test('encode: using infoHashBuffer', () => {
   const obj = {
     infoHashBuffer: new Uint8Array(Buffer.from('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36', 'hex')),
   }
-  const result = encode(obj)
+  const result = magnet.encode(obj)
   expect(result).toBe('magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36')
-  expect(decode(result)).toEqual({
+  expect(magnet.decode(result)).toEqual({
     infoHashBuffer: new Uint8Array(Buffer.from('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36', 'hex')),
     infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
@@ -86,11 +86,11 @@ test('encode: using infoHashV2Buffer', () => {
       Buffer.from('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36d2474e86c95b19b8bcfdb92b', 'hex')
     ),
   }
-  const result = encode(obj)
+  const result = magnet.encode(obj)
   expect(result).toBe(
     'magnet:?xt=urn:btmh:1220d2474e86c95b19b8bcfdb92bc12c9d44667cfa36d2474e86c95b19b8bcfdb92b'
   )
-  expect(decode(result)).toEqual({
+  expect(magnet.decode(result)).toEqual({
     infoHashV2: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36d2474e86c95b19b8bcfdb92b',
     infoHashV2Buffer: new Uint8Array(
       Buffer.from('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36d2474e86c95b19b8bcfdb92b', 'hex')
@@ -107,9 +107,9 @@ test('encode: select-only', () => {
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     so: [0, 2, 4, 6, 7, 8],
   }
-  const result = encode(obj)
+  const result = magnet.encode(obj)
   expect(result).toBe('magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36&so=0,2,4,6-8')
-  expect(decode(result)).toEqual({
+  expect(magnet.decode(result)).toEqual({
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     infoHashBuffer: new Uint8Array(Buffer.from('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36', 'hex')),
@@ -125,11 +125,11 @@ test('encode: peer-address single value', () => {
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     'x.pe': '123.213.32.10:47450',
   }
-  const result = encode(obj as Record<string, unknown>)
+  const result = magnet.encode(obj as Record<string, unknown>)
   expect(result).toBe(
     'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36&x.pe=123.213.32.10:47450'
   )
-  expect(decode(result)).toEqual({
+  expect(magnet.decode(result)).toEqual({
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     'x.pe': '123.213.32.10:47450',
     infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
@@ -145,11 +145,11 @@ test('encode: peer-address multiple values', () => {
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     'x.pe': ['123.213.32.10:47450', '[2001:db8::2]:55013'],
   }
-  const result = encode(obj as Record<string, unknown>)
+  const result = magnet.encode(obj as Record<string, unknown>)
   expect(result).toBe(
     'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36&x.pe=123.213.32.10:47450&x.pe=[2001:db8::2]:55013'
   )
-  expect(decode(result)).toEqual({
+  expect(magnet.decode(result)).toEqual({
     xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
     'x.pe': ['123.213.32.10:47450', '[2001:db8::2]:55013'],
     infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
@@ -163,7 +163,7 @@ test('encode: peer-address multiple values', () => {
 test('encode: using publicKey', () => {
   const publicKey = '9a36edf0988ddc1a0fc02d4e8652cce87a71aaac71fce936e650a597c0fb72e0'
   const obj = { publicKey }
-  const result = encode(obj)
+  const result = magnet.encode(obj)
   expect(result).toBe(
     'magnet:?xs=urn:btpk:9a36edf0988ddc1a0fc02d4e8652cce87a71aaac71fce936e650a597c0fb72e0'
   )
@@ -174,7 +174,7 @@ test('encode: using publicKeyBuffer', () => {
     Buffer.from('9a36edf0988ddc1a0fc02d4e8652cce87a71aaac71fce936e650a597c0fb72e0', 'hex')
   )
   const obj = { publicKeyBuffer }
-  const result = encode(obj)
+  const result = magnet.encode(obj)
   expect(result).toBe(
     'magnet:?xs=urn:btpk:9a36edf0988ddc1a0fc02d4e8652cce87a71aaac71fce936e650a597c0fb72e0'
   )

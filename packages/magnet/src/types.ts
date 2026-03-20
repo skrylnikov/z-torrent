@@ -8,6 +8,7 @@ export interface MagnetURI {
   kt?: string[]
   so?: number[]
   ix?: number
+  xl?: string
   infoHash?: string
   infoHashBuffer?: Uint8Array
   infoHashV2?: string
@@ -32,6 +33,7 @@ export interface MagnetURIEncodeInput {
   kt?: string[]
   so?: number[]
   ix?: number
+  xl?: string
   infoHash?: string
   infoHashBuffer?: Uint8Array
   infoHashV2?: string
