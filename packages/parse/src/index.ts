@@ -2,14 +2,14 @@
 import bencode from 'bencode'
 import sha1 from 'sync-sha1/rawSha1.js'
 import fetch from 'cross-fetch-ponyfill'
-import magnet, { encode } from '@z-torrent/magnet'
+import { magnet } from '@z-torrent/magnet'
 import { hash, arr2hex, text2arr, arr2text } from 'uint8-util'
 
 import type { Instance } from './types.js'
 
 async function parseTorrent(torrentId: string | Uint8Array | Instance): Promise<Instance> {
   if (typeof torrentId === 'string' && /^(stream-)?magnet:/.test(torrentId)) {
-    const torrentObj = magnet(torrentId)
+    const torrentObj = magnet.decode(torrentId)
 
     if (!torrentObj.infoHash) {
       throw new Error('Invalid torrent identifier')
@@ -20,9 +20,9 @@ async function parseTorrent(torrentId: string | Uint8Array | Instance): Promise<
     typeof torrentId === 'string' &&
     (/^[a-f0-9]{40}$/i.test(torrentId) || /^[a-z2-7]{32}$/i.test(torrentId))
   ) {
-    return magnet(`magnet:?xt=urn:btih:${torrentId}`)
+    return magnet.decode(`magnet:?xt=urn:btih:${torrentId}`)
   } else if (ArrayBuffer.isView(torrentId) && torrentId.length === 20) {
-    return magnet(`magnet:?xt=urn:btih:${arr2hex(torrentId)}`)
+    return magnet.decode(`magnet:?xt=urn:btih:${arr2hex(torrentId as Uint8Array)}`)
   } else if (ArrayBuffer.isView(torrentId)) {
     return Promise.resolve(decodeTorrentFile(torrentId))
   } else if (torrentId && torrentId.infoHash) {
@@ -266,7 +266,7 @@ function parseTorrentSync(torrentId: Uint8Array): Instance {
   return decodeTorrentFile(torrentId)
 }
 
-const toMagnetURI = encode
+const toMagnetURI = magnet.encode
 export {
   parseTorrentRemote as remote,
   parseTorrentSync,
