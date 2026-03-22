@@ -1,5 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
 import { chunkStoreRead } from 'chunk-store-iterator'
+import { resolveTorrentFileMime } from '@z-torrent/utils/streaming-mime'
 import mime from 'mime/lite.js'
 import { FileIterator } from './file-iterator.js'
 import type { FileWire, TorrentForFile } from './types.js'
@@ -43,7 +44,7 @@ export class File extends EventEmitter implements FileWire {
     this.path = file.path
     this.length = file.length
     this.size = file.length
-    this.type = mime.getType(this.name) || 'application/octet-stream'
+    this.type = resolveTorrentFileMime(this.name, mime.getType(this.name))
     this.offset = file.offset
 
     this.done = false

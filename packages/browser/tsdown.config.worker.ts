@@ -29,6 +29,7 @@ export default defineConfig({
   },
   deps: {
     alwaysBundle: [
+      '@z-torrent/utils',
       '@z-torrent/core',
       '@thaunknown/simple-peer',
       '@z-torrent/tracker',

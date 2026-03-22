@@ -1,3 +1,5 @@
+import { normalizeSwResponseContentType } from '@z-torrent/utils/streaming-mime'
+
 const portTimeoutDuration = 5000
 let cancellable = false
 
@@ -74,11 +76,13 @@ async function serve(event: FetchEvent): Promise<Response> {
     port.onmessage = null
   }
 
+  const headers = normalizeSwResponseContentType(url, data.headers)
+
   if (data.body !== 'STREAM') {
     cleanup()
     return new Response(data.body as string | ReadableStream<Uint8Array>, {
       status: data.status,
-      headers: data.headers,
+      headers,
     })
   }
 
@@ -111,6 +115,6 @@ async function serve(event: FetchEvent): Promise<Response> {
         cleanup()
       },
     }),
-    data
+    { status: data.status, headers }
   )
 }
