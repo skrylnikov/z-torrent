@@ -1,5 +1,16 @@
 ## [11.0.11](https://github.com/webtorrent/bittorrent-dht/compare/v11.0.10...v11.0.11) (2025-09-14)
 
+## 0.0.8
+
+### Patch Changes
+
+- [#16](https://github.com/skrylnikov/z-torrent/pull/16) [`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - **Debug namespaces**
+  - All `debug` logger namespaces now use `@z-torrent/<package>:<scope>` (aligned with workspace package names).
+  - **Breaking for debugging only:** previous `DEBUG` values (`webtorrent*`, `bittorrent-*`, `torrent-discovery`, `ut_metadata`, etc.) no longer match. Use e.g. `DEBUG=@z-torrent/core:*`, `DEBUG=@z-torrent/protocol:wire`, or `DEBUG=@z-torrent/*`.
+
+  **Docs**
+  - Root [README.md](README.md) and [AGENTS.md](AGENTS.md) updated with the new convention and examples.
+
 ## 0.0.7
 
 ### Patch Changes
