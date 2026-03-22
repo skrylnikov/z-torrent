@@ -51,17 +51,36 @@ function normalizeTruncatedV2InfoHash(value: string | Uint8Array): string {
   return hex
 }
 
+/**
+ * BEP 52 v2-truncated swarm: same logical client, different `info_hash` on the wire.
+ * Must not use a Proxy — sub-trackers call `getDefaultAnnounceOpts()` on this object, and
+ * private fields on the real `Client` only work when `this` is the actual instance.
+ */
 function v2SwarmContext(base: TrackerClientContext, v2Hex: string): TrackerClientContext {
   const infoHashBuffer = hex2arr(v2Hex)
   const infoHashBinary = hex2bin(v2Hex)
-  return new Proxy(base, {
-    get(target, prop, receiver) {
-      if (prop === 'infoHash') return v2Hex
-      if (prop === 'infoHashBuffer') return infoHashBuffer
-      if (prop === 'infoHashBinary') return infoHashBinary
-      return Reflect.get(target, prop, receiver)
-    },
-  }) as TrackerClientContext
+  return {
+    infoHash: v2Hex,
+    infoHashBuffer,
+    infoHashBinary,
+    peerId: base.peerId,
+    peerIdBuffer: base.peerIdBuffer,
+    peerIdBinary: base.peerIdBinary,
+    port: base.port,
+    userAgent: base.userAgent,
+    rtcConfig: base.rtcConfig,
+    wrtc: base.wrtc,
+    proxyOpts: base.proxyOpts,
+    getDefaultAnnounceOpts: (opts?: Record<string, unknown>) =>
+      base.getDefaultAnnounceOpts(opts as AnnounceOptions),
+    on: base.on.bind(base),
+    once: base.once.bind(base),
+    off: base.off.bind(base),
+    emit: base.emit.bind(base),
+    addListener: base.addListener.bind(base),
+    removeListener: base.removeListener.bind(base),
+    removeAllListeners: base.removeAllListeners.bind(base),
+  } as TrackerClientContext
 }
 
 function buildSubTrackers(
