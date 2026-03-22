@@ -1,5 +1,18 @@
 ## [2.8.5](https://github.com/webtorrent/webtorrent/compare/v2.8.4...v2.8.5) (2025-11-30)
 
+## 0.0.12
+
+### Patch Changes
+
+- [`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Type `ZTorrent` constructor options with `ZTorrentNodeOpts` (`Omit<ZTorrentCoreOpts, 'platform'>`). Type `seed` options with `SeedOpts` (`TorrentOpts & CreateTorrentOptions` plus optional `streams`) and add overloads for `(input, onseed?)` vs `(input, opts, onseed?)`. Export `ZTorrentNodeOpts` and `SeedOpts`. Replaces `Record<string, unknown>`.
+
+- Updated dependencies [[`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8), [`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8)]:
+  - @z-torrent/core@0.0.12
+  - @z-torrent/dht@0.0.12
+  - @z-torrent/create@0.0.12
+  - @z-torrent/discovery@0.0.12
+  - @z-torrent/utils@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes

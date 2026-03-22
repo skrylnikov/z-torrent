@@ -1,5 +1,16 @@
 # @z-torrent/browser
 
+## 0.0.12
+
+### Patch Changes
+
+- [`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Type `ZTorrent` constructor options with `ZTorrentBrowserOpts` (`Omit<ZTorrentCoreOpts, 'platform'>`) and export the type. Replaces `Record<string, unknown>`.
+
+- Updated dependencies [[`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8)]:
+  - @z-torrent/core@0.0.12
+  - @z-torrent/tracker@0.0.12
+  - @z-torrent/utils@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes
