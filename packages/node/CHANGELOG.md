@@ -1,5 +1,16 @@
 ## [2.8.5](https://github.com/webtorrent/webtorrent/compare/v2.8.4...v2.8.5) (2025-11-30)
 
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/core@0.0.11
+  - @z-torrent/dht@0.0.11
+  - @z-torrent/discovery@0.0.11
+  - @z-torrent/create@0.0.11
+  - @z-torrent/utils@0.0.11
+
 ## 0.0.10
 
 ### Patch Changes
