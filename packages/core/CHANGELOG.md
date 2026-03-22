@@ -1,5 +1,19 @@
 # @z-torrent/core
 
+## 0.0.12
+
+### Patch Changes
+
+- [`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Stricter typing for `ZTorrentCore` and related APIs: add `client-types.ts` with `TorrentDestroyOpts`, `TrackerOpts` (aligned with `@z-torrent/tracker` client options), `TrackerAnnounceOpts`, and `TrackerProxyOpts`. Add `TorrentId` for `get` / `add` / `remove`. Replace `unknown` on `tracker`, `blocklist`, `blocked`, `createServer` return type, and destroy/remove options. Type `PlatformAdapter.loadIPSet` with `IPSet` / `IPInput`; add `DHTInstance.once('error')` overload and typed `removeTorrentRoutingTable`; extend `ZTorrentClient` with `blocked`, `dht`, and `tracker`. `Torrent.destroy` accepts `TorrentDestroyOpts`, `Error`, or a callback; discovery startup uses typed `TrackerOpts` without `as any`. Export the new types from `@z-torrent/core`.
+
+- Updated dependencies [[`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8)]:
+  - @z-torrent/parse@0.0.12
+  - @z-torrent/merkle-tree@0.0.12
+  - @z-torrent/ut-metadata@0.0.12
+  - @z-torrent/protocol@0.0.12
+  - @z-torrent/ut-pex@0.0.12
+  - @z-torrent/utils@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes

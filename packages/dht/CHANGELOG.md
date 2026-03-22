@@ -1,5 +1,11 @@
 ## [11.0.11](https://github.com/webtorrent/bittorrent-dht/compare/v11.0.10...v11.0.11) (2025-09-14)
 
+## 0.0.12
+
+### Patch Changes
+
+- [`524498f`](https://github.com/skrylnikov/z-torrent/commit/524498ff7dd37ae04ed16a73d6d38edd76efc1c8) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Replace `node:crypto` and `sync-sha1` with `@noble/hashes` in `@z-torrent/parse`, `@z-torrent/merkle-tree`, and `@z-torrent/dht` for SHA-1 and SHA-256. Improves browser bundling (avoids `crypto-browserify` / broken CJS `exports` in production Vite/Rollup builds).
+
 ## 0.0.11
 
 ## 0.0.10
