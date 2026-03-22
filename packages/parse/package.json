@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/parse",
   "description": "Parse a torrent identifier (magnet uri, .torrent file, info hash)",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
     "url": "https://github.com/skrylnikov/z-torrent/issues"

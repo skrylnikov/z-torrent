@@ -2,7 +2,7 @@
   "name": "@z-torrent/dht",
   "description": "BitTorrent DHT implementation (BEP 5, BEP 44)",
   "type": "module",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
     "url": "https://github.com/skrylnikov/z-torrent/issues"

@@ -1,5 +1,14 @@
 ## [11.2.2](https://github.com/webtorrent/bittorrent-tracker/compare/v11.2.1...v11.2.2) (2025-09-06)
 
+## 0.0.10
+
+### Patch Changes
+
+- [`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix publish
+
+- Updated dependencies [[`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d)]:
+  - @z-torrent/utils@0.0.10
+
 ## 0.0.9
 
 ### Patch Changes
