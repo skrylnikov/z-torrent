@@ -3,7 +3,7 @@ import http from 'http'
 import zlib from 'zlib'
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 function assertBlocked(torrent: any, addr: string) {
   return new Promise<void>((resolve) => {
@@ -26,7 +26,7 @@ function assertReachable(torrent: any, addr: string) {
 }
 
 test('blocklist (single IP)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -57,7 +57,7 @@ test('blocklist (single IP)', async () => {
 })
 
 test('blocklist (array of IPs)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -117,7 +117,7 @@ function assertList(torrent: any) {
 }
 
 test('blocklist (array of IP ranges)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -156,7 +156,7 @@ test('blocklist (http url)', async () => {
     server.listen(0, () => {
       const port = (server.address() as { port: number }).port
       const url = `http://127.0.0.1:${port}`
-      const client = new WebTorrent({
+      const client = new ZTorrent({
         dht: false,
         tracker: false,
         lsd: false,
@@ -194,7 +194,7 @@ test('blocklist (http url with gzip encoding)', async () => {
     server.listen(0, () => {
       const port = (server.address() as { port: number }).port
       const url = `http://127.0.0.1:${port}`
-      const client = new WebTorrent({
+      const client = new ZTorrent({
         dht: false,
         tracker: false,
         lsd: false,
@@ -232,7 +232,7 @@ test('blocklist (http url with deflate encoding)', async () => {
     server.listen(0, () => {
       const port = (server.address() as { port: number }).port
       const url = `http://127.0.0.1:${port}`
-      const client = new WebTorrent({
+      const client = new ZTorrent({
         dht: false,
         tracker: false,
         lsd: false,
@@ -260,7 +260,7 @@ test('blocklist (http url with deflate encoding)', async () => {
 })
 
 test('blocklist (fs path)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -287,7 +287,7 @@ test('blocklist (fs path)', async () => {
 })
 
 test('blocklist (fs path with gzip)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

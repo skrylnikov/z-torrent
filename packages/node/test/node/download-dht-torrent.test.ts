@@ -4,7 +4,7 @@ import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
 test.skipIf(!LIVE_NETWORK)(
@@ -34,7 +34,7 @@ test.skipIf(!LIVE_NETWORK)(
           let loaded = false
           let noPeersFound = false
 
-          client1 = new WebTorrent({
+          client1 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: { bootstrap: `127.0.0.1:${dhtServer.address().port}` },
@@ -81,7 +81,7 @@ test.skipIf(!LIVE_NETWORK)(
         },
 
         (cb) => {
-          client2 = new WebTorrent({
+          client2 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: { bootstrap: `127.0.0.1:${dhtServer.address().port}` },

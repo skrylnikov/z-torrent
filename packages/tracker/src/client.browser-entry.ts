@@ -1,4 +1,3 @@
-/*! @z-torrent/tracker — browser client (WebSocket trackers only). MIT License. */
 import { createTrackerClient } from './client-class.js'
 import { HTTPTracker, UDPTracker } from './client/tracker-import.browser.js'
 

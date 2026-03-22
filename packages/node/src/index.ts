@@ -1,5 +1,3 @@
-/*! z-torrent. MIT License. Fork of WebTorrent by Feross Aboukhadijeh and WebTorrent LLC */
-
 import path from 'path'
 import { createTorrent, parseInput } from '@z-torrent/create'
 import parallel from 'run-parallel'
@@ -7,7 +5,7 @@ import { concat } from 'uint8-util'
 import SimplePeerLite from '@thaunknown/simple-peer/lite.js'
 
 import {
-  WebTorrentCore,
+  ZTorrentCore,
   VERSION_STR,
   Torrent,
   FileIterator,
@@ -23,7 +21,7 @@ import VERSION from '../version.cjs'
 
 export { FileIterator, Torrent, Peer, RarityMap, WebConn, ServerBase, File } from '@z-torrent/core'
 
-export class WebTorrent extends WebTorrentCore {
+export class ZTorrent extends ZTorrentCore {
   static readonly WEBRTC_SUPPORT: boolean = SimplePeerLite.WEBRTC_SUPPORT
   static readonly UTP_SUPPORT: boolean = ConnPool.UTP_SUPPORT
   static readonly VERSION: string = VERSION

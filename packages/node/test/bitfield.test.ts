@@ -2,11 +2,11 @@
 import { fixtures } from '@z-torrent/fixtures'
 import path from 'path'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 import { SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
 test('preloaded bitfield: load files into filesystem', { timeout: SEED_HEAVY_TIMEOUT_MS }, async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     utp: false,
     tracker: false,
@@ -41,7 +41,7 @@ test('preloaded bitfield: load files into filesystem', { timeout: SEED_HEAVY_TIM
 })
 
 test('preloaded bitfield: full bitfield, files exist', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     utp: false,
     tracker: false,
@@ -78,7 +78,7 @@ test('preloaded bitfield: full bitfield, files exist', async () => {
 })
 
 test('preloaded bitfield: partial bitfield, files exist', { timeout: SEED_HEAVY_TIMEOUT_MS }, async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     utp: false,
     tracker: false,
@@ -116,7 +116,7 @@ test('preloaded bitfield: partial bitfield, files exist', { timeout: SEED_HEAVY_
 })
 
 test('preloaded bitfield: wrong size bitfield, files exist', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     utp: false,
     tracker: false,
@@ -150,7 +150,7 @@ test('preloaded bitfield: wrong size bitfield, files exist', async () => {
 })
 
 test("preloaded bitfield: full bitfield, files don't exist", async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     utp: false,
     tracker: false,
@@ -182,7 +182,7 @@ test("preloaded bitfield: full bitfield, files don't exist", async () => {
 })
 
 test("preloaded bitfield: wrong size bitfield, files don't exist", async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     utp: false,
     tracker: false,

@@ -17,7 +17,7 @@ const argv = minimist(process.argv.slice(2), {
   boolean: ['help', 'version', 'private'],
   string: ['outfile', 'name', 'creationDate', 'comment', 'createdBy', 'announce', 'urlList'],
   default: {
-    createdBy: 'WebTorrent <https://webtorrent.io>',
+    createdBy: 'Z-Torrent <https://github.com/skrylnikov/z-torrent>',
   },
 })
 

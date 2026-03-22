@@ -1,4 +1,3 @@
-/*! @z-torrent/merkle-tree. MIT License. */
 export {
   BEP52_BLOCK_SIZE,
   BEP52_ZERO_LEAF,

@@ -1,6 +1,13 @@
 import Wire from '@z-torrent/protocol'
 import type { TorrentWire } from './types.js'
 
+/** Wire extends streamx Duplex but uses BitTorrent event names; avoid strict StreamEvents from @types/streamx. */
+type WireEventTarget = {
+  on(event: string, fn: (...args: unknown[]) => void): void
+  once(event: string, fn: (...args: unknown[]) => void): void
+  removeListener(event: string, fn: (...args: unknown[]) => void): void
+}
+
 export class RarityMap {
   #torrent: TorrentWire | null
   readonly #numPieces: number
@@ -84,9 +91,10 @@ export class RarityMap {
       }
     }
 
-    wire.on('have', this.#onWireHave as (...args: unknown[]) => void)
-    wire.on('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
-    wire.once('close', w._onClose)
+    const streamWire = wire as unknown as WireEventTarget
+    streamWire.on('have', this.#onWireHave as (...args: unknown[]) => void)
+    streamWire.on('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
+    streamWire.once('close', w._onClose)
   }
 
   recalculate(): void {
@@ -102,11 +110,12 @@ export class RarityMap {
   }
 
   #cleanupWireEvents(wire: Wire): void {
-    if (this.#onWireHave) wire.removeListener('have', this.#onWireHave as (...args: unknown[]) => void)
+    const streamWire = wire as unknown as WireEventTarget
+    if (this.#onWireHave) streamWire.removeListener('have', this.#onWireHave as (...args: unknown[]) => void)
     if (this.#onWireBitfield)
-      wire.removeListener('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
+      streamWire.removeListener('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
     const w = wire as any
-    if (w._onClose) wire.removeListener('close', w._onClose)
+    if (w._onClose) streamWire.removeListener('close', w._onClose)
     w._onClose = null
   }
 }

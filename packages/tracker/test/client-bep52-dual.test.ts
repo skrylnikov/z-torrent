@@ -1,4 +1,3 @@
-/*! BEP 52 hybrid: dual tracker announce (v1 + truncated v2). */
 import { test, expect } from 'bun:test'
 import { Client } from '../src/index.js'
 import common from './common.js'

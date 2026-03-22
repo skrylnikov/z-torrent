@@ -1,4 +1,3 @@
-/*! @z-torrent/tracker. MIT License. */
 import type { EventEmitter } from 'eventemitter3'
 
 export interface TrackerProxyOpts {

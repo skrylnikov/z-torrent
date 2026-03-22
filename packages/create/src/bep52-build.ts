@@ -1,4 +1,3 @@
-/*! create-torrent BEP 52 helpers. MIT License. */
 import { buildFileV2Merkle, BEP52_BLOCK_SIZE } from '@z-torrent/merkle-tree'
 import { arr2hex } from 'uint8-util'
 

@@ -7,7 +7,7 @@ import * as common from '../common.js'
 import type { TrackerClientContext } from '../client-context.js'
 import { Tracker } from './tracker.js'
 
-const debug = Debug('bittorrent-tracker:websocket-tracker')
+const debug = Debug('@z-torrent/tracker:websocket-tracker')
 const socketPool: Record<string, any> = {}
 const RECONNECT_MINIMUM = 10 * 1000
 const RECONNECT_MAXIMUM = 60 * 60 * 1000

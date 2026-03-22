@@ -1,8 +1,3 @@
-/**
- * WebTorrentCore — platform-agnostic client.
- * Requires platform adapter (PlatformAdapter) to be passed in opts.
- */
-
 import { EventEmitter } from 'eventemitter3'
 import parallel from 'run-parallel'
 import { parseTorrent } from '@z-torrent/parse'
@@ -23,11 +18,11 @@ import type {
   Server,
   ServerOptions,
 } from './interfaces.js'
-import type { WebTorrentClient } from './lib/torrent.js'
+import type { ZTorrentClient } from './lib/torrent.js'
 
 import { VERSION_STR } from './version.js'
 
-const debug = debugFactory('webtorrent')
+const debug = debugFactory('@z-torrent/core:client')
 
 const VERSION_PREFIX = `-WW${VERSION_STR}-`
 
@@ -38,7 +33,7 @@ interface ThrottleGroupControl {
   destroy(): void
 }
 
-export interface WebTorrentCoreOpts {
+export interface ZTorrentCoreOpts {
   platform: PlatformAdapter
   peerId?: string | ArrayBufferView
   nodeId?: string | ArrayBufferView
@@ -60,7 +55,7 @@ export interface WebTorrentCoreOpts {
   secure?: boolean
 }
 
-export class WebTorrentCore extends EventEmitter implements WebTorrentClient {
+export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
   platform: PlatformAdapter
   peerId: string
   peerIdBuffer: Uint8Array
@@ -89,7 +84,7 @@ export class WebTorrentCore extends EventEmitter implements WebTorrentClient {
   #downloadSpeedMeasure = throughput()
   #uploadSpeedMeasure = throughput()
 
-  constructor(opts: WebTorrentCoreOpts = {} as WebTorrentCoreOpts) {
+  constructor(opts: ZTorrentCoreOpts = {} as ZTorrentCoreOpts) {
     super()
 
     const platform = opts.platform

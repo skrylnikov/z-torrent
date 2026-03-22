@@ -2,7 +2,7 @@ import { fixtures } from '@z-torrent/fixtures'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
 import { Server as TrackerServer } from '@z-torrent/tracker'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { getDownloadPath, LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
 test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via tracker', async () => {
@@ -30,7 +30,7 @@ test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via tracker', asyn
         },
 
         (cb) => {
-          client1 = new WebTorrent({ dht: false, lsd: false })
+          client1 = new ZTorrent({ dht: false, lsd: false })
           client1.on('error', (err) => {
             throw err
           })
@@ -52,7 +52,7 @@ test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via tracker', asyn
         },
 
         (cb) => {
-          client2 = new WebTorrent({
+          client2 = new ZTorrent({
             dht: false,
             lsd: false,
             blocklist: ['127.0.0.1'],

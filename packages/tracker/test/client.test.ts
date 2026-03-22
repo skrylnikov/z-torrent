@@ -401,7 +401,7 @@ test('http: userAgent', () => {
   return new Promise((resolve, reject) => {
     common.createServer('http', (server, announceUrl) => {
       server.http!.on('request', (req) => {
-        expect(req.headers['user-agent']?.includes('WebTorrent')).toBeTruthy()
+        expect(req.headers['user-agent']?.includes('Z-Torrent')).toBeTruthy()
       })
 
       const client = new Client({
@@ -409,7 +409,7 @@ test('http: userAgent', () => {
         announce: announceUrl,
         peerId: peerId1,
         port,
-        userAgent: 'WebTorrent/0.98.0 (https://webtorrent.io)',
+        userAgent: 'Z-Torrent/0.98.0 (https://github.com/skrylnikov/z-torrent)',
         wrtc: testWrtc,
       })
 

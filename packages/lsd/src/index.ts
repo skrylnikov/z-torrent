@@ -2,7 +2,7 @@ import dgram from 'dgram'
 import { EventEmitter } from 'eventemitter3'
 import Debug from 'debug'
 
-const debug = Debug('bittorrent-lsd')
+const debug = Debug('@z-torrent/lsd:lsd')
 
 const ANNOUNCE_INTERVAL = 300000 // 5min
 const LSD_HOST = '239.192.152.143'

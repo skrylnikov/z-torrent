@@ -1,11 +1,11 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 import { expectSameMagnet } from './common.js'
 
 test('client.add: magnet uri, utf-8 string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -45,7 +45,7 @@ test('client.add: magnet uri, utf-8 string', async () => {
 })
 
 test('client.add: torrent file, buffer', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -85,7 +85,7 @@ test('client.add: torrent file, buffer', async () => {
 })
 
 test('client.add: info hash, hex string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -128,7 +128,7 @@ test('client.add: info hash, hex string', async () => {
 })
 
 test('client.add: info hash, buffer', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -172,7 +172,7 @@ test('client.add: info hash, buffer', async () => {
 })
 
 test('client.add: parsed torrent, from `parse-torrent`', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -212,7 +212,7 @@ test('client.add: parsed torrent, from `parse-torrent`', async () => {
 })
 
 test('client.add: parsed torrent, with string type announce property', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -258,7 +258,7 @@ test('client.add: parsed torrent, with string type announce property', async () 
 })
 
 test('client.add: parsed torrent, with array type announce property', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -304,7 +304,7 @@ test('client.add: parsed torrent, with array type announce property', async () =
 })
 
 test('client.add: invalid torrent id: empty string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -331,7 +331,7 @@ test('client.add: invalid torrent id: empty string', async () => {
 })
 
 test('client.add: invalid torrent id: short buffer', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -358,7 +358,7 @@ test('client.add: invalid torrent id: short buffer', async () => {
 })
 
 test('client.add: paused torrent', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

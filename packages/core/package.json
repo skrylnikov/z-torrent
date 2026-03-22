@@ -39,10 +39,9 @@
     "@z-torrent/utils": "workspace:*",
     "@z-torrent/ut-metadata": "workspace:*",
     "@z-torrent/ut-pex": "workspace:*",
-    "bitfield": "^4.2.0",
+    "bitfield": "^5.0.1",
     "cache-chunk-store": "^3.2.2",
     "chunk-store-iterator": "^1.0.4",
-    "cross-fetch-ponyfill": "^1.0.3",
     "debug": "^4.4.3",
     "escape-html": "^1.0.3",
     "eventemitter3": "^5.0.4",
@@ -62,6 +61,12 @@
     "unordered-array-remove": "^1.0.2"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/escape-html": "^1.0.4",
+    "@types/mime": "^3.0.4",
+    "@types/range-parser": "^1.2.7",
+    "@types/streamx": "^2.9.5",
+    "@types/unordered-array-remove": "^1.0.2",
     "typescript": "^5.9.3"
   },
   "engines": {

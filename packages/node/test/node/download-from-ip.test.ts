@@ -2,11 +2,11 @@ import fs from 'fs'
 import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
 test.skipIf(!LIVE_NETWORK)('Download via torrent.addPeer()', async () => {
-  const seeder = new WebTorrent({ tracker: false, dht: false, lsd: false })
+  const seeder = new ZTorrent({ tracker: false, dht: false, lsd: false })
 
   seeder.on('error', (err) => {
     throw err
@@ -28,7 +28,7 @@ test.skipIf(!LIVE_NETWORK)('Download via torrent.addPeer()', async () => {
     torrent.load(fs.createReadStream(fixtures.leaves.contentPath), (err) => {
       if (err) throw err
 
-      const downloader = new WebTorrent({ tracker: false, dht: false, lsd: false })
+      const downloader = new ZTorrent({ tracker: false, dht: false, lsd: false })
 
       downloader.on('error', (err) => {
         throw err
@@ -67,7 +67,7 @@ test.skipIf(!LIVE_NETWORK)('Download via torrent.addPeer()', async () => {
 }, { timeout: LIVE_TEST_TIMEOUT_MS })
 
 test.skipIf(!LIVE_NETWORK)('Download via magnet x.pe (BEP09)', async () => {
-  const seeder = new WebTorrent({
+  const seeder = new ZTorrent({
     tracker: false,
     dht: false,
     lsd: false,
@@ -94,7 +94,7 @@ test.skipIf(!LIVE_NETWORK)('Download via magnet x.pe (BEP09)', async () => {
     torrent.load(fs.createReadStream(fixtures.leaves.contentPath), (err) => {
       if (err) throw err
 
-      const downloader = new WebTorrent({ tracker: false, dht: false, lsd: false })
+      const downloader = new ZTorrent({ tracker: false, dht: false, lsd: false })
 
       downloader.on('error', (err) => {
         throw err

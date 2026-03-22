@@ -1,4 +1,3 @@
-/*! @z-torrent/merkle-tree. MIT License. */
 import { createHash } from 'node:crypto'
 
 /** 16 KiB — BEP 52 leaf block size */
@@ -235,7 +234,7 @@ export function verifyLeafToRoot(
   expectedRoot: Uint8Array
 ): boolean {
   let idx = leafIndex
-  let acc = leafHash.slice()
+  let acc: Uint8Array = leafHash.slice()
   for (const uncle of uncles) {
     const left = (idx & 1) === 0 ? acc : uncle
     const right = (idx & 1) === 0 ? uncle : acc

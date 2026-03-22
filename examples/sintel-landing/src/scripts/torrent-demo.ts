@@ -4,7 +4,7 @@ import { WSS_TRACKERS } from '../config/trackers'
 import prettierBytes from 'prettier-bytes'
 import throttle from 'throttleit'
 
-// WebTorrent demo torrent: Sintel.mp4. WSS trackers from config (client.tracker.announce).
+// Public Sintel demo magnet (Sintel.mp4). WSS trackers from config (client.tracker.announce).
 // Local sintel.torrent is a different torrent (4K mkv, no announce) — no peers in browser.
 // ws/xs — metadata source (webtorrent.io).
 const SINTEL_MAGNET =
@@ -69,9 +69,9 @@ async function runDemo(): Promise<void> {
   const graph = createP2PGraph('.torrent-graph')
   graph.add({ id: 'You', name: 'You', me: true })
 
-  const { WebTorrent } = await import('@z-torrent/browser')
+  const { ZTorrent } = await import('@z-torrent/browser')
   // webSeeds: false — скачивать только через P2P (wss трекеры + WebRTC), не с webtorrent.io
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     // webSeeds: false,
     tracker: {
       announce: WSS_TRACKERS,

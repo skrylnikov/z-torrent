@@ -9,7 +9,7 @@ to get started!
 
 ```html
 <script type="module">
-  import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
+  import { ZTorrent } from 'https://esm.sh/@z-torrent/browser'
 </script>
 ```
 
@@ -22,7 +22,7 @@ npm install @z-torrent/node
 ```
 
 ```js
-import { WebTorrent } from '@z-torrent/node'
+import { ZTorrent } from '@z-torrent/node'
 ```
 
 ## Quick Examples
@@ -30,9 +30,9 @@ import { WebTorrent } from '@z-torrent/node'
 ### Downloading a torrent (in the browser)
 
 ```js
-import { WebTorrent } from '@z-torrent/browser'
+import { ZTorrent } from '@z-torrent/browser'
 
-const client = new WebTorrent()
+const client = new ZTorrent()
 
 // Sintel — magnet (no webtorrent.io fallback; seed via WebRTC-capable client or use .torrent URL below)
 const torrentId =
@@ -67,9 +67,9 @@ the needed torrent pieces from the network on-demand.
 
 ```js
 import dragDrop from 'drag-drop'
-import { WebTorrent } from '@z-torrent/browser'
+import { ZTorrent } from '@z-torrent/browser'
 
-const client = new WebTorrent()
+const client = new ZTorrent()
 
 // When user drops files on the browser, create a new torrent and start seeding it!
 dragDrop('body', (files) => {
@@ -89,9 +89,9 @@ This exports a `DragDrop` function on `window`.
 ### Download and save a torrent (in Node.js)
 
 ```js
-import { WebTorrent } from '@z-torrent/node'
+import { ZTorrent } from '@z-torrent/node'
 
-const client = new WebTorrent()
+const client = new ZTorrent()
 
 const magnetURI = 'magnet: ...'
 
@@ -107,8 +107,8 @@ client.add(magnetURI, { path: '/path/to/folder' }, (torrent) => {
 **Note:** **`@z-torrent/node`** includes WebRTC support so browser peers can connect when you seed from Node.
 
 ```js
-import { WebTorrent } from '@z-torrent/node'
-const client = new WebTorrent()
+import { ZTorrent } from '@z-torrent/node'
+const client = new ZTorrent()
 
 client.seed('/seed-me.txt', (torrent) => {
   console.log('Client is seeding ' + torrent.magnetURI)
@@ -120,7 +120,7 @@ where **seed-me.txt** is a text file which is going to be seeded as a torrent.
 ### Complete HTML page example
 
 Looking for a more complete example? Look no further! This HTML example has a form input
-where the user can paste a magnet link and start a download over WebTorrent.
+where the user can paste a magnet link and start a download with **Z-Torrent**.
 
 Best of all, it's a single HTML page, under 70 lines!
 
@@ -150,9 +150,9 @@ downloaded.
     <div class="log"></div>
 
     <script type="module">
-      import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
+      import { ZTorrent } from 'https://esm.sh/@z-torrent/browser'
 
-      const client = new WebTorrent()
+      const client = new ZTorrent()
       const controller = await navigator.serviceWorker.register('./sw.min.js', {
         scope: './',
       })
@@ -331,11 +331,11 @@ The browser can only reach peers that speak WebRTC (web peers) unless you bridge
     <script src="http://momentjs.com/downloads/moment.min.js"></script>
 
     <script type="module">
-      import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
+      import { ZTorrent } from 'https://esm.sh/@z-torrent/browser'
 
       const torrentId = 'https://download.blender.org/demo/movies/Sintel.torrent'
 
-      const client = new WebTorrent()
+      const client = new ZTorrent()
 
       // HTML elements
       const $body = document.body

@@ -26,9 +26,9 @@ npm install @z-torrent/browser
 Browser (service worker + streaming to `<video>`):
 
 ```js
-import { WebTorrent } from '@z-torrent/browser'
+import { ZTorrent } from '@z-torrent/browser'
 
-const client = new WebTorrent()
+const client = new ZTorrent()
 
 const torrentId =
   'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
@@ -50,25 +50,25 @@ client.add(torrentId, (torrent) => {
 })
 ```
 
-# Client API (`WebTorrent`)
+# Client API (`ZTorrent`)
 
-The Node build exports `import { WebTorrent } from '@z-torrent/node'`. The browser build exports the same class from `@z-torrent/browser`.
+The Node build exports `import { ZTorrent } from '@z-torrent/node'`. The browser build exports the same class from `@z-torrent/browser`.
 
-## `WebTorrent.WEBRTC_SUPPORT`
+## `ZTorrent.WEBRTC_SUPPORT`
 
 Is WebRTC natively supported in the environment?
 
 ```js
-if (WebTorrent.WEBRTC_SUPPORT) {
+if (ZTorrent.WEBRTC_SUPPORT) {
   // WebRTC is supported
 } else {
   // Use a fallback
 }
 ```
 
-## `client = new WebTorrent([opts])`
+## `client = new ZTorrent([opts])`
 
-Create a new `WebTorrent` instance.
+Create a new `ZTorrent` instance.
 
 If `opts` is specified, then the default options (shown below) will be overridden.
 
@@ -314,7 +314,7 @@ Visiting the root of the server `/` won't show anything. Visiting `/webtorrent/`
 Here is a usage example for Node.js:
 
 ```js
-const client = new WebTorrent()
+const client = new ZTorrent()
 const magnetURI = 'magnet: ...'
 
 const instance = client.createServer()
@@ -340,7 +340,7 @@ In the browser you need the service worker bundle from [@z-torrent/browser](http
 Here is a user example for browser:
 
 ```js
-const client = new WebTorrent()
+const client = new ZTorrent()
 const magnetURI = 'magnet: ...'
 const player = document.querySelector('video')
 

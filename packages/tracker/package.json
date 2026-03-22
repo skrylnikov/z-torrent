@@ -1,6 +1,6 @@
 {
   "name": "@z-torrent/tracker",
-  "description": "BitTorrent tracker client and server (HTTP, UDP, WebSocket / WebTorrent)",
+  "description": "BitTorrent tracker client and server (HTTP, UDP, WebSocket / WebRTC signaling)",
   "version": "0.0.7",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bin": {

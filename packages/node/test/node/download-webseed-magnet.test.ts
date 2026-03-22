@@ -6,7 +6,7 @@ import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import serveStatic from 'serve-static'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('Download using webseed (via magnet uri)', async () => {
   const serve = serveStatic(path.dirname(fixtures.leaves.contentPath))
@@ -29,7 +29,7 @@ test('Download using webseed (via magnet uri)', async () => {
         },
 
         (cb) => {
-          client1 = new WebTorrent({
+          client1 = new ZTorrent({
             dht: false,
             tracker: false,
             lsd: false,
@@ -70,7 +70,7 @@ test('Download using webseed (via magnet uri)', async () => {
         },
 
         (cb) => {
-          client2 = new WebTorrent({
+          client2 = new ZTorrent({
             dht: false,
             tracker: false,
             lsd: false,

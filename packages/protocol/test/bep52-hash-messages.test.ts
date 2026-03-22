@@ -1,4 +1,3 @@
-/*! BEP 52 wire: HASH_REQUEST / HASHES / HASH_REJECT */
 import { expect, test } from 'bun:test'
 import Protocol from '@z-torrent/protocol'
 

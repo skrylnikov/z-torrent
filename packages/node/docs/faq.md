@@ -251,14 +251,14 @@ clients like Transmission, and uTorrent to add support for WebTorrent. **Vuze**
 
 **Browser:** install `@z-torrent/browser`, register the service worker from that package (see [packages/browser README](https://github.com/skrylnikov/z-torrent/tree/main/packages/browser)), then bundle with your app (Vite, Webpack, etc.).
 
-**Node.js:** `npm install @z-torrent/node` and `import { WebTorrent } from '@z-torrent/node'`.
+**Node.js:** `npm install @z-torrent/node` and `import { ZTorrent } from '@z-torrent/node'`.
 
 Example (browser, with service worker):
 
 ```js
-import { WebTorrent } from '@z-torrent/browser'
+import { ZTorrent } from '@z-torrent/browser'
 
-const client = new WebTorrent()
+const client = new ZTorrent()
 
 const torrentId =
   'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'

@@ -13,7 +13,7 @@ In node.js, this module is a simple torrent client, using TCP and UDP to talk to
 
 In the browser, Z-Torrent uses **WebRTC** (data channels) for peer-to-peer transport. It can be used **without** browser plugins, extensions, or installations.
 
-To make BitTorrent work over WebRTC (which is the only P2P transport that works on the web) we made some protocol changes. Therefore, a browser-based Z-Torrent client or **"web peer"** can only connect to other clients that support WebTorrent/WebRTC.
+To make BitTorrent work over WebRTC (which is the only P2P transport that works on the web) we made some protocol changes. Therefore, a browser-based Z-Torrent client or **"web peer"** can only connect to other clients that support WebTorrent/WebRTC. The programmatic client class is exported as **`ZTorrent`** from `@z-torrent/node` and `@z-torrent/browser`.
 
 ### Features
 
@@ -137,22 +137,28 @@ _Sizes and dependency counts are from `bun run size` and `bun run deps:count`._
 
 #### Enable debug logs
 
-In **node**, enable debug logs by setting the `DEBUG` environment variable to the name of the module you want to debug (e.g. `bittorrent-protocol`, or `*` to print **all logs**).
+Debug namespaces follow **`@z-torrent/<package>:<scope>`** (for example `@z-torrent/protocol:wire` for the wire protocol, `@z-torrent/core:torrent` for the torrent engine). Use `*` segments to widen: `@z-torrent/core:*` for all core scopes, or `@z-torrent/*` for every package.
+
+In **node**, set the `DEBUG` environment variable (comma-separated list is supported):
 
 ```bash
+DEBUG=@z-torrent/protocol:wire z-torrent
+DEBUG=@z-torrent/* z-torrent
 DEBUG=* z-torrent
 ```
 
 In the **browser**, enable debug logs by running this in the developer console:
 
 ```js
-localStorage.setItem("debug", "*");
+localStorage.setItem('debug', '@z-torrent/core:*')
+// or all packages:
+localStorage.setItem('debug', '@z-torrent/*')
 ```
 
 Disable by running this:
 
 ```js
-localStorage.removeItem("debug");
+localStorage.removeItem('debug')
 ```
 
 ## Acknowledgments

@@ -1,4 +1,3 @@
-/*! @z-torrent/tracker. MIT License. */
 import { EventEmitter } from 'eventemitter3'
 
 import type { TrackerClientContext } from '../client-context.js'

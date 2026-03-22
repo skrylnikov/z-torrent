@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import { WebTorrentCore } from '../src/client.js'
+import { ZTorrentCore } from '../src/client.js'
 import type { ChunkStore, PlatformAdapter } from '../src/interfaces.js'
 
 class MinimalChunkStore implements ChunkStore {
@@ -45,12 +45,12 @@ function minimalPlatform(): PlatformAdapter {
   }
 }
 
-test('WebTorrentCore requires platform', () => {
-  expect(() => new WebTorrentCore({} as never)).toThrow('platform adapter is required')
+test('ZTorrentCore requires platform', () => {
+  expect(() => new ZTorrentCore({} as never)).toThrow('platform adapter is required')
 })
 
-test('WebTorrentCore constructs with platform', () => {
-  const client = new WebTorrentCore({ platform: minimalPlatform() })
+test('ZTorrentCore constructs with platform', () => {
+  const client = new ZTorrentCore({ platform: minimalPlatform() })
   expect(client.peerId.length).toBeGreaterThan(0)
   expect(client.nodeId.length).toBeGreaterThan(0)
   expect(client.debugId.length).toBeGreaterThan(0)

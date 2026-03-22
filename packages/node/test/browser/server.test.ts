@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { fixtures } from '@z-torrent/fixtures'
 
 // The image append/render tests don't work in electron, so skip them
@@ -14,7 +14,7 @@ if (!(global as any)?.process?.versions?.electron && typeof navigator?.serviceWo
   ;(img as Buffer & { name: string }).name = 'img.png'
 
   test('SW Registration and errors', async () => {
-    const client = new WebTorrent({
+    const client = new ZTorrent({
       dht: false,
       tracker: false,
       lsd: false,
@@ -66,7 +66,7 @@ if (!(global as any)?.process?.versions?.electron && typeof navigator?.serviceWo
   })
 
   test('SW renderer image', async () => {
-    const client = new WebTorrent({
+    const client = new ZTorrent({
       dht: false,
       tracker: false,
       lsd: false,
@@ -108,7 +108,7 @@ if (!(global as any)?.process?.versions?.electron && typeof navigator?.serviceWo
   })
 
   test('client.createServer: programmatic http server [node-like usage]', async () => {
-    const client = new WebTorrent({ tracker: false, dht: false, lsd: false })
+    const client = new ZTorrent({ tracker: false, dht: false, lsd: false })
 
     client.on('error', (err) => {
       throw err

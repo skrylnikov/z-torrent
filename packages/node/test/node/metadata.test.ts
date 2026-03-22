@@ -1,16 +1,16 @@
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('ut_metadata transfer', async () => {
-  const client1 = new WebTorrent({
+  const client1 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
     natUpnp: false,
     natPmp: false,
   })
-  const client2 = new WebTorrent({
+  const client2 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

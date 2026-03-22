@@ -1,5 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
-import { Transform, pipeline } from 'streamx'
+import { Transform } from 'streamx'
+
+import { pipeline } from './streamx-pipeline.js'
 import arrayRemove from 'unordered-array-remove'
 import debugFactory from 'debug'
 import type { ThrottleGroup } from 'speed-limiter'
@@ -24,7 +26,7 @@ const SOURCE_DHT = 'dht'
 const SOURCE_LSD = 'lsd'
 const SOURCE_UT_PEX = 'ut_pex'
 
-const debug = debugFactory('webtorrent:peer')
+const debug = debugFactory('@z-torrent/core:peer')
 
 let secure = false
 
@@ -206,7 +208,7 @@ export class Peer extends EventEmitter {
 
   clearPipes(): void {
     this.conn.unpipe()
-    this.wire!.unpipe()
+    ;(this.wire as unknown as { unpipe(): void }).unpipe()
   }
 
   setThrottlePipes(): void {

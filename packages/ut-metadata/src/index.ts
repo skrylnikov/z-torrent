@@ -4,7 +4,7 @@ import BitField from 'bitfield'
 import Debug from 'debug'
 import { hash, arr2text, concat } from 'uint8-util'
 
-const debug = Debug('ut_metadata')
+const debug = Debug('@z-torrent/ut-metadata:metadata')
 
 const MAX_METADATA_SIZE = 1e7
 const BITFIELD_GROW = 1e3

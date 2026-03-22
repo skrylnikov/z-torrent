@@ -16,11 +16,12 @@ test('v2 fixture: expected merkle piece roots count matches layout', async () =>
   expect(decoded.v2FileLayout).toBeDefined()
   expect(decoded.pieceLayersByRootHex).toBeDefined()
   expect(decoded.pieceLength).toBeGreaterThan(0)
+  const pieceLength = decoded.pieceLength as number
 
-  const n = v2NumPieces(decoded.v2FileLayout!, decoded.pieceLength)
+  const n = v2NumPieces(decoded.v2FileLayout!, pieceLength)
   const roots = buildV2ExpectedPieceRoots(
     decoded.v2FileLayout!,
-    decoded.pieceLength,
+    pieceLength,
     decoded.pieceLayersByRootHex!
   )
   expect(roots.length).toBe(n)

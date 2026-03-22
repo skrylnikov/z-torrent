@@ -152,12 +152,7 @@ test('server: multiple info_hash scrape (manual http request)', async () => {
       const url = `${scrapeUrl}?${commonLib.querystringStringify({
         info_hash: [binaryInfoHash1, binaryInfoHash2],
       })}`
-      let res
-      try {
-        res = await fetch(url)
-      } catch (err) {
-        throw err
-      }
+      const res = await fetch(url)
       let data = Buffer.from(await res.arrayBuffer())
 
       expect(res.status).toBe(200)
@@ -206,12 +201,7 @@ test('server: all info_hash scrape (manual http request)', () => {
       client.start()
 
       server.once('start', async () => {
-        let res
-        try {
-          res = await fetch(scrapeUrl)
-        } catch (err) {
-          throw err
-        }
+        const res = await fetch(scrapeUrl)
         let data = Buffer.from(await res.arrayBuffer())
 
         expect(res.status).toBe(200)

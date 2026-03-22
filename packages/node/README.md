@@ -10,12 +10,12 @@ npm install @z-torrent/node
 
 ## Usage
 
-Use the **named** export `WebTorrent` (there is no default export).
+Use the **named** export `ZTorrent` (there is no default export).
 
 ```js
-import { WebTorrent } from '@z-torrent/node'
+import { ZTorrent } from '@z-torrent/node'
 
-const client = new WebTorrent({
+const client = new ZTorrent({
   dht: true,
   tracker: true,
   lsd: true,
@@ -40,9 +40,9 @@ client.destroy(() => {
 
 Static fields on the class:
 
-- `WebTorrent.VERSION` — package version string
-- `WebTorrent.WEBRTC_SUPPORT` — whether WebRTC data channels are available
-- `WebTorrent.UTP_SUPPORT` — whether µTP listener support is available (native `utp-native`)
+- `ZTorrent.VERSION` — package version string
+- `ZTorrent.WEBRTC_SUPPORT` — whether WebRTC data channels are available
+- `ZTorrent.UTP_SUPPORT` — whether µTP listener support is available (native `utp-native`)
 
 ## Scripts (package development)
 

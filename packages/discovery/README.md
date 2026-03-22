@@ -1,6 +1,6 @@
 # @z-torrent/discovery
 
-Combines DHT, tracker, and LSD (Local Service Discovery) clients behind one API for finding BitTorrent / WebTorrent peers. Used by [Z-Torrent](https://z-torrent.xyz).
+Combines DHT, tracker, and LSD (Local Service Discovery) clients behind one API for finding BitTorrent peers (including WebRTC-capable swarms). Used by [Z-Torrent](https://z-torrent.xyz).
 
 ## Install
 

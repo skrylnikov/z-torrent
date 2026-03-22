@@ -1,4 +1,3 @@
-/*! create-torrent. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import bencode from 'bencode'
 import blockIterator from 'block-iterator'
 import calcPieceLength from 'piece-length'

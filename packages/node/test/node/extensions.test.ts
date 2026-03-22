@@ -1,6 +1,6 @@
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('extension support', async () => {
   let extendedHandshakes = 0
@@ -39,7 +39,7 @@ test('extension support', async () => {
 
   await new Promise<void>((resolve) => {
     done = resolve
-    client1 = new WebTorrent({
+    client1 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -54,7 +54,7 @@ test('extension support', async () => {
     throw err
   })
 
-  client2 = new WebTorrent({
+  client2 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

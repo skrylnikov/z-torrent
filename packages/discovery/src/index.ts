@@ -1,4 +1,3 @@
-/*! @z-torrent/discovery. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 
 import Debug from 'debug'
 import { EventEmitter } from 'eventemitter3'
@@ -9,7 +8,7 @@ import { DHT } from '@z-torrent/dht'
 import { LSD } from '@z-torrent/lsd'
 import { Client } from '@z-torrent/tracker'
 
-const debug = Debug('torrent-discovery')
+const debug = Debug('@z-torrent/discovery:discovery')
 
 function isBrowserRuntime(): boolean {
   if (typeof process === 'undefined') return false

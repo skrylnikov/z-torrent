@@ -2,7 +2,7 @@ import http from 'http'
 import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 function createServer(data: Buffer, cb: (url: string, server: http.Server) => void) {
   const server = http.createServer((req, res) => {
@@ -24,7 +24,7 @@ function createServer(data: Buffer, cb: (url: string, server: http.Server) => vo
 }
 
 test('Download metadata for magnet URI with xs parameter', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -60,7 +60,7 @@ test('Download metadata for magnet URI with xs parameter', async () => {
 })
 
 test('Download metadata for magnet URI with 2 xs parameters', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -99,7 +99,7 @@ test('Download metadata for magnet URI with 2 xs parameters', async () => {
 })
 
 test('Download metadata for magnet URI with 2 xs parameters, with 1 invalid protocol', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -134,7 +134,7 @@ test('Download metadata for magnet URI with 2 xs parameters, with 1 invalid prot
 })
 
 test('Download metadata for magnet URI with 2 xs parameters, with 1 404 URL', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -169,7 +169,7 @@ test('Download metadata for magnet URI with 2 xs parameters, with 1 404 URL', as
 })
 
 test('Download metadata magnet URI with unsupported protocol in xs parameter', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

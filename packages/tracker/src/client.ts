@@ -1,4 +1,3 @@
-/*! @z-torrent/tracker. MIT License. */
 import { createTrackerClient } from './client-class.js'
 import { HTTPTracker } from './client/http-tracker.js'
 import { UDPTracker } from './client/udp-tracker.js'

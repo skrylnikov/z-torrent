@@ -15,7 +15,7 @@ import records from 'record-cache'
 import { randomBytes } from 'uint8-util'
 import sha1Hash from 'sync-sha1/rawSha1.js'
 
-const debug = Debug('bittorrent-dht')
+const debug = Debug('@z-torrent/dht:client')
 
 const ROTATE_INTERVAL = 5 * 60 * 1000 // rotate secrets every 5 minutes
 const BUCKET_OUTDATED_TIMESPAN = 15 * 60 * 1000 // check nodes in bucket in 15 minutes old buckets
@@ -981,7 +981,7 @@ function decodePeers(buf: Buffer[]): Array<{ host: string; port: number }> {
 }
 
 function parseIp(buf: Buffer, offset: number): string {
-  return `${buf[offset++]}.${buf[offset++]}.${buf[offset++]}.${buf[offset++]}`
+  return `${buf[offset]}.${buf[offset + 1]}.${buf[offset + 2]}.${buf[offset + 3]}`
 }
 
 function encodeSigData(msg: any): Buffer {

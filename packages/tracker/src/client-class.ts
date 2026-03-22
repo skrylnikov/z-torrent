@@ -1,4 +1,3 @@
-/*! @z-torrent/tracker. MIT License. */
 import Debug from 'debug'
 import { EventEmitter } from 'eventemitter3'
 import { once } from '@z-torrent/utils'
@@ -11,7 +10,7 @@ import * as common from './common.js'
 import type { TrackerClientContext, TrackerProxyOpts } from './client-context.js'
 import { WebSocketTracker } from './client/websocket-tracker.js'
 
-const debug = Debug('bittorrent-tracker:client')
+const debug = Debug('@z-torrent/tracker:client')
 
 export interface AnnounceOptions {
   uploaded?: number

@@ -4,7 +4,7 @@ import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
 import { Server as TrackerServer } from '@z-torrent/tracker'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
 test.skipIf(!LIVE_NETWORK)('Download using UDP tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
@@ -53,7 +53,7 @@ function magnetDownloadTest(serverType: 'udp' | 'http' | 'ws') {
           parsedTorrent.announce = [announceUrl]
           magnetURI = `magnet:?xt=urn:btih:${parsedTorrent.infoHash}&tr=${encodeURIComponent(announceUrl)}`
 
-          client1 = new WebTorrent({ dht: false, lsd: false })
+          client1 = new ZTorrent({ dht: false, lsd: false })
           client1.on('error', (err) => {
             throw err
           })
@@ -90,7 +90,7 @@ function magnetDownloadTest(serverType: 'udp' | 'http' | 'ws') {
         },
 
         (cb) => {
-          client2 = new WebTorrent({ dht: false, lsd: false })
+          client2 = new ZTorrent({ dht: false, lsd: false })
           client2.on('error', (err) => {
             throw err
           })

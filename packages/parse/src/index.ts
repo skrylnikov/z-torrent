@@ -1,4 +1,3 @@
-/*! @z-torrent/parse. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import { createHash } from 'node:crypto'
 
 import bencode from 'bencode'
