@@ -7,15 +7,23 @@
   "bugs": {
     "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
-  "main": "dist/z-torrent.min.js",
+  "main": "dist/index.js",
   "exports": {
     ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./standalone": {
       "import": "./dist/z-torrent.min.js",
       "types": "./dist/z-torrent.min.d.ts"
     },
     "./sw": {
       "import": "./dist/sw.min.js",
       "types": "./types/sw.d.ts"
+    },
+    "./vite": {
+      "import": "./dist/vite-plugin.mjs",
+      "types": "./dist/vite-plugin.d.mts"
     }
   },
   "files": [
@@ -34,7 +42,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown -c tsdown.config.main.ts && tsdown -c tsdown.config.worker.ts",
+    "build": "tsdown -c tsdown.config.main.ts && tsdown -c tsdown.config.standalone.ts && tsdown -c tsdown.config.worker.ts && tsdown -c tsdown.config.node.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json"
   },
@@ -49,7 +57,8 @@
     "crypto-browserify": "^3.12.1",
     "stream-browserify": "^3.0.0",
     "tsdown": "^0.21.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0"
   },
   "peerDependencies": {
     "webrtc-polyfill": "^1.1.5"

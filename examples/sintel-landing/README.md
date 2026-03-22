@@ -22,7 +22,7 @@ Or run `bun run build` to build everything, then `bun run dev` in sintel-landing
 bun run build
 ```
 
-The build script ensures the z-torrent-browser bundle exists, copies the service worker to `public/`, and runs the Astro build.
+The Astro build uses `@z-torrent/browser/vite` (`zTorrentSW`) to emit the service worker into the static output; ensure `@z-torrent/browser` is built first (e.g. `bun run build --filter=@z-torrent/browser` from the repo root).
 
 ## Deploy
 

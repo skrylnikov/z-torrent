@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
-    "build": "node scripts/copy-sw.mjs && astro build",
+    "build": "astro build",
     "preview": "astro preview"
   },
   "dependencies": {

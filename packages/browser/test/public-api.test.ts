@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import { ZTorrent, FileIterator } from '../dist/z-torrent.min.js'
+import { ZTorrent, FileIterator } from '../dist/index.js'
 
 test('FileIterator is exported', () => {
   expect(FileIterator).toBeDefined()
