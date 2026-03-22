@@ -32,6 +32,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "@noble/hashes": "^1.8.0"
+  },
   "keywords": [
     "bittorrent",
     "bep52",

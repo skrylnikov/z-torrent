@@ -1,3 +1,5 @@
+import type { IPInput, IPSet } from '@z-torrent/utils'
+
 /** Chunk storage abstraction — read/write piece data */
 export interface ChunkStore {
   get(
@@ -58,12 +60,13 @@ export interface ConnectionPoolInstance extends ConnectionPool {
 
 /** DHT client API used by ZTorrentCore (not the same as swarm `Discovery`). */
 export interface DHTInstance {
+  once(event: 'error', fn: (err: Error) => void): void
   once(event: string, fn: (...args: unknown[]) => void): void
   listen(port: number): void
   destroy(cb: () => void): void
   address(): { port: number } | null
   setMaxListeners?(n: number): void
-  removeTorrentRoutingTable?(infoHash: unknown): void
+  removeTorrentRoutingTable?(infoHash: string): void
 }
 
 /** UPnP/NAT-PMP helper used by ZTorrentCore. */
@@ -104,7 +107,11 @@ export interface PlatformAdapter {
   /** Create DHT instance (null in browser) */
   createDHT?(opts: Record<string, unknown>): DHTInstance | null
   /** Load IP blocklist (null in browser) */
-  loadIPSet?(blocklist: unknown, opts: Record<string, unknown>, cb: (err: Error | null, ipSet?: unknown) => void): void
+  loadIPSet?(
+    blocklist: string | IPInput[],
+    opts: Record<string, unknown>,
+    cb: (err: Error | null, ipSet?: IPSet) => void
+  ): void
   /** NAT traversal (null in browser) */
   createNatTraversal?(opts: Record<string, unknown>): NatTraversalInstance | null
   /** Connect to peer via TCP/UTP (null in browser, returns connection object) */

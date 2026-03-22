@@ -1,5 +1,10 @@
 import path from 'path'
-import { createTorrent, parseInput } from '@z-torrent/create'
+import {
+  createTorrent,
+  parseInput,
+  type CreateTorrentOptions,
+  type FileItem,
+} from '@z-torrent/create'
 import parallel from 'run-parallel'
 import { concat } from 'uint8-util'
 import SimplePeerLite from '@thaunknown/simple-peer/lite.js'
@@ -13,6 +18,8 @@ import {
   RarityMap,
   WebConn,
   ServerBase,
+  type ZTorrentCoreOpts,
+  type TorrentOpts,
 } from '@z-torrent/core'
 import { createNodePlatformAdapter } from './platform.js'
 import { ConnPool } from './lib/conn-pool.js'
@@ -21,12 +28,22 @@ import VERSION from '../version.cjs'
 
 export { FileIterator, Torrent, Peer, RarityMap, WebConn, ServerBase, File } from '@z-torrent/core'
 
+export type ZTorrentNodeOpts = Omit<ZTorrentCoreOpts, 'platform'>
+
+export type SeedOpts = TorrentOpts &
+  CreateTorrentOptions & {
+    /** Filled while seeding; elements match `FileItem.getStream` from parseInput */
+    streams?: Array<FileItem['getStream']>
+  }
+
+type ParseInputInput = Parameters<typeof parseInput>[0]
+
 export class ZTorrent extends ZTorrentCore {
   static readonly WEBRTC_SUPPORT: boolean = SimplePeerLite.WEBRTC_SUPPORT
   static readonly UTP_SUPPORT: boolean = ConnPool.UTP_SUPPORT
   static readonly VERSION: string = VERSION
 
-  constructor(opts: Record<string, unknown> = {}) {
+  constructor(opts: ZTorrentNodeOpts = {}) {
     const platform = createNodePlatformAdapter()
     super({
       ...opts,
@@ -36,13 +53,30 @@ export class ZTorrent extends ZTorrentCore {
 
   seed(
     input: string | File | FileList | Buffer | Array<string | File | Buffer>,
-    opts: Record<string, unknown> = {},
+    onseed?: (torrent: Torrent) => void
+  ): Torrent
+  seed(
+    input: string | File | FileList | Buffer | Array<string | File | Buffer>,
+    opts: SeedOpts,
+    onseed?: (torrent: Torrent) => void
+  ): Torrent
+  seed(
+    input: string | File | FileList | Buffer | Array<string | File | Buffer>,
+    optsOrOnseed?: SeedOpts | ((torrent: Torrent) => void),
     onseed?: (torrent: Torrent) => void
   ): Torrent {
     if (this.destroyed) throw new Error('client is destroyed')
-    if (typeof opts === 'function') [opts, onseed] = [{}, opts]
 
-    opts = opts ? Object.assign({}, opts) : {}
+    let opts: SeedOpts
+    let seedCallback: ((torrent: Torrent) => void) | undefined
+    if (typeof optsOrOnseed === 'function') {
+      opts = {}
+      seedCallback = optsOrOnseed
+    } else {
+      opts = optsOrOnseed ? { ...optsOrOnseed } : {}
+      seedCallback = onseed
+    }
+
     opts.skipVerify = true
 
     const isFilePath = typeof input === 'string'
@@ -54,7 +88,7 @@ export class ZTorrent extends ZTorrentCore {
       const tasks: Array<(cb: (err?: Error | null) => void) => void> = [
         (cb) => {
           if (isFilePath || opts.preloadedStore) return cb()
-          torrent.load((opts as { streams?: unknown }).streams, cb)
+          torrent.load(opts.streams, cb)
         },
       ]
       if (this.dht) {
@@ -62,10 +96,10 @@ export class ZTorrent extends ZTorrentCore {
           torrent.once('dhtAnnounce', () => cb())
         })
       }
-      parallel(tasks, (err) => {
+      parallel(tasks, (err?: Error | null) => {
         if (this.destroyed) return
         if (err) return torrent.destroyWithError(err)
-        if (typeof onseed === 'function') onseed(torrent)
+        if (typeof seedCallback === 'function') seedCallback(torrent)
         torrent.emit('seed')
         this.emit('seed', torrent)
       })
@@ -102,19 +136,19 @@ export class ZTorrent extends ZTorrentCore {
           }
         }
       ),
-      (err, inputResult) => {
+      (err: Error | null | undefined, inputResult: unknown[] | undefined) => {
         if (this.destroyed) return
         if (err) return torrent.destroyWithError(err)
 
-        parseInput(inputResult as never, opts, (parseErr, files) => {
+        parseInput(inputResult as ParseInputInput, opts, (parseErr, files) => {
           if (this.destroyed) return
           if (parseErr) return torrent.destroyWithError(parseErr)
           if (!files) return torrent.destroyWithError(new Error('parseInput returned no files'))
 
           const streams = files.map((f) => f.getStream)
-          ;(opts as { streams?: unknown }).streams = streams
+          opts.streams = streams
 
-          createTorrent(inputResult as never, opts, async (createErr, torrentBuf) => {
+          createTorrent(inputResult as ParseInputInput, opts, async (createErr, torrentBuf) => {
             if (this.destroyed) return
             if (createErr) return torrent.destroyWithError(createErr)
             if (!torrentBuf) return torrent.destroyWithError(new Error('createTorrent returned no buffer'))
@@ -124,10 +158,10 @@ export class ZTorrent extends ZTorrentCore {
               console.warn('A torrent with the same id is already being seeded')
               if (this.torrents.includes(torrent)) {
                 this.detachTorrent(torrent, null, () => {
-                  if (typeof onseed === 'function') onseed(existingTorrent)
+                  if (typeof seedCallback === 'function') seedCallback(existingTorrent)
                 })
-              } else if (typeof onseed === 'function') {
-                onseed(existingTorrent)
+              } else if (typeof seedCallback === 'function') {
+                seedCallback(existingTorrent)
               }
             } else {
               void torrent.applyTorrentInput(torrentBuf)

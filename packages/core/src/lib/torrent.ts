@@ -25,7 +25,10 @@ import { RarityMap } from './rarity-map.js'
 import { WebConn } from './webconn.js'
 import { Selections } from '../selections.js'
 import MemoryChunkStore from 'memory-chunk-store'
-import type { Discovery, PlatformAdapter } from '../interfaces.js'
+import type { IPSet } from '@z-torrent/utils'
+
+import type { Discovery, DHTInstance, DiscoveryOptions, PlatformAdapter } from '../interfaces.js'
+import type { TorrentDestroyOpts, TrackerAnnounceOpts, TrackerOpts } from '../client-types.js'
 import type { V2FileLayoutEntry } from '@z-torrent/parse'
 import { buildV2ExpectedPieceRoots, v2IsFirstPieceOfFile } from './v2-piece-roots.js'
 import type { TorrentWire, TorrentForFile } from './types.js'
@@ -113,8 +116,8 @@ export interface ZTorrentClient {
   maxConns: number
   utp: boolean
   throttleGroups: ThrottleGroups
-  dht?: unknown
-  tracker?: unknown
+  dht?: DHTInstance | null
+  tracker?: boolean | TrackerOpts
   lsd?: boolean
   utPex?: boolean
   enableWebSeeds?: boolean
@@ -123,7 +126,12 @@ export interface ZTorrentClient {
   debugId: string
   recordDownload: (bytes?: number) => number
   recordUpload: (bytes?: number) => number
-  removeTorrentFromClient: (torrent: Torrent, opts?: unknown, cb?: () => void) => void
+  removeTorrentFromClient: (
+    torrent: Torrent,
+    opts?: TorrentDestroyOpts | null | (() => void),
+    cb?: () => void
+  ) => void
+  blocked?: IPSet | null
   listening: boolean
   on: (event: string, fn: (...args: unknown[]) => void) => void
   once: (event: string, fn: (...args: unknown[]) => void) => void
@@ -415,12 +423,13 @@ export class Torrent
       parsedTorrent.announce = parsedTorrent.announce.concat(this.announce)
     }
 
-    if (
-      this.client.tracker &&
-      Array.isArray((this.client.tracker as any).announce) &&
-      !parsedTorrent.private
-    ) {
-      parsedTorrent.announce = parsedTorrent.announce.concat((this.client.tracker as any).announce)
+    const globalTracker = this.client.tracker
+    if (globalTracker && typeof globalTracker === 'object' && !parsedTorrent.private) {
+      const extra = globalTracker.announce
+      if (extra != null) {
+        const extraList = typeof extra === 'string' ? [extra] : extra
+        parsedTorrent.announce = parsedTorrent.announce.concat(extraList)
+      }
     }
 
     if (this.client.tracker && (globalThis as any).WEBTORRENT_ANNOUNCE && !parsedTorrent.private) {
@@ -466,19 +475,20 @@ export class Torrent
   #startDiscovery(): void {
     if (this.discovery || this.destroyed) return
 
-    let trackerOpts = this.client.tracker
-    if (trackerOpts) {
-      trackerOpts = Object.assign({}, this.client.tracker, {
-        getAnnounceOpts: () => {
+    let trackerOpts: DiscoveryOptions['tracker'] = this.client.tracker
+    const ctr = this.client.tracker
+    if (ctr && typeof ctr === 'object') {
+      trackerOpts = Object.assign({}, ctr, {
+        getAnnounceOpts: (): TrackerAnnounceOpts => {
           if (this.destroyed) return {}
 
-          const opts = {
+          const opts: TrackerAnnounceOpts = {
             uploaded: this.uploaded,
             downloaded: this.downloaded,
             left: Math.max(this.length - this.downloaded, 0),
           }
-          if ((this.client.tracker as any)?.getAnnounceOpts) {
-            Object.assign(opts, (this.client.tracker as any).getAnnounceOpts())
+          if (ctr.getAnnounceOpts) {
+            Object.assign(opts, ctr.getAnnounceOpts())
           }
           if (this._getAnnounceOpts) {
             Object.assign(opts, this._getAnnounceOpts())
@@ -1530,8 +1540,7 @@ export class Torrent
     return IPv4Pattern.test(addr)
   }
 
-  #destroyTorrent(err?: Error, opts?: any, cb?: () => void): void {
-    if (typeof opts === 'function') return this.#destroyTorrent(err, null, opts)
+  #destroyTorrent(err?: Error, opts?: TorrentDestroyOpts | null, cb?: () => void): void {
     if (this.destroyed) return
     this.destroyed = true
     this.#debug('destroy')
@@ -1588,9 +1597,16 @@ export class Torrent
     this.#destroyTorrent(err, undefined, cb)
   }
 
-  destroy(opts?: any, cb?: (err?: Error) => void): void {
+  destroy(
+    opts?: TorrentDestroyOpts | Error | null | ((err?: Error) => void),
+    cb?: (err?: Error) => void
+  ): void {
     if (typeof opts === 'function') return this.destroy(null, opts)
-    this.#destroyTorrent(undefined, opts, cb)
+    if (opts instanceof Error) {
+      this.#destroyTorrent(opts, undefined, cb as (() => void) | undefined)
+      return
+    }
+    this.#destroyTorrent(undefined, opts ?? undefined, cb)
   }
 
   addPeer(peer: string, source?: string): boolean {
@@ -1607,7 +1623,7 @@ export class Torrent
       return false
     }
 
-    if ((this.client as any).blocked && host && (this.client as any).blocked.contains(host)) {
+    if (this.client.blocked && host && this.client.blocked.contains(host)) {
       this.#debug('ignoring peer: blocked %s', peer)
       this.emit('blockedPeer', peer)
       return false

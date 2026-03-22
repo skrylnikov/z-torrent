@@ -12,8 +12,8 @@ import krpc, {
 import low from 'last-one-wins'
 import { LRUCache } from 'lru-cache'
 import records from 'record-cache'
+import { sha1 as sha1Noble } from '@noble/hashes/sha1'
 import { randomBytes } from 'uint8-util'
-import sha1Hash from 'sync-sha1/rawSha1.js'
 
 const debug = Debug('@z-torrent/dht:client')
 
@@ -934,7 +934,7 @@ export class DHT extends EventEmitter {
 function noop() {}
 
 function sha1(buf: Buffer | Uint8Array): Buffer {
-  return Buffer.from(sha1Hash(buf instanceof Uint8Array ? buf : new Uint8Array(buf)))
+  return Buffer.from(sha1Noble(buf instanceof Uint8Array ? buf : new Uint8Array(buf)))
 }
 
 function createGetResponse(

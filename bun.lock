@@ -7,7 +7,6 @@
       "dependencies": {
         "@types/bencode": "^2.0.4",
         "bencode": "^4.0.0",
-        "sync-sha1": "^1.0.1",
         "uint8-util": "^2.2.6",
       },
       "devDependencies": {
@@ -36,7 +35,6 @@
         "@thaunknown/simple-peer": "^10.0.11",
         "@z-torrent/browser": "workspace:*",
         "astro": "^5.0.0",
-        "crypto-browserify": "^3.12.0",
         "d3": "^7.9.0",
         "prettier-bytes": "^1.0.0",
         "throttleit": "^2.0.0",
@@ -62,7 +60,7 @@
     },
     "packages/browser": {
       "name": "@z-torrent/browser",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "@thaunknown/simple-peer": "^10.1.0",
         "@z-torrent/core": "workspace:*",
@@ -86,7 +84,7 @@
     },
     "packages/core": {
       "name": "@z-torrent/core",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "@z-torrent/merkle-tree": "workspace:*",
         "@z-torrent/parse": "workspace:*",
@@ -127,7 +125,7 @@
     },
     "packages/create": {
       "name": "@z-torrent/create",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "bin": {
         "create-torrent": "./dist/bin/cmd.js",
       },
@@ -152,8 +150,9 @@
     },
     "packages/dht": {
       "name": "@z-torrent/dht",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
+        "@noble/hashes": "^1.8.0",
         "bencode": "^4.0.0",
         "debug": "^4.4.3",
         "eventemitter3": "^5.0.4",
@@ -162,7 +161,6 @@
         "last-one-wins": "^1.0.4",
         "lru-cache": "^11.2.4",
         "record-cache": "^1.2.0",
-        "sync-sha1": "^1.0.1",
         "uint8-util": "^2.2.6",
       },
       "devDependencies": {
@@ -177,7 +175,7 @@
     },
     "packages/discovery": {
       "name": "@z-torrent/discovery",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "@z-torrent/dht": "workspace:*",
         "@z-torrent/lsd": "workspace:*",
@@ -194,14 +192,14 @@
     },
     "packages/fixtures": {
       "name": "@z-torrent/fixtures",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "dependencies": {
         "@z-torrent/parse": "workspace:*",
       },
     },
     "packages/lsd": {
       "name": "@z-torrent/lsd",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "debug": "^4.4.3",
         "eventemitter3": "^5.0.4",
@@ -212,7 +210,7 @@
     },
     "packages/magnet": {
       "name": "@z-torrent/magnet",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "@thaunknown/thirty-two": "^1.0.5",
         "bep53-range": "^2.0.0",
@@ -221,11 +219,14 @@
     },
     "packages/merkle-tree": {
       "name": "@z-torrent/merkle-tree",
-      "version": "0.0.10",
+      "version": "0.0.11",
+      "dependencies": {
+        "@noble/hashes": "^1.8.0",
+      },
     },
     "packages/node": {
       "name": "@z-torrent/node",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "@silentbot1/nat-api": "^0.4.9",
         "@thaunknown/simple-peer": "^10.0.11",
@@ -256,14 +257,14 @@
     },
     "packages/parse": {
       "name": "@z-torrent/parse",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "bin": {
         "parse-torrent": "./dist/bin/cmd.js",
       },
       "dependencies": {
+        "@noble/hashes": "^1.8.0",
         "@z-torrent/magnet": "workspace:*",
         "bencode": "^4.0.0",
-        "sync-sha1": "^1.0.1",
         "uint8-util": "^2.2.6",
       },
       "devDependencies": {
@@ -272,7 +273,7 @@
     },
     "packages/protocol": {
       "name": "@z-torrent/protocol",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "bencode": "^4.0.0",
         "bitfield": "^5.0.1",
@@ -286,7 +287,7 @@
     },
     "packages/tracker": {
       "name": "@z-torrent/tracker",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "bin": {
         "bittorrent-tracker": "./dist/bin/cmd.js",
       },
@@ -329,7 +330,7 @@
     },
     "packages/ut-metadata": {
       "name": "@z-torrent/ut-metadata",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "bencode": "^4.0.0",
         "bitfield": "^5.0.1",
@@ -346,7 +347,7 @@
     },
     "packages/ut-pex": {
       "name": "@z-torrent/ut-pex",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "@z-torrent/utils": "workspace:*",
         "bencode": "^4.0.0",
@@ -359,7 +360,7 @@
     },
     "packages/utils": {
       "name": "@z-torrent/utils",
-      "version": "0.0.10",
+      "version": "0.0.11",
       "dependencies": {
         "ipaddr.js": "2.3.0",
         "uint8-util": "^2.2.6",
@@ -579,6 +580,8 @@
     "@manypkg/get-packages": ["@manypkg/get-packages@1.1.3", "", { "dependencies": { "@babel/runtime": "^7.5.5", "@changesets/types": "^4.0.1", "@manypkg/find-root": "^1.1.0", "fs-extra": "^8.1.0", "globby": "^11.0.0", "read-yaml-file": "^1.1.0" } }, "sha512-fo+QhuU3qE/2TQMQmbVMqaQ6EWbMhi4ABWP+O4AM1NqPBuy0OrApV5LO6BrrgnhtAHS2NH6RrVk9OL181tTi8A=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.1", "", { "dependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1", "@tybys/wasm-util": "^0.10.1" } }, "sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A=="],
+
+    "@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 
@@ -1962,8 +1965,6 @@
 
     "streamx": ["streamx@2.23.0", "", { "dependencies": { "events-universal": "^1.0.0", "fast-fifo": "^1.3.2", "text-decoder": "^1.1.0" } }, "sha512-kn+e44esVfn2Fa/O0CPFcex27fjIL6MkVae0Mm6q+E6f0hWv578YCERbv+4m02cjxvDsPKLnmxral/rR6lBMAg=="],
 
-    "string-encode": ["string-encode@0.2.2", "", {}, "sha512-lek1Sd4loeelHin0oCME49h9OdAg9l06682iodjyRvq32Y+fAPfpFOv8BGrkjOG+IVx1EvARIo9MCzeEPdrkXA=="],
-
     "string-width": ["string-width@7.2.0", "", { "dependencies": { "emoji-regex": "^10.3.0", "get-east-asian-width": "^1.0.0", "strip-ansi": "^7.1.0" } }, "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ=="],
 
     "string_decoder": ["string_decoder@1.3.0", "", { "dependencies": { "safe-buffer": "~5.2.0" } }, "sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA=="],
@@ -1981,8 +1982,6 @@
     "supports-preserve-symlinks-flag": ["supports-preserve-symlinks-flag@1.0.0", "", {}, "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="],
 
     "svgo": ["svgo@4.0.1", "", { "dependencies": { "commander": "^11.1.0", "css-select": "^5.1.0", "css-tree": "^3.0.1", "css-what": "^6.1.0", "csso": "^5.0.5", "picocolors": "^1.1.1", "sax": "^1.5.0" }, "bin": "./bin/svgo.js" }, "sha512-XDpWUOPC6FEibaLzjfe0ucaV0YrOjYotGJO1WpF0Zd+n6ZGEQUsSugaoLq9QkEZtAfQIxT42UChcssDVPP3+/w=="],
-
-    "sync-sha1": ["sync-sha1@1.0.1", "", { "dependencies": { "string-encode": "^0.2.1" } }, "sha512-1ZuuBoVoGmb8r+fjCLl5SHcrYcrmEHeDQxTdbWZgbK9vmRHeCcnqOtKZm49Qgw0H4f+JBqCPQgDpTx88EwH1/w=="],
 
     "tar": ["tar@4.4.19", "", { "dependencies": { "chownr": "^1.1.4", "fs-minipass": "^1.2.7", "minipass": "^2.9.0", "minizlib": "^1.3.3", "mkdirp": "^0.5.5", "safe-buffer": "^5.2.1", "yallist": "^3.1.1" } }, "sha512-a20gEsvHnWe0ygBY8JbxoM4w3SJdhc7ZAuxkLqh+nvNQN2IOt0B5lLgM490X5Hl8FF0dl0tOf2ewFYAlIFgzVA=="],
 

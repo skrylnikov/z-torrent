@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { sha256 } from '@noble/hashes/sha256'
 
 /** 16 KiB — BEP 52 leaf block size */
 export const BEP52_BLOCK_SIZE = 1 << 14
@@ -10,11 +10,11 @@ export function sha256Concat(left: Uint8Array, right: Uint8Array): Uint8Array {
   const buf = new Uint8Array(64)
   buf.set(left, 0)
   buf.set(right, 32)
-  return new Uint8Array(createHash('sha256').update(buf).digest())
+  return sha256(buf)
 }
 
 export function sha256Data(data: Uint8Array): Uint8Array {
-  return new Uint8Array(createHash('sha256').update(data).digest())
+  return sha256(data)
 }
 
 /**

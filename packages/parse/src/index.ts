@@ -1,7 +1,7 @@
-import { createHash } from 'node:crypto'
+import { sha256 } from '@noble/hashes/sha256'
+import { sha1 } from '@noble/hashes/sha1'
 
 import bencode from 'bencode'
-import rawSha1 from 'sync-sha1/rawSha1.js'
 import { magnet } from '@z-torrent/magnet'
 import { arr2hex, text2arr, arr2text } from 'uint8-util'
 
@@ -14,7 +14,7 @@ class TorrentIdParser {
     return this.#decodeInner(torrentId)
   }
 
-  /** Synchronous decode (Node.js). Uses `crypto.createHash` for BitTorrent v2 info hashes. */
+  /** Synchronous decode. Uses SHA-256 for BitTorrent v2 info hashes. */
   parseTorrentSync(torrentId: string | Uint8Array | Instance): Instance {
     return this.#decodeInner(torrentId)
   }
@@ -149,7 +149,7 @@ class TorrentIdParser {
   }
 
   #sha256BencodedInfo(infoBufferEncoded: Uint8Array): Uint8Array {
-    return new Uint8Array(createHash('sha256').update(Buffer.from(infoBufferEncoded)).digest())
+    return sha256(infoBufferEncoded)
   }
 
   #decodeInner(torrentId: string | Uint8Array | Instance): Instance {
@@ -245,7 +245,7 @@ class TorrentIdParser {
     const infoBufferEncoded = result.infoBuffer!
 
     if (hasV1Structure) {
-      result.infoHashBuffer = rawSha1(
+      result.infoHashBuffer = sha1(
         infoBufferEncoded instanceof Uint8Array
           ? infoBufferEncoded
           : new Uint8Array(infoBufferEncoded)

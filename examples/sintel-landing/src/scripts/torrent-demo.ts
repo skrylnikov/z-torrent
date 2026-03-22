@@ -20,10 +20,20 @@ function formatRemaining(ms: number): string {
   return `${hours} hour${hours === 1 ? '' : 's'} remaining.`
 }
 
+function readExtendedClientV(hs: Record<string, unknown>): string {
+  const v = hs.v
+  if (typeof v === 'string') return v
+  if (v instanceof Uint8Array) return new TextDecoder().decode(v)
+  return ''
+}
+
 interface TorrentWire {
-  peerId: { toString: () => string }
+  peerId: string | { toString: () => string }
   remoteAddress?: string
-  once: (ev: string, fn: () => void) => void
+  uploaded: number
+  downloaded: number
+  once: (ev: string, fn: (...args: unknown[]) => void) => void
+  on: (ev: string, fn: (...args: unknown[]) => void) => void
 }
 
 interface Torrent {
@@ -64,7 +74,7 @@ export async function initTorrentDemo() {
 }
 
 async function runDemo(): Promise<void> {
-  localStorage.debug = 'webtorrent*,bittorrent-tracker*'
+  localStorage.debug = '@z-torrent/*,-@z-torrent/protocol:wire'
 
   const graph = createP2PGraph('.torrent-graph')
   graph.add({ id: 'You', name: 'You', me: true })
@@ -76,32 +86,38 @@ async function runDemo(): Promise<void> {
     tracker: {
       announce: WSS_TRACKERS,
       rtcConfig: {
+        // Fewer iceServers entries avoids Chrome: "Using five or more STUN/TURN servers..."
+        // Merge extra STUN URLs into the first `urls` array; TURN needs its own entry (credentials).
         iceServers: [
-          { urls: 'stun:turn.z-torrent.xyz:3478' },
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun.cloudflare.com:3478' },
-          { urls: "stun:stun.skylink.ru:3478" },
+          {
+            urls: [
+              'stun:turn.z-torrent.xyz:3478',
+              'stun:stun.l.google.com:19302',
+              // 'stun:stun.cloudflare.com:3478',
+            ],
+          },
           {
             urls: ['turn:turn.z-torrent.xyz:3478', 'turns:turn.z-torrent.xyz:5349'],
             username: 'z-torrent',
             credential: '7hEo08aCalKZMllCsU7DUnQ71/gSS0tAQ6hrQnVtL9vCqYc5',
           },
-
-
-          // { urls: 'stun:stun1.l.google.com:19302' },
-          // { urls: 'stun:stun2.l.google.com:19302' },
-          // { urls: 'stun:stun3.l.google.com:19302' },
-          // { urls: 'stun:stun4.l.google.com:19302' },
-          // { urls: 'stun:stun.stunprotocol.org:3478' },
-          // { urls: 'stun:global.stun.twilio.com:3478' },
-          // { urls: 'stun:stun.nextcloud.com:443' },
-          // { urls: "stun:stun.arbuz.ru:3478" },
-          // { urls: "stun:stun.chathelp.ru:3478" },
-          // { urls: "stun:stun.comtube.ru:3478" },
-          // { urls: "stun:stun.demos.ru:3478" },
-          // { urls: "stun:stun.kanet.ru:3478" },
-          // { urls: "stun:stun.mgn.ru:3478" },
-          // { urls: "stun:stun.ooonet.ru:3478" },
+          // More STUN: append to the first `urls` array, not as new iceServers entries:
+          // 'stun:stun.skylink.ru:3478',
+          // 'stun:stun1.l.google.com:19302',
+          // 'stun:stun2.l.google.com:19302',
+          // 'stun:stun3.l.google.com:19302',
+          // 'stun:stun4.l.google.com:19302',
+          // 'stun:stun.stunprotocol.org:3478',
+          // 'stun:global.stun.twilio.com:3478',
+          // 'stun:stun.nextcloud.com:443',
+          // 'stun:stun.arbuz.ru:3478',
+          // 'stun:stun.chathelp.ru:3478',
+          // 'stun:stun.comtube.ru:3478',
+          // 'stun:stun.demos.ru:3478',
+          // 'stun:stun.kanet.ru:3478',
+          // 'stun:stun.mgn.ru:3478',
+          // 'stun:stun.ooonet.ru:3478',
+          // Extra TURN (different credentials) = separate iceServers object:
           // {
           //   urls: ['turn:freeturn.net:3478', 'turn:freeturn.net:5349'],
           //   username: 'free',
@@ -158,9 +174,28 @@ async function runDemo(): Promise<void> {
 
     torrent.on('wire', (wire: unknown) => {
       const w = wire as TorrentWire
-      const id = w.peerId.toString()
-      graph.add({ id, name: w.remoteAddress || 'Unknown' })
+      const rawPeerId = w.peerId
+      const id = typeof rawPeerId === 'string' ? rawPeerId : rawPeerId.toString()
+      const shortId = id.slice(0, 6)
+      const initialName = w.remoteAddress ?? shortId
+      graph.add({ id, name: initialName })
       graph.connect('You', id)
+
+      w.on('extended', (...args: unknown[]) => {
+        const extName = args[0]
+        const hs = args[1]
+        if (extName !== 'handshake') return
+        if (w.remoteAddress) return
+        const clientStr = readExtendedClientV(hs as Record<string, unknown>)
+        if (clientStr) graph.updatePeer(id, { name: `${clientStr} (${shortId})` })
+      })
+
+      const throttledPeerStats = throttle(() => {
+        graph.updatePeer(id, { downloaded: w.downloaded, uploaded: w.uploaded })
+      }, 500) as () => void
+      w.on('download', throttledPeerStats)
+      w.on('upload', throttledPeerStats)
+
       w.once('close', () => {
         graph.disconnect('You', id)
         graph.remove(id)

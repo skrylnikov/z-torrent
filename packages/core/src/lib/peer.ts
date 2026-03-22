@@ -7,6 +7,7 @@ import debugFactory from 'debug'
 import type { ThrottleGroup } from 'speed-limiter'
 import Wire from '@z-torrent/protocol'
 import type { TorrentWire } from './types.js'
+import type { DHTInstance } from '../interfaces.js'
 
 const CONNECT_TIMEOUT_TCP = 5_000
 const CONNECT_TIMEOUT_UTP = 5_000
@@ -47,7 +48,7 @@ export interface PeerSwarm extends TorrentWire {
   infoHash: string
   infoHashHash?: string
   private?: boolean
-  client: { peerId: string; dht?: unknown }
+  client: { peerId: string; dht?: DHTInstance | null }
   handleWire(wire: unknown, addr?: string): void
   removePeer(id: string): void
 }

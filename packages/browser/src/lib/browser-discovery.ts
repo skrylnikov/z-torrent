@@ -36,6 +36,8 @@ export class BrowserDiscovery implements Discovery {
       port: opts.port,
       announce: wsAnnounce,
       getAnnounceOpts: trackerOpts.getAnnounceOpts as (() => Record<string, unknown>) | undefined,
+      rtcConfig: trackerOpts.rtcConfig as ConstructorParameters<typeof RTCPeerConnection>[0],
+      wrtc: trackerOpts.wrtc as unknown | (() => unknown) | undefined,
       userAgent: opts.userAgent,
     })
     this.#tracker.on('warning', (err: Error) => this.#emit('warning', err))

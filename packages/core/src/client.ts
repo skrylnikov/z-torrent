@@ -1,6 +1,8 @@
 import { EventEmitter } from 'eventemitter3'
 import parallel from 'run-parallel'
 import { parseTorrent } from '@z-torrent/parse'
+import type { Instance as ParseInstance } from '@z-torrent/parse'
+import type { IPInput, IPSet } from '@z-torrent/utils'
 
 import { hash, hex2arr, arr2hex, arr2base, text2arr, randomBytes } from 'uint8-util'
 import throughput from 'throughput'
@@ -18,9 +20,26 @@ import type {
   Server,
   ServerOptions,
 } from './interfaces.js'
-import type { ZTorrentClient } from './lib/torrent.js'
+import type { ParsedTorrent, TorrentOpts, ZTorrentClient } from './lib/torrent.js'
+import type { TorrentDestroyOpts, TrackerOpts } from './client-types.js'
 
 import { VERSION_STR } from './version.js'
+
+export type {
+  TorrentDestroyOpts,
+  TrackerAnnounceOpts,
+  TrackerOpts,
+  TrackerProxyOpts,
+} from './client-types.js'
+
+/** Value that identifies a torrent for `get` / `add` / `remove`. */
+export type TorrentId =
+  | string
+  | ArrayBufferView
+  | ParsedTorrent
+  | ParseInstance
+  | Torrent
+  | null
 
 const debug = debugFactory('@z-torrent/core:client')
 
@@ -39,7 +58,7 @@ export interface ZTorrentCoreOpts {
   nodeId?: string | ArrayBufferView
   torrentPort?: number
   dhtPort?: number
-  tracker?: unknown
+  tracker?: boolean | TrackerOpts
   lsd?: boolean
   utPex?: boolean
   natUpnp?: boolean | string
@@ -49,7 +68,7 @@ export interface ZTorrentCoreOpts {
   seedOutgoingConnections?: boolean
   downloadLimit?: number
   uploadLimit?: number
-  blocklist?: unknown
+  blocklist?: string | IPInput[]
   dht?: boolean | Record<string, unknown>
   webSeeds?: boolean
   secure?: boolean
@@ -67,7 +86,7 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
   ready: boolean
   torrentPort: number
   dhtPort: number
-  tracker: unknown
+  tracker: boolean | TrackerOpts
   lsd: boolean
   utPex: boolean
   torrents: Torrent[]
@@ -77,7 +96,7 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
   enableWebSeeds: boolean
   dht: DHTInstance | null
   natTraversal: NatTraversalInstance | null
-  blocked: unknown
+  blocked: IPSet | null
 
   #connPool: ConnectionPoolInstance | null = null
   #httpServer: (Server & { pathname?: string }) | null = null
@@ -117,7 +136,8 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     this.ready = false
     this.torrentPort = opts.torrentPort || 0
     this.dhtPort = opts.dhtPort || 0
-    this.tracker = opts.tracker !== undefined ? opts.tracker : {}
+    this.tracker = opts.tracker !== undefined ? opts.tracker : ({} as TrackerOpts)
+    this.blocked = null
     this.lsd = opts.lsd !== false
     this.utPex = opts.utPex !== false
     this.torrents = []
@@ -155,8 +175,9 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     }
 
     if (this.tracker && typeof this.tracker === 'object') {
-      const tr = this.tracker as Record<string, unknown>
-      if ((globalThis as any).WRTC && !tr.wrtc) tr.wrtc = (globalThis as any).WRTC
+      const tr = this.tracker
+      const g = globalThis as typeof globalThis & { WRTC?: object }
+      if (g.WRTC && !tr.wrtc) tr.wrtc = g.WRTC
     }
 
     const connPool = platform.createConnPool?.(this)
@@ -178,8 +199,8 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     }
     if (dht) {
       this.dht = dht
-      dht.once('error', (...args: unknown[]) => {
-        this.shutdownWithError(args[0] as Error)
+      dht.once('error', (err: Error) => {
+        this.shutdownWithError(err)
       })
       dht.once('listening', () => {
         const address = dht.address()
@@ -223,7 +244,7 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
         },
         (err, ipSet) => {
           if (err) return console.error(`Failed to load blocklist: ${err.message}`)
-          this.blocked = ipSet
+          this.blocked = ipSet ?? null
           ready()
         }
       )
@@ -250,9 +271,13 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
    * Removes a torrent from the client list and destroys it. Used by the platform layer
    * when replacing a duplicate torrent (e.g. seed flow).
    */
-  detachTorrent(torrent: Torrent, opts?: unknown, cb?: () => void): void {
+  detachTorrent(
+    torrent: Torrent,
+    opts?: TorrentDestroyOpts | null | (() => void),
+    cb?: () => void
+  ): void {
     if (!torrent) return
-    if (typeof opts === 'function') return this.detachTorrent(torrent, null, opts as () => void)
+    if (typeof opts === 'function') return this.detachTorrent(torrent, null, opts)
     const index = this.torrents.indexOf(torrent)
     if (index === -1) return
     this.torrents.splice(index, 1)
@@ -336,7 +361,7 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     this.throttleGroups.up.destroy()
   }
 
-  createServer(options: ServerOptions = {}): unknown {
+  createServer(options: ServerOptions = {}): Server {
     if (this.destroyed) throw new Error('torrent is destroyed')
     if (this.#httpServer) throw new Error('server already created')
     const server = this.platform.createServer(this, options)
@@ -393,14 +418,20 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     return uploaded / received
   }
 
-  async get(torrentId: unknown): Promise<Torrent | null> {
+  async get(torrentId: TorrentId): Promise<Torrent | null> {
     if (torrentId instanceof Torrent) {
       if (this.torrents.includes(torrentId)) return torrentId
+      return null
+    }
+    if (torrentId == null) {
+      return null
     } else {
-      let parsed
+      let parsed: ParseInstance | undefined
       try {
-        parsed = await parseTorrent(torrentId as any)
-      } catch (err) {}
+        parsed = await parseTorrent(torrentId as string | Uint8Array | ParseInstance)
+      } catch {
+        /* invalid id */
+      }
       if (!parsed) return null
       if (!parsed.infoHash && !parsed.infoHashV2) throw new Error('Invalid torrent identifier')
 
@@ -411,9 +442,16 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     return null
   }
 
-  add(torrentId: unknown, opts: any = {}, ontorrent: (t: Torrent) => void = () => {}): Torrent {
+  add(
+    torrentId: TorrentId,
+    opts: TorrentOpts | ((t: Torrent) => void) = {},
+    ontorrent: (t: Torrent) => void = () => {}
+  ): Torrent {
     if (this.destroyed) throw new Error('client is destroyed')
-    if (typeof opts === 'function') [opts, ontorrent] = [{}, opts]
+    if (typeof opts === 'function') {
+      ontorrent = opts
+      opts = {}
+    }
 
     const onInfoHash = () => {
       if (this.destroyed) return
@@ -440,12 +478,12 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
       torrent.removeListener('close', onClose)
     }
 
-    opts = opts ? Object.assign({}, opts) : {}
+    const torrentOpts: TorrentOpts = opts ? Object.assign({}, opts) : {}
 
     const torrent = new Torrent(
       torrentId as ConstructorParameters<typeof Torrent>[0],
       this,
-      opts
+      torrentOpts
     )
     this.torrents.push(torrent)
 
@@ -457,15 +495,23 @@ export class ZTorrentCore extends EventEmitter implements ZTorrentClient {
     return torrent
   }
 
-  async remove(torrentId: unknown, opts?: unknown, cb?: () => void): Promise<void> {
-    if (typeof opts === 'function') return this.remove(torrentId, null, opts as () => void)
+  async remove(
+    torrentId: TorrentId,
+    opts?: TorrentDestroyOpts | null | (() => void),
+    cb?: () => void
+  ): Promise<void> {
+    if (typeof opts === 'function') return this.remove(torrentId, null, opts)
 
     const torrent = await this.get(torrentId)
     if (!torrent) throw new Error(`No torrent with id ${torrentId}`)
     this.detachTorrent(torrent, opts, cb)
   }
 
-  removeTorrentFromClient(torrent: Torrent, opts?: unknown, cb?: () => void): void {
+  removeTorrentFromClient(
+    torrent: Torrent,
+    opts?: TorrentDestroyOpts | null | (() => void),
+    cb?: () => void
+  ): void {
     this.detachTorrent(torrent, opts, cb)
   }
 

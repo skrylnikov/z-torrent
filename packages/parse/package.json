@@ -11,10 +11,10 @@
   },
   "type": "module",
   "dependencies": {
+    "@noble/hashes": "^1.8.0",
     "bencode": "^4.0.0",
     "@z-torrent/magnet": "workspace:*",
-    "uint8-util": "^2.2.6",
-    "sync-sha1": "^1.0.1"
+    "uint8-util": "^2.2.6"
   },
   "keywords": [
     ".torrent",

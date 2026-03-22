@@ -1,4 +1,4 @@
-import sha1 from 'sync-sha1/rawSha1.js'
+import { sha1 } from '@noble/hashes/sha1'
 import ed from 'bittorrent-dht-sodium'
 import { test, expect } from 'bun:test'
 import { DHT } from '../src/index.js'

@@ -8,6 +8,7 @@
     "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "dependencies": {
+    "@noble/hashes": "^1.8.0",
     "bencode": "^4.0.0",
     "debug": "^4.4.3",
     "eventemitter3": "^5.0.4",
@@ -16,7 +17,6 @@
     "last-one-wins": "^1.0.4",
     "lru-cache": "^11.2.4",
     "record-cache": "^1.2.0",
-    "sync-sha1": "^1.0.1",
     "uint8-util": "^2.2.6"
   },
   "devDependencies": {

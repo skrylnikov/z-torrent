@@ -1,6 +1,14 @@
 export * from './interfaces.js'
 export * from './selections.js'
-export { ZTorrentCore, type ZTorrentCoreOpts } from './client.js'
+export {
+  ZTorrentCore,
+  type ZTorrentCoreOpts,
+  type TorrentDestroyOpts,
+  type TrackerAnnounceOpts,
+  type TrackerOpts,
+  type TrackerProxyOpts,
+  type TorrentId,
+} from './client.js'
 export { Torrent } from './lib/torrent.js'
 export { File } from './lib/file.js'
 export { FileIterator } from './lib/file-iterator.js'
