@@ -137,13 +137,17 @@ export class UtMetadata extends EventEmitter {
       }
     } catch {}
 
-    const sha1Hex = await hash(metadata, 'hex')
-    const sha256Hex = await hash(metadata, 'hex', 'sha256')
-    if (this.#infoHashV2 && this.#infoHashV2 !== sha256Hex) {
-      return false
+    if (this.#infoHashV2) {
+      const sha256Hex = await hash(metadata, 'hex', 'sha256')
+      if (this.#infoHashV2 !== sha256Hex) {
+        return false
+      }
     }
-    if (this.#infoHash && this.#infoHash !== sha1Hex) {
-      return false
+    if (this.#infoHash) {
+      const sha1Hex = await hash(metadata, 'hex')
+      if (this.#infoHash !== sha1Hex) {
+        return false
+      }
     }
 
     this.cancel()

@@ -1,6 +1,6 @@
 /*! BEP 52 expected piece roots for v2-only swarms. MIT License. */
 import type { V2FileLayoutEntry } from '@z-torrent/parse'
-import { pieceSubtreeRootFromBytes } from '@z-torrent/merkle-tree'
+import { BEP52_BLOCK_SIZE, padPieceRoot } from '@z-torrent/merkle-tree'
 import { hex2arr } from 'uint8-util'
 
 export function alignUpByteOffset(offset: number, align: number): number {
@@ -54,8 +54,9 @@ export function buildV2ExpectedPieceRoots(
   layersByRootHex: Record<string, Uint8Array[]>
 ): Uint8Array[] {
   const n = v2NumPieces(layout, pieceLength)
-  const zeroPiece = new Uint8Array(pieceLength)
-  const paddingPieceRoot = pieceSubtreeRootFromBytes(zeroPiece, pieceLength, false)
+  /** BEP 52: inter-file padding uses zero *leaves* (32 zero bytes), not SHA-256 of zero blocks */
+  const blocksPerPiece = pieceLength / BEP52_BLOCK_SIZE
+  const paddingPieceRoot = padPieceRoot(blocksPerPiece)
   const roots: Uint8Array[] = []
 
   for (let g = 0; g < n; g++) {
