@@ -1,5 +1,16 @@
 ## [11.0.19](https://github.com/webtorrent/torrent-discovery/compare/v11.0.18...v11.0.19) (2025-09-14)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Support truncated v2 info hash in peer discovery and announces for hybrid BitTorrent v2 torrents.
+
+- Updated dependencies [[`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b)]:
+  - @z-torrent/dht@0.0.7
+  - @z-torrent/tracker@0.0.7
+  - @z-torrent/lsd@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

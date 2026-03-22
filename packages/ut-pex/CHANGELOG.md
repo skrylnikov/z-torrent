@@ -1,5 +1,14 @@
 ## [4.0.4](https://github.com/webtorrent/ut_pex/compare/v4.0.3...v4.0.4) (2023-08-10)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Hybrid / v2–aware types and small API adjustments.
+
+- Updated dependencies []:
+  - @z-torrent/utils@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

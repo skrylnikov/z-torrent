@@ -1,5 +1,11 @@
 ## [4.1.21](https://github.com/webtorrent/bittorrent-protocol/compare/v4.1.20...v4.1.21) (2025-09-14)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Add BitTorrent v2 (BEP 52) on the wire: handshake reserved-byte v2 bit (`0x10`), hash request / hashes messages and payloads. Update README.
+
 ## 0.0.6
 
 ### Patch Changes

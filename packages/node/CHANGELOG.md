@@ -1,5 +1,18 @@
 ## [2.8.5](https://github.com/webtorrent/webtorrent/compare/v2.8.4...v2.8.5) (2025-11-30)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Refresh Node package docs (API, BEP support, FAQ, get-started, tutorials, free-torrents) and root `AGENTS.md`.
+
+- Updated dependencies [[`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b)]:
+  - @z-torrent/core@0.0.7
+  - @z-torrent/create@0.0.7
+  - @z-torrent/dht@0.0.7
+  - @z-torrent/discovery@0.0.7
+  - @z-torrent/utils@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

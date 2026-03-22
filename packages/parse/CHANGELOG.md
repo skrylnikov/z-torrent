@@ -1,5 +1,14 @@
 ## [11.0.19](https://github.com/webtorrent/parse-torrent/compare/v11.0.18...v11.0.19) (2025-10-07)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Add v2 torrent metadata types and parsing (file layout, piece layers, and related fields).
+
+- Updated dependencies []:
+  - @z-torrent/magnet@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes
