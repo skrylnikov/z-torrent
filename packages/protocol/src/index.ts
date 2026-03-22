@@ -642,6 +642,15 @@ class Wire extends Duplex {
     this._message(0x11, [index], null)
   }
 
+  /** BEP 52: hash wire messages require v2 bit negotiated on both handshakes (reserved byte). */
+  _assertBep52HashWire(): void {
+    if (!this.extensions.v2 || !this.peerExtensions.v2) {
+      throw new Error(
+        'BEP 52 hash wire messages require v2 support on both sides (handshake reserved bit 0x10)'
+      )
+    }
+  }
+
   /**
    * BEP 52 hash request (message id 21).
    * `piecesRoot` must be 32 bytes (SHA-256 subtree root).
@@ -653,6 +662,7 @@ class Wire extends Duplex {
     length: number,
     proofLayers: number
   ): void {
+    this._assertBep52HashWire()
     if (piecesRoot.length !== 32) {
       throw new Error('hashRequest: piecesRoot must be 32 bytes')
     }
@@ -669,6 +679,7 @@ class Wire extends Duplex {
     proofLayers: number,
     hashPayload: Uint8Array
   ): void {
+    this._assertBep52HashWire()
     if (piecesRoot.length !== 32) {
       throw new Error('hashes: piecesRoot must be 32 bytes')
     }
@@ -684,6 +695,7 @@ class Wire extends Duplex {
     length: number,
     proofLayers: number
   ): void {
+    this._assertBep52HashWire()
     if (piecesRoot.length !== 32) {
       throw new Error('hashReject: piecesRoot must be 32 bytes')
     }

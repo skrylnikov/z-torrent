@@ -2,6 +2,16 @@
 import { expect, test } from 'bun:test'
 import Protocol from '@z-torrent/protocol'
 
+test('hashRequest throws if v2 not negotiated on handshake', () => {
+  const wire = new Protocol()
+  wire.handshake(
+    Buffer.from('01234567890123456789'),
+    Buffer.from('12345678901234567890')
+  )
+  const root = new Uint8Array(32)
+  expect(() => wire.hashRequest(root, 0, 0, 1, 0)).toThrow(/v2 support/)
+})
+
 test('hash_request round-trip over piped wires', () => {
   return new Promise<void>((resolve, reject) => {
     const a = new Protocol()
@@ -23,8 +33,12 @@ test('hash_request round-trip over piped wires', () => {
       resolve()
     })
 
-    a.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
-    b.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
+    a.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'), {
+      v2: true,
+    })
+    b.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'), {
+      v2: true,
+    })
 
     queueMicrotask(() => {
       a.hashRequest(root, 2, 3, 4, 5)
@@ -55,8 +69,12 @@ test('hashes message carries hash payload', () => {
       resolve()
     })
 
-    a.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
-    b.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
+    a.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'), {
+      v2: true,
+    })
+    b.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'), {
+      v2: true,
+    })
 
     queueMicrotask(() => {
       a.hashes(root, 0, 1, 2, 3, payload)
@@ -85,8 +103,12 @@ test('hashReject round-trip', () => {
       resolve()
     })
 
-    a.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
-    b.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
+    a.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'), {
+      v2: true,
+    })
+    b.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'), {
+      v2: true,
+    })
 
     queueMicrotask(() => {
       a.hashReject(root, 8, 7, 6, 1)

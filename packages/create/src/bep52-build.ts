@@ -54,7 +54,7 @@ export function buildHybridV1Layout(
     if (!path?.length) {
       throw new Error('hybrid torrent requires each file to have a path')
     }
-    infoFiles.push({ length: d.length, path, attr: 'x' })
+    infoFiles.push({ length: d.length, path })
     parts.push(d)
     cursor += d.length
     if (i < files.length - 1) {
@@ -87,7 +87,7 @@ export function addFileToV2Torrent(
   const merkle = buildFileV2Merkle(data, pieceLength)
   const leaf: Record<string, unknown> = { length: data.length }
   if (data.length > 0 && merkle.piecesRoot) {
-    leaf['pieces root'] = Buffer.from(merkle.piecesRoot)
+    leaf['pieces root'] = new Uint8Array(merkle.piecesRoot)
   }
   mergePathIntoFileTree(fileTree, path, leaf)
   if (merkle.pieceLayerConcat && merkle.piecesRoot) {

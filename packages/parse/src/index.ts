@@ -353,6 +353,23 @@ class TorrentIdParser {
       )
     }
 
+    /** v2-only: `files[].offset` must match piece-aligned layout (padding between files), not raw concatenation */
+    if (
+      result.version === 'v2' &&
+      result.files &&
+      result.v2FileLayout &&
+      result.files.length === result.v2FileLayout.length
+    ) {
+      const layout = result.v2FileLayout
+      const pl = result.pieceLength!
+      for (let i = 0; i < layout.length; i++) {
+        result.files[i]!.offset = layout[i]!.byteOffset
+      }
+      const last = layout[layout.length - 1]!
+      const lastFile = result.files[result.files.length - 1]!
+      result.lastPieceLength = (last.byteOffset + lastFile.length) % pl || pl
+    }
+
     return result
   }
 
@@ -365,8 +382,13 @@ class TorrentIdParser {
     for (const [key, buf] of Object.entries(pieceLayers)) {
       const rootHex = this.#piecesRootKeyToHex(key)
       const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+      if (u8.length % 32 !== 0) {
+        throw new Error(
+          `Invalid piece layers length for root ${rootHex.slice(0, 8)}…: expected multiple of 32 bytes, got ${u8.length}`
+        )
+      }
       const hashes: Uint8Array[] = []
-      for (let i = 0; i + 32 <= u8.length; i += 32) {
+      for (let i = 0; i < u8.length; i += 32) {
         hashes.push(u8.subarray(i, i + 32))
       }
       byHex[rootHex] = hashes
@@ -445,7 +467,9 @@ class TorrentIdParser {
 
   #flattenFileTree(tree: FileTree, currentPath: string[] = []): Array<Record<string, unknown>> {
     const files: Array<Record<string, unknown>> = []
-    for (const [name, entry] of Object.entries(tree)) {
+    const names = Object.keys(tree).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    for (const name of names) {
+      const entry = tree[name]!
       const fullPath = [...currentPath, name]
       if ('length' in (entry as FileTreeEntry)) {
         files.push({

@@ -63,6 +63,8 @@ Pass `protocolVersion` in options:
 
 `pieceLength` for `v2` / `hybrid` is normalized to BEP 52 rules (power of two, ≥ 16 KiB leaf blocks). Hybrid torrents require each file to have a path.
 
+**Memory:** for `v2` / `hybrid`, each source file is read fully into memory to build per-file merkle metadata (unlike the streaming SHA-1 path for plain `v1`). Very large inputs may need more RAM; consider raising Node memory limits or using `v1` for huge seeds until streaming merkle creation exists.
+
 ### Global: `WEBTORRENT_ANNOUNCE`
 
 If set on `globalThis` to a string or `string[]`, those URLs are appended to the announce list. (Legacy name from WebTorrent; behaviour is the same for Z-Torrent.)
