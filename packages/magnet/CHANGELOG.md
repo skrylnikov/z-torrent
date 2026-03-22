@@ -1,5 +1,19 @@
 ## [7.0.7](https://github.com/webtorrent/magnet-uri/compare/v7.0.6...v7.0.7) (2025-01-04)
 
+## 0.0.6
+
+### Patch Changes
+
+- [#12](https://github.com/skrylnikov/z-torrent/pull/12) [`e84ff59`](https://github.com/skrylnikov/z-torrent/commit/e84ff596f40550a02e7b3fdf5bb3445bdbe1c066) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Refactor @z-torrent/magnet package
+  - Remove default export, export `magnet` object with `decode` and `encode` methods instead
+  - Fix TypeScript type errors throughout the codebase
+  - Fix import of `@thaunknown/thirty-two` (use default import)
+  - Add `xl` property to `MagnetURI` and `MagnetURIEncodeInput` types
+  - Update README with new API usage examples
+  - Update `@z-torrent/parse` to use new magnet API
+
+  Breaking change: Default export removed. Use `import { magnet } from '@z-torrent/magnet'` instead of `import magnet from '@z-torrent/magnet'`.
+
 ## 0.0.5
 
 ### Patch Changes
