@@ -4,16 +4,18 @@
 
 Z-Torrent can be used to stream videos. Z-Torrent can render the incoming video to an HTML `<video>` element. Below are some examples for various video players.
 
-### [Service Worker Renderer](https://github.com/webtorrent/webtorrent/blob/master/docs/api.md#clientloadworkercontroller-function-callback-controller---browser-only)
+### Service worker + `createServer` (browser)
+
+See [API: `client.createServer`](./api.md#clientcreateserveropts-force) and [@z-torrent/browser](https://github.com/skrylnikov/z-torrent/tree/main/packages/browser).
 
 Code example:
 
 ```js
-import WebTorrent from 'https://esm.sh/webtorrent/dist/webtorrent.min.js'
+import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
 
 const client = new WebTorrent()
 const torrentId =
-  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
 const player = document.querySelector('video')
 
 const controller = await navigator.serviceWorker.register('./sw.min.js', {
@@ -63,7 +65,7 @@ Code example:
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Web Torrent Tutorial</title>
+    <title>Z-Torrent + Video.js</title>
     <meta charset="UTF-8" />
     <link
       rel="stylesheet"
@@ -74,10 +76,10 @@ Code example:
   <body>
     <video id="video-container" class="video-js" data-setup="{}" controls="true"></video>
     <script type="module">
-      import WebTorrent from 'https://esm.sh/webtorrent/dist/webtorrent.min.js'
+      import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
       const client = new WebTorrent()
       const torrentId =
-        'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+        'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
       const player = document.querySelector('video')
 
       const controller = await navigator.serviceWorker.register('./sw.min.js', {

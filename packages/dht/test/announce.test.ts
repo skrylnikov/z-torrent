@@ -40,6 +40,41 @@ test('`announce` with {host: "127.0.0.1"}', () => {
   })
 })
 
+test('announce/lookup accept 32-byte BEP 52 info_hash (truncated to 20)', () => {
+  return new Promise<void>((resolve) => {
+    const dht1 = new DHT({ bootstrap: false })
+    const id20 = common.randomId()
+    const infoHash = Buffer.concat([id20, Buffer.alloc(12, 0xfe)])
+
+    dht1.listen(() => {
+      const dht2 = new DHT({
+        bootstrap: `127.0.0.1:${(dht1.address() as any).port}`,
+      })
+
+      dht1.on('announce', (peer) => {
+        expect(peer).toEqual({
+          host: '127.0.0.1',
+          port: (dht2.address() as any).port,
+        })
+      })
+
+      dht2.announce(infoHash, () => {
+        dht2.once('peer', (peer) => {
+          expect(peer).toEqual({
+            host: '127.0.0.1',
+            port: (dht2.address() as any).port,
+          })
+          dht1.destroy()
+          dht2.destroy()
+          resolve()
+        })
+
+        dht2.lookup(infoHash)
+      })
+    })
+  })
+})
+
 test('announce with implied port', () => {
   return new Promise<void>((resolve) => {
     const dht1 = new DHT({ bootstrap: false })

@@ -13,6 +13,7 @@ const FLAGS = {
   supportsUtp: 0x04,
   supportsUtHolepunch: 0x08,
   isReachable: 0x10,
+  supportsV2: 0x20,
 }
 
 function toUint8Array(value: unknown): Uint8Array | null {
@@ -166,6 +167,8 @@ export class UtPex extends EventEmitter {
     const localAdded = Object.keys(this.#localAddedPeers).slice(0, PEX_MAX_PEERS)
     const localDropped = Object.keys(this.#localDroppedPeers).slice(0, PEX_MAX_PEERS)
 
+    if (localAdded.length === 0 && localDropped.length === 0) return
+
     const isIPv4 = (peers: Record<string, PeerEntry>, addr: string) => peers[addr]!.ip === 4
     const isIPv6 = (peers: Record<string, PeerEntry>, addr: string) => peers[addr]!.ip === 6
     const flags = (peers: Record<string, PeerEntry>, addr: string) => peers[addr]!.flags
@@ -221,6 +224,7 @@ export class UtPex extends EventEmitter {
       supportsUtp: !!(flags! & FLAGS.supportsUtp),
       supportsUtHolepunch: !!(flags! & FLAGS.supportsUtHolepunch),
       isReachable: !!(flags! & FLAGS.isReachable),
+      supportsV2: !!(flags! & FLAGS.supportsV2),
     }
   }
 

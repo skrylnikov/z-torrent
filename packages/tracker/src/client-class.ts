@@ -41,6 +41,89 @@ type SubTracker = {
 
 type TrackerCtor = new (client: TrackerClientContext, url: string) => SubTracker
 
+/** BEP 52 hybrid: second swarm uses truncated SHA-256 (20 bytes = 40 hex) as info_hash. */
+function normalizeTruncatedV2InfoHash(value: string | Uint8Array): string {
+  const hex =
+    typeof value === 'string' ? value.toLowerCase() : arr2hex(value as Uint8Array).toLowerCase()
+  if (hex.length !== 40 || !/^[0-9a-f]+$/.test(hex)) {
+    throw new Error('infoHashV2 must be 40 hex chars (20-byte truncated SHA-256, BEP 52)')
+  }
+  return hex
+}
+
+/**
+ * BEP 52 v2-truncated swarm: same logical client, different `info_hash` on the wire.
+ * Must not use a Proxy — sub-trackers call `getDefaultAnnounceOpts()` on this object, and
+ * private fields on the real `Client` only work when `this` is the actual instance.
+ */
+function v2SwarmContext(base: TrackerClientContext, v2Hex: string): TrackerClientContext {
+  const infoHashBuffer = hex2arr(v2Hex)
+  const infoHashBinary = hex2bin(v2Hex)
+  return {
+    infoHash: v2Hex,
+    infoHashBuffer,
+    infoHashBinary,
+    peerId: base.peerId,
+    peerIdBuffer: base.peerIdBuffer,
+    peerIdBinary: base.peerIdBinary,
+    port: base.port,
+    userAgent: base.userAgent,
+    rtcConfig: base.rtcConfig,
+    wrtc: base.wrtc,
+    proxyOpts: base.proxyOpts,
+    getDefaultAnnounceOpts: (opts?: Record<string, unknown>) =>
+      base.getDefaultAnnounceOpts(opts as AnnounceOptions),
+    on: base.on.bind(base),
+    once: base.once.bind(base),
+    off: base.off.bind(base),
+    emit: base.emit.bind(base),
+    addListener: base.addListener.bind(base),
+    removeListener: base.removeListener.bind(base),
+    removeAllListeners: base.removeAllListeners.bind(base),
+  } as TrackerClientContext
+}
+
+function buildSubTrackers(
+  ctx: TrackerClientContext,
+  announce: string[],
+  HTTPTracker: TrackerCtor | null,
+  UDPTracker: TrackerCtor | null,
+  webrtcSupport: boolean,
+  nextTickWarn: (err: Error) => void
+): SubTracker[] {
+  const trackers: SubTracker[] = []
+  for (const url of announce) {
+    try {
+      const parsed = common.parseUrl(url)
+      const portNum = parsed.port ? parseInt(parsed.port, 10) : NaN
+      if (parsed.port !== '' && (isNaN(portNum) || portNum < 0 || portNum > 65535)) {
+        nextTickWarn(new Error(`Invalid tracker port: ${url}`))
+        continue
+      }
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        if (HTTPTracker != null) trackers.push(new HTTPTracker(ctx, url))
+      } else if (parsed.protocol === 'udp:') {
+        if (UDPTracker != null) trackers.push(new UDPTracker(ctx, url))
+      } else if ((parsed.protocol === 'ws:' || parsed.protocol === 'wss:') && webrtcSupport) {
+        if (
+          parsed.protocol === 'ws:' &&
+          typeof window !== 'undefined' &&
+          window.location.protocol === 'https:'
+        ) {
+          nextTickWarn(new Error(`Unsupported tracker protocol: ${url}`))
+          continue
+        }
+        trackers.push(new WebSocketTracker(ctx, url))
+      } else {
+        nextTickWarn(new Error(`Unsupported tracker protocol: ${url}`))
+      }
+    } catch {
+      nextTickWarn(new Error(`Invalid tracker URL: ${url}`))
+    }
+  }
+  return trackers
+}
+
 export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker: TrackerCtor | null) {
   class Client extends EventEmitter {
     readonly peerId: string
@@ -49,6 +132,8 @@ export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker:
     readonly infoHash: string
     readonly infoHashBuffer: Uint8Array
     readonly infoHashBinary: string
+    /** When set, each announce URL is registered twice (v1 + BEP 52 v2 truncated swarm). */
+    readonly infoHashV2: string | undefined
     destroyed = false
     readonly port: number
     readonly userAgent?: string
@@ -62,6 +147,8 @@ export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker:
       opts: {
         peerId?: string | Uint8Array
         infoHash?: string | Uint8Array
+        /** BEP 52: truncated v2 info-hash (40 hex); dual-announce to same tracker URLs */
+        infoHashV2?: string | Uint8Array
         announce?: string | string[]
         port?: number
         getAnnounceOpts?: () => Record<string, unknown>
@@ -89,6 +176,9 @@ export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker:
           : arr2hex(opts.infoHash as Uint8Array)
       this.infoHashBuffer = hex2arr(this.infoHash)
       this.infoHashBinary = hex2bin(this.infoHash)
+
+      this.infoHashV2 =
+        opts.infoHashV2 != null ? normalizeTruncatedV2InfoHash(opts.infoHashV2) : undefined
 
       debug('new client %s', this.infoHash)
 
@@ -121,36 +211,26 @@ export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker:
 
       const nextTickWarn = (err: Error) => queueMicrotask(() => this.emit('warning', err))
 
-      const trackers: SubTracker[] = []
-      for (const url of announce) {
-        try {
-          const parsed = common.parseUrl(url)
-          const portNum = parsed.port ? parseInt(parsed.port, 10) : NaN
-          if (parsed.port !== '' && (isNaN(portNum) || portNum < 0 || portNum > 65535)) {
-            nextTickWarn(new Error(`Invalid tracker port: ${url}`))
-            continue
-          }
-          const ctx = this as unknown as TrackerClientContext
-          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-            if (HTTPTracker != null) trackers.push(new HTTPTracker(ctx, url))
-          } else if (parsed.protocol === 'udp:') {
-            if (UDPTracker != null) trackers.push(new UDPTracker(ctx, url))
-          } else if ((parsed.protocol === 'ws:' || parsed.protocol === 'wss:') && webrtcSupport) {
-            if (
-              parsed.protocol === 'ws:' &&
-              typeof window !== 'undefined' &&
-              window.location.protocol === 'https:'
-            ) {
-              nextTickWarn(new Error(`Unsupported tracker protocol: ${url}`))
-              continue
-            }
-            trackers.push(new WebSocketTracker(ctx, url))
-          } else {
-            nextTickWarn(new Error(`Unsupported tracker protocol: ${url}`))
-          }
-        } catch {
-          nextTickWarn(new Error(`Invalid tracker URL: ${url}`))
-        }
+      const primaryCtx = this as unknown as TrackerClientContext
+      const trackers = buildSubTrackers(
+        primaryCtx,
+        announce,
+        HTTPTracker,
+        UDPTracker,
+        webrtcSupport,
+        nextTickWarn
+      )
+      if (this.infoHashV2) {
+        trackers.push(
+          ...buildSubTrackers(
+            v2SwarmContext(primaryCtx, this.infoHashV2),
+            announce,
+            HTTPTracker,
+            UDPTracker,
+            webrtcSupport,
+            nextTickWarn
+          )
+        )
       }
       this.#trackers = trackers
     }

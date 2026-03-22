@@ -9,13 +9,25 @@ To use Z-Torrent in the browser, [WebRTC] support is required (Chrome, Firefox, 
 
 ## Install
 
+**Node.js**
+
 ```bash
-npm install z-torrent
+npm install @z-torrent/node
+```
+
+**Browser** (bundled build with WebRTC and service worker support)
+
+```bash
+npm install @z-torrent/browser
 ```
 
 ## Quick Example
 
+Browser (service worker + streaming to `<video>`):
+
 ```js
+import { WebTorrent } from '@z-torrent/browser'
+
 const client = new WebTorrent()
 
 const torrentId =
@@ -38,7 +50,9 @@ client.add(torrentId, (torrent) => {
 })
 ```
 
-# WebTorrent API
+# Client API (`WebTorrent`)
+
+The Node build exports `import { WebTorrent } from '@z-torrent/node'`. The browser build exports the same class from `@z-torrent/browser`.
 
 ## `WebTorrent.WEBRTC_SUPPORT`
 
@@ -78,14 +92,11 @@ If `opts` is specified, then the default options (shown below) will be overridde
 }
 ```
 
-For possible values of `opts.dht` see the
-[`bittorrent-dht` documentation](https://github.com/webtorrent/bittorrent-dht#dht--new-dhtopts).
+For possible values of `opts.dht` see [@z-torrent/dht](https://github.com/skrylnikov/z-torrent/tree/main/packages/dht).
 
-For possible values of `opts.tracker` see the
-[`bittorrent-tracker` documentation](https://github.com/webtorrent/bittorrent-tracker#client).
+For possible values of `opts.tracker` see [@z-torrent/tracker](https://github.com/skrylnikov/z-torrent/tree/main/packages/tracker).
 
-For possible values of `opts.blocklist` see the
-[`load-ip-set` documentation](https://github.com/webtorrent/load-ip-set#usage).
+For possible values of `opts.blocklist` see [@z-torrent/utils / load-ip-set](https://github.com/skrylnikov/z-torrent/tree/main/packages/utils).
 
 For `opts.natUpnp` and `opts.natPmp`, if both are set to `true`, PMP will be attempted first, then fallback to UPNP. NodeJS only.
 
@@ -108,7 +119,7 @@ Start downloading a new torrent.
 - magnet uri (string)
 - torrent file (Uint8Array)
 - info hash (hex string or Uint8Array)
-- parsed torrent (from [parse-torrent](https://github.com/webtorrent/parse-torrent))
+- parsed torrent (from [@z-torrent/parse](https://github.com/skrylnikov/z-torrent/tree/main/packages/parse))
 - http/https url to a torrent file (string)
 - filesystem path to a torrent file (string) _(Node.js only)_
 
@@ -180,7 +191,7 @@ Or, an **array of of any of those values**.
 
 If `opts` is specified, it should contain the following types of options:
 
-- options for [create-torrent](https://github.com/webtorrent/create-torrent#createtorrentinput-opts-function-callback-err-torrent-) (to allow configuration of the .torrent file that is created)
+- options for [@z-torrent/create](https://github.com/skrylnikov/z-torrent/tree/main/packages/create) (to allow configuration of the .torrent file that is created)
 - options for `client.add` (see above)
 
 If `onseed` is specified, it will be called when the client has begun seeding the file.
@@ -292,7 +303,7 @@ If `opts` is specified, it can have the following properties:
 }
 ```
 
-If `force` is specified, it can force WebTorrent to use a specific implementation for enviorments which run both Node and Browser like NW.js or Electron. Allowed values:
+If `force` is specified, it can force the client to use a specific implementation for environments which run both Node and browser like NW.js or Electron. Allowed values:
 
 ```js
 'browser' || 'node'
@@ -324,7 +335,7 @@ instance.close()
 client.destroy()
 ```
 
-In browser needs either [this worker](https://github.com/webtorrent/webtorrent/blob/master/sw.min.js) to be used, or have [this functionality](https://github.com/webtorrent/webtorrent/blob/master/lib/worker.js) implemented.
+In the browser you need the service worker bundle from [@z-torrent/browser](https://github.com/skrylnikov/z-torrent/tree/main/packages/browser) (see that package’s README for `sw.min.js` / `import '@z-torrent/browser/sw'`).
 
 Here is a user example for browser:
 
@@ -351,7 +362,7 @@ client._server.close()
 client.destroy()
 ```
 
-Needs either [this worker](https://github.com/webtorrent/webtorrent/blob/master/sw.min.js) to be used, or have [this functionality](https://github.com/webtorrent/webtorrent/blob/master/lib/worker.js) implemented.
+Same service worker requirement as above — use [@z-torrent/browser](https://github.com/skrylnikov/z-torrent/tree/main/packages/browser).
 
 # Torrent API
 
@@ -485,7 +496,7 @@ i.e. all open sockets are closed, and the storage is either closed or destroyed.
 ## `torrent.addPeer(peer)`
 
 Add a peer to the torrent swarm. This is advanced functionality. Normally, you should not
-need to call `torrent.addPeer()` manually. WebTorrent will automatically find peers using
+need to call `torrent.addPeer()` manually. The client will automatically find peers using
 the tracker servers or DHT. This is just for manually adding a peer to the client.
 
 This method should not be called until the `infoHash` event has been emitted.
@@ -512,7 +523,7 @@ uniquely identifies the custom web seed.
 ## `torrent.removePeer(peer)`
 
 Remove a peer from the torrent swarm. This is advanced functionality. Normally, you should
-not need to call `torrent.removePeer()` manually. WebTorrent will automatically remove
+not need to call `torrent.removePeer()` manually. The client will automatically remove
 peers from the torrent swarm when they're slow or don't have pieces that are needed.
 
 The `peer` argument should be an address (i.e. "ip:port" string), a peer id (hex string),
@@ -545,7 +556,7 @@ Resume connecting to new peers.
 ## `torrent.rescanFiles([function callback (err) {}])`
 
 Verify the hashes of all pieces in the store and update the bitfield for any new valid
-pieces. Useful if data has been added to the store outside WebTorrent, e.g. if another
+pieces. Useful if data has been added to the store outside the client, e.g. if another
 process puts a valid file in the right place. Once the scan is complete,
 `callback(null)` will be called (if provided), unless the torrent was destroyed during
 the scan, in which case `callback` will be called with an error.
@@ -625,9 +636,9 @@ Emitted whenever data is uploaded. Useful for reporting the current torrent stat
 ## `torrent.on('wire', function (wire) {})`
 
 Emitted whenever a new peer is connected for this torrent. `wire` is an instance of
-[`bittorrent-protocol`](https://github.com/webtorrent/bittorrent-protocol), which is a
-node.js-style duplex stream to the remote peer. This event can be used to specify
-[custom BitTorrent protocol extensions](https://github.com/webtorrent/bittorrent-protocol#extension-api).
+[@z-torrent/protocol](https://github.com/skrylnikov/z-torrent/tree/main/packages/protocol), which is a
+Node.js-style duplex stream to the remote peer. This event can be used to specify
+[custom BitTorrent protocol extensions](https://github.com/skrylnikov/z-torrent/blob/main/packages/protocol/README.md#extension-api).
 
 Here is a usage example:
 
@@ -640,8 +651,7 @@ torrent1.on('wire', (wire, addr) => {
 })
 ```
 
-See the `bittorrent-protocol`
-[extension api docs](https://github.com/webtorrent/bittorrent-protocol#extension-api) for more
+See [@z-torrent/protocol](https://github.com/skrylnikov/z-torrent/blob/main/packages/protocol/README.md#extension-api) for more
 information on how to define a protocol extension.
 
 ## `torrent.on('noPeers', function (announceType) {})`
@@ -654,7 +664,7 @@ Emitted every time a piece is verified, the value of the event is the index of t
 
 # File API
 
-Webtorrent Files closely mimic W3C [Files](https://developer.mozilla.org/en-US/docs/Web/API/File)/[Blobs](https://developer.mozilla.org/en-US/docs/Web/API/Blob) except for `slice` where instead you pass the offsets as objects to the arrayBuffer/stream/createReadStream functions.
+Z-Torrent file objects closely mimic W3C [Files](https://developer.mozilla.org/en-US/docs/Web/API/File)/[Blobs](https://developer.mozilla.org/en-US/docs/Web/API/Blob) except for `slice` where instead you pass the offsets as objects to the arrayBuffer/stream/createReadStream functions.
 
 ## `file.name`
 
@@ -837,7 +847,7 @@ Requires `client.createServer` to be ran beforehand.
 
 Returns the URL of the file which is recognized by the HTTP server.
 
-This method is useful both for servers which run WebTorrent or client apps. A few examples:
+This method is useful both for servers which run Z-Torrent or client apps. A few examples:
 
 ```js
 const url = file.streamURL

@@ -44,9 +44,8 @@ test('should ignore when addPeer receives a peer that remote wire already sent u
   let called = false
   const peer = '127.0.0.1:6889'
 
-  const wire = createMockWire((_name, data) => {
+  const wire = createMockWire(() => {
     called = true
-    expect(data.added!.length).toBe(0)
   })
 
   const pex = new UtPex(wire)
@@ -55,7 +54,7 @@ test('should ignore when addPeer receives a peer that remote wire already sent u
   pex.addPeer(peer)
   pex.sendMessage()
 
-  expect(called).toBe(true)
+  expect(called).toBe(false)
 })
 
 test('should add peer via sendMessage when addPeer called', () => {
@@ -79,6 +78,29 @@ test('should add peer with flags via sendMessage when addPeer called with flags'
     supportsUtp: true,
     supportsUtHolepunch: false,
     isReachable: false,
+    supportsV2: false,
+  }
+
+  const wire = createMockWire((_name, data) => {
+    expect(data.added).toEqual(new Uint8Array(string2compact(peer)))
+    expect(data['added.f']).toEqual(new Uint8Array([encodedFlags]))
+  })
+
+  const pex = new UtPex(wire)
+  pex.addPeer(peer, decodedFlags)
+  pex.sendMessage()
+})
+
+test('should add peer with supportsV2 (BEP 52) flag 0x20', () => {
+  const peer = '127.0.0.1:6889'
+  const encodedFlags = 0x20
+  const decodedFlags = {
+    prefersEncryption: false,
+    isSender: false,
+    supportsUtp: false,
+    supportsUtHolepunch: false,
+    isReachable: false,
+    supportsV2: true,
   }
 
   const wire = createMockWire((_name, data) => {
@@ -112,6 +134,7 @@ test('should add IPv6 peer with flags via sendMessage when addPeer6 called with 
     supportsUtp: true,
     supportsUtHolepunch: false,
     isReachable: false,
+    supportsV2: false,
   }
 
   const wire = createMockWire((_name, data) => {
@@ -156,9 +179,8 @@ test('should ignore when dropPeer receives a peer that remote wire already sent 
   let called = false
   const peer = '127.0.0.1:6889'
 
-  const wire = createMockWire((_name, data) => {
+  const wire = createMockWire(() => {
     called = true
-    expect(data.dropped!.length).toBe(0)
   })
 
   const pex = new UtPex(wire)
@@ -167,7 +189,7 @@ test('should ignore when dropPeer receives a peer that remote wire already sent 
   pex.dropPeer(peer)
   pex.sendMessage()
 
-  expect(called).toBe(true)
+  expect(called).toBe(false)
 })
 
 test('should drop peer via sendMessage when dropPeer called', () => {
@@ -283,6 +305,7 @@ test('should emit peer event when onMessage added', (done) => {
     supportsUtp: true,
     supportsUtHolepunch: false,
     isReachable: false,
+    supportsV2: false,
   }
 
   pex.on('peer', (_peer, _flags) => {
@@ -311,6 +334,7 @@ test('should emit peer event when onMessage includes added without flags', (done
     supportsUtp: false,
     supportsUtHolepunch: false,
     isReachable: false,
+    supportsV2: false,
   }
 
   pex.on('peer', (_peer, _flags) => {
@@ -338,6 +362,7 @@ test('should emit peer event when onMessage added6', (done) => {
     supportsUtp: true,
     supportsUtHolepunch: false,
     isReachable: false,
+    supportsV2: false,
   }
 
   pex.on('peer', (_peer, _flags) => {
@@ -367,6 +392,7 @@ test('should emit peer event when onMessage includes added6 without flags', (don
     supportsUtp: false,
     supportsUtHolepunch: false,
     isReachable: false,
+    supportsV2: false,
   }
 
   pex.on('peer', (_peer, _flags) => {
@@ -432,24 +458,16 @@ test('should emit dropped event when onMessage dropped6', (done) => {
   pex.onMessage(buf)
 })
 
-test('should sendMessage with empty added and empty dropped', () => {
-  expect.assertions(2)
-
-  const wire = createMockWire((ext, obj) => {
-    expect(ext).toBe('ut_pex')
-    expect(obj).toEqual({
-      added: new Uint8Array(0),
-      'added.f': new Uint8Array(0),
-      dropped: new Uint8Array(0),
-      added6: new Uint8Array(0),
-      'added6.f': new Uint8Array(0),
-      dropped6: new Uint8Array(0),
-    })
+test('should not call extended when added and dropped queues are empty', () => {
+  let called = false
+  const wire = createMockWire(() => {
+    called = true
   })
 
   const pex = new UtPex(wire)
 
   pex.sendMessage()
+  expect(called).toBe(false)
 })
 
 test('should sendMessage when a localAdded has an IPv4 address', () => {

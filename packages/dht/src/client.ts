@@ -560,7 +560,7 @@ export class DHT extends EventEmitter {
     cb?: (err?: Error | null) => void
   ): void {
     if (typeof port === 'function') return this.announce(infoHash, 0, port)
-    infoHash = toBuffer(infoHash)
+    infoHash = normalizeDhtInfoHash(toBuffer(infoHash))
     if (!cb) cb = noop
 
     const table = this.#tables.get(infoHash.toString('hex'))
@@ -601,11 +601,11 @@ export class DHT extends EventEmitter {
 
   /** Drop cached get_peers routing state for this info hash (e.g. when removing a torrent). */
   removeTorrentRoutingTable(infoHash: Buffer | Uint8Array | string): void {
-    this.#tables.delete(toBuffer(infoHash).toString('hex'))
+    this.#tables.delete(normalizeDhtInfoHash(toBuffer(infoHash)).toString('hex'))
   }
 
   lookup(infoHash: Buffer | string, cb?: (err?: Error | null) => void): () => void {
-    infoHash = toBuffer(infoHash)
+    infoHash = normalizeDhtInfoHash(toBuffer(infoHash))
     if (!cb) cb = noop
     const self = this
     let aborted = false
@@ -1002,6 +1002,12 @@ function toBuffer(str: Buffer | Uint8Array | string): Buffer {
   if (ArrayBuffer.isView(str)) return Buffer.from(str.buffer, str.byteOffset, str.byteLength)
   if (typeof str === 'string') return Buffer.from(str, 'hex')
   throw new Error('Pass a buffer or a string')
+}
+
+/** BEP 52: DHT uses 20-byte info_hash; truncate full SHA-256 if 32 bytes are passed. */
+function normalizeDhtInfoHash(buf: Buffer): Buffer {
+  if (buf.length === 32) return buf.subarray(0, 20)
+  return buf
 }
 
 export interface DHTNode {

@@ -33,6 +33,8 @@ export class UtMetadata extends EventEmitter {
 
   #wire: Wire
   #infoHash?: string
+  /** Full v2 info-hash (64 hex), when known (e.g. magnet `urn:btmh`). */
+  #infoHashV2?: string
   #fetching = false
   #metadataComplete = false
   #metadataSize: number | null = null
@@ -40,10 +42,11 @@ export class UtMetadata extends EventEmitter {
   #remainingRejects: number | null = null
   #bitfield: BitField
 
-  constructor(wire: Wire, metadata?: Uint8Array) {
+  constructor(wire: Wire, metadata?: Uint8Array, infoHashV2?: string) {
     super()
 
     this.#wire = wire
+    this.#infoHashV2 = infoHashV2?.toLowerCase()
     this.#bitfield = new BitField(0, { grow: BITFIELD_GROW })
 
     if (metadata) {
@@ -56,7 +59,7 @@ export class UtMetadata extends EventEmitter {
   }
 
   onHandshake(infoHash: string, _peerId: string, _extensions: unknown): void {
-    this.#infoHash = infoHash
+    this.#infoHash = infoHash.toLowerCase()
   }
 
   onExtendedHandshake(handshake: ExtendedHandshake): void {
@@ -134,8 +137,22 @@ export class UtMetadata extends EventEmitter {
       }
     } catch {}
 
-    if (this.#infoHash && this.#infoHash !== (await hash(metadata, 'hex'))) {
-      return false
+    if (this.#infoHashV2) {
+      const sha256Hex = await hash(metadata, 'hex', 'sha256')
+      if (this.#infoHashV2 !== sha256Hex) {
+        return false
+      }
+    }
+    // v2-only swarms use the first 20 bytes of SHA-256(info) in the handshake, not SHA-1(info).
+    const handshakeIsV2Truncated =
+      !!this.#infoHashV2 &&
+      !!this.#infoHash &&
+      this.#infoHash === this.#infoHashV2.slice(0, 40)
+    if (this.#infoHash && !handshakeIsV2Truncated) {
+      const sha1Hex = await hash(metadata, 'hex')
+      if (this.#infoHash !== sha1Hex) {
+        return false
+      }
     }
 
     this.cancel()
@@ -250,10 +267,13 @@ export class UtMetadata extends EventEmitter {
   }
 }
 
-export function createUtMetadata(metadata?: Uint8Array): typeof UtMetadata {
+export function createUtMetadata(
+  metadata?: Uint8Array,
+  opts?: { infoHashV2?: string }
+): typeof UtMetadata {
   class UtMetadataWithMetadata extends UtMetadata {
     constructor(wire: Wire) {
-      super(wire, metadata)
+      super(wire, metadata, opts?.infoHashV2)
     }
   }
   return UtMetadataWithMetadata

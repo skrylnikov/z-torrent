@@ -24,6 +24,8 @@ function normalizeHexId(value: string | Uint8Array): string {
 export interface DiscoveryOptions {
   peerId: string | Uint8Array
   infoHash: string | Uint8Array
+  /** BEP 52 hybrid: truncated v2 info-hash (40 hex) for second tracker/DHT swarm */
+  infoHashV2Truncated?: string | Uint8Array
   port: number
   announce?: string[]
   intervalMs?: number
@@ -44,10 +46,13 @@ export class Discovery extends EventEmitter {
   infoHash: string
   destroyed: boolean
   dht: DHT | null
-  tracker: InstanceType<typeof Client> | null
+  tracker: InstanceType<typeof Client> | null = null
+  /** Second tracker client for BEP 52 hybrid (v2 truncated swarm). */
+  trackerV2: InstanceType<typeof Client> | null = null
   lsd: LSD | null
 
   #port: number
+  #infoHashV2Truncated: string | null
   #userAgent?: string
   #announce: string[] | null
   #intervalMs: number
@@ -65,7 +70,8 @@ export class Discovery extends EventEmitter {
   }
 
   #onDHTPeer = (peer: DHTPeer, infoHash: Uint8Array) => {
-    if (normalizeHexId(infoHash) !== this.infoHash) return
+    const id = normalizeHexId(infoHash)
+    if (id !== this.infoHash && id !== this.#infoHashV2Truncated) return
     this.emit('peer', `${peer.host}:${peer.port}`, 'dht')
   }
 
@@ -102,6 +108,9 @@ export class Discovery extends EventEmitter {
     this.#dhtAnnouncing = false
     this.#dhtTimeout = false
     this.#internalDHT = false
+    this.#infoHashV2Truncated = opts.infoHashV2Truncated
+      ? normalizeHexId(opts.infoHashV2Truncated)
+      : null
 
     const createDHT = (port?: number, dhtOpts?: object): DHT => {
       const dht = new DHT(dhtOpts)
@@ -114,11 +123,14 @@ export class Discovery extends EventEmitter {
 
     if (opts.tracker === false) {
       this.tracker = null
+      this.trackerV2 = null
     } else if (opts.tracker && typeof opts.tracker === 'object') {
       this.#trackerOpts = Object.assign({}, opts.tracker)
-      this.tracker = this.#createTracker()
+      this.tracker = this.#createTracker(this.infoHash)
+      this.trackerV2 = this.#infoHashV2Truncated ? this.#createTracker(this.#infoHashV2Truncated) : null
     } else {
-      this.tracker = this.#createTracker()
+      this.tracker = this.#createTracker(this.infoHash)
+      this.trackerV2 = this.#infoHashV2Truncated ? this.#createTracker(this.#infoHashV2Truncated) : null
     }
 
     if (opts.dht === false || typeof DHT !== 'function') {
@@ -151,9 +163,19 @@ export class Discovery extends EventEmitter {
 
     if (this.tracker) {
       this.tracker.stop()
-      this.tracker.destroy(() => {
-        this.tracker = this.#createTracker()
-      })
+      this.trackerV2?.stop()
+      const v2h = this.#infoHashV2Truncated
+      const recreate = (): void => {
+        this.tracker = this.#createTracker(this.infoHash)
+        this.trackerV2 = v2h ? this.#createTracker(v2h) : null
+      }
+      if (this.trackerV2) {
+        this.trackerV2.destroy(() => {
+          this.tracker!.destroy(() => recreate())
+        })
+      } else {
+        this.tracker.destroy(() => recreate())
+      }
     }
   }
 
@@ -161,6 +183,7 @@ export class Discovery extends EventEmitter {
     if (this.tracker) {
       this.tracker.complete(opts)
     }
+    this.trackerV2?.complete(opts)
   }
 
   destroy(cb?: () => void): void {
@@ -174,15 +197,22 @@ export class Discovery extends EventEmitter {
 
     const tasks: ((taskCb: (err: Error | null) => void) => void)[] = []
 
-    if (this.tracker) {
-      this.tracker.stop()
-      this.tracker.removeListener('warning', this.#onWarning)
-      this.tracker.removeListener('error', this.#onError)
-      this.tracker.removeListener('peer', this.#onTrackerPeer)
-      this.tracker.removeListener('update', this.#onTrackerAnnounce)
+    const destroyTracker = (t: InstanceType<typeof Client>) => {
+      t.stop()
+      t.removeListener('warning', this.#onWarning)
+      t.removeListener('error', this.#onError)
+      t.removeListener('peer', this.#onTrackerPeer)
+      t.removeListener('update', this.#onTrackerAnnounce)
       tasks.push((taskCb) => {
-        this.tracker!.destroy(() => taskCb(null))
+        t.destroy(() => taskCb(null))
       })
+    }
+
+    if (this.tracker) {
+      destroyTracker(this.tracker)
+    }
+    if (this.trackerV2) {
+      destroyTracker(this.trackerV2)
     }
 
     if (this.dht) {
@@ -212,13 +242,14 @@ export class Discovery extends EventEmitter {
 
     this.dht = null
     this.tracker = null
+    this.trackerV2 = null
     this.lsd = null
     this.#announce = null
   }
 
-  #createTracker(): InstanceType<typeof Client> {
+  #createTracker(infoHashHex: string): InstanceType<typeof Client> {
     const opts = Object.assign({}, this.#trackerOpts, {
-      infoHash: this.infoHash,
+      infoHash: infoHashHex,
       announce: this.#announce ?? [],
       peerId: this.peerId,
       port: this.#port,
@@ -245,7 +276,7 @@ export class Discovery extends EventEmitter {
       this.#dhtTimeout = false
     }
 
-    this.dht!.announce(this.infoHash, this.#port, (err?: Error | null) => {
+    const afterAnnounce = (err?: Error | null) => {
       this.#dhtAnnouncing = false
       debug('dht announce complete')
 
@@ -259,7 +290,16 @@ export class Discovery extends EventEmitter {
         this.#dhtTimeout = timer
         if (typeof timer.unref === 'function') timer.unref()
       }
-    })
+    }
+
+    if (this.#infoHashV2Truncated) {
+      this.dht!.announce(this.infoHash, this.#port, (err1?: Error | null) => {
+        if (err1) this.emit('warning', err1)
+        this.dht!.announce(this.#infoHashV2Truncated!, this.#port, afterAnnounce)
+      })
+    } else {
+      this.dht!.announce(this.infoHash, this.#port, afterAnnounce)
+    }
   }
 
   #createLSD(): LSD {

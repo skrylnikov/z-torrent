@@ -19,7 +19,8 @@ import parallelLimit from 'run-parallel-limit'
 import { parseTorrent, toMagnetURI, toTorrentFile, remote } from '@z-torrent/parse'
 
 import randomIterate from 'random-iterate'
-import { hash, arr2hex } from 'uint8-util'
+import { pieceSubtreeRootFromBytes } from '@z-torrent/merkle-tree'
+import { hash, arr2hex, equal } from 'uint8-util'
 import throughput from 'throughput'
 import { createUtMetadata } from '@z-torrent/ut-metadata'
 import { UtPex } from '@z-torrent/ut-pex'
@@ -31,6 +32,8 @@ import { WebConn } from './webconn.js'
 import { Selections } from '../selections.js'
 import MemoryChunkStore from 'memory-chunk-store'
 import type { Discovery, PlatformAdapter } from '../interfaces.js'
+import type { V2FileLayoutEntry } from '@z-torrent/parse'
+import { buildV2ExpectedPieceRoots, v2IsFirstPieceOfFile } from './v2-piece-roots.js'
 import type { TorrentWire, TorrentForFile } from './types.js'
 
 const debug = debugFactory('webtorrent:torrent')
@@ -105,6 +108,8 @@ export interface ParsedTorrent {
     attr?: string
   }>
   xs?: string | string[]
+  pieceLayersByRootHex?: Record<string, Uint8Array[]>
+  v2FileLayout?: V2FileLayoutEntry[]
 }
 
 export interface WebTorrentClient {
@@ -490,8 +495,14 @@ export class Torrent
       })
     }
 
+    const v2Trunc =
+      this.version === 'hybrid' && this.infoHashV2Buffer && this.infoHashV2Buffer.length === 32
+        ? arr2hex(this.infoHashV2Buffer.subarray(0, 20))
+        : undefined
+
     this.discovery = this.client.platform.createDiscovery({
       infoHash: this.infoHash,
+      infoHashV2Truncated: v2Trunc,
       announce: this.announce,
       peerId: this.client.peerId,
       dht: !(this as any).private && this.client.dht,
@@ -736,7 +747,11 @@ export class Torrent
 
     wire.setKeepAlive(true)
 
-    wire.use(createUtMetadata(this.metadata as any))
+    wire.use(
+      createUtMetadata(this.metadata as any, {
+        infoHashV2: this.infoHashV2 || undefined,
+      })
+    )
     ;(wire as any).ut_metadata.on('warning', (err: Error) => {
       this.#debug('ut_metadata warning: %s', err.message)
     })
@@ -1002,6 +1017,23 @@ export class Torrent
     return false
   }
 
+  async #verifyPieceBufferForVersion(index: number, u8: Uint8Array): Promise<boolean> {
+    if (this.version === 'v2') {
+      const layout = (this as unknown as ParsedTorrent).v2FileLayout
+      const exp = (this._hashes as Uint8Array[])[index]
+      if (!layout?.length || !exp) return false
+      const first = v2IsFirstPieceOfFile(layout, this.pieceLength, index)
+      const computed = pieceSubtreeRootFromBytes(u8, this.pieceLength, first)
+      return equal(computed, exp)
+    }
+    const hex = await hash(u8, 'hex')
+    const expected = (this._hashes as any)[index]
+    const expectedHex = ArrayBuffer.isView(expected)
+      ? arr2hex(expected as Uint8Array)
+      : (expected as string)
+    return hex === expectedHex
+  }
+
   #request(wire: any, index: number, hotswap: boolean): boolean {
     if (this.bitfield!.get(index)) return false
     const piece = (this.pieces as any[])[index]
@@ -1044,13 +1076,10 @@ export class Torrent
           buf instanceof Uint8Array
             ? buf
             : new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
-        const hex = await hash(u8, 'hex')
         if (this.destroyed) return
-        const expected = (this._hashes as any)[index]
-        const expectedHex = ArrayBuffer.isView(expected)
-          ? arr2hex(expected as Uint8Array)
-          : (expected as string)
-        if (hex === expectedHex) {
+        const ok = await this.#verifyPieceBufferForVersion(index, u8)
+        if (this.destroyed) return
+        if (ok) {
           this.store!.put(index, buf, (storeErr: Error | null) => {
             if (storeErr) return this.#destroyTorrent(storeErr)
             ;(this.pieces as any[])[index] = null
@@ -1086,6 +1115,22 @@ export class Torrent
     const metadata = parsedTorrent as ParsedTorrent
     if (metadata && (metadata.infoHash || metadata.infoHashV2)) {
       this.#processParsedTorrent(metadata)
+    }
+
+    if (this.version === 'v2') {
+      const layout = (this as unknown as ParsedTorrent).v2FileLayout
+      const plm = (this as unknown as ParsedTorrent).pieceLayersByRootHex
+      if (!layout?.length || !plm) {
+        return this.#destroyTorrent(
+          new Error('Invalid BitTorrent v2 torrent: missing v2 file layout or piece layers')
+        )
+      }
+      try {
+        const roots = buildV2ExpectedPieceRoots(layout, this.pieceLength, plm)
+        this.pieces = roots as unknown as Piece[]
+      } catch (err) {
+        return this.#destroyTorrent(err as Error)
+      }
     }
 
     this.metadata = this.torrentFile as any
@@ -1192,11 +1237,10 @@ export class Torrent
       if (this.destroyed) return cb(new Error('torrent is destroyed'))
       if (err) return queueMicrotask(() => cb(undefined, false))
       try {
-        const hex = await hash(buf as Uint8Array, 'hex')
         if (this.destroyed) return cb(new Error('torrent is destroyed'))
-        const expected = (this._hashes as any)[index]
-        const expectedHex = ArrayBuffer.isView(expected) ? arr2hex(expected as Uint8Array) : (expected as string)
-        cb(undefined, hex === expectedHex)
+        const ok = await this.#verifyPieceBufferForVersion(index, buf as Uint8Array)
+        if (this.destroyed) return cb(new Error('torrent is destroyed'))
+        cb(undefined, ok)
       } catch {
         cb(undefined, false)
       }

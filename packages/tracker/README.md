@@ -33,7 +33,7 @@ import { Client, Server } from '@z-torrent/tracker'
 import { Client } from '@z-torrent/tracker'
 
 const client = new Client({
-  infoHash: '012345678901234567890123456789012345678', // hex string or Uint8Array
+  infoHash: '0123456789012345678901234567890123456789', // 40-char v1 info hash hex (or Uint8Array)
   peerId: Buffer.from('01234567890123456789'), // 20 bytes
   announce: ['http://tracker.example/announce'],
   port: 6881,

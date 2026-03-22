@@ -4,6 +4,8 @@ export interface PEXFlags {
   supportsUtp?: boolean
   supportsUtHolepunch?: boolean
   isReachable?: boolean
+  /** BEP 52 — peer supports BitTorrent v2 / hybrid on this connection */
+  supportsV2?: boolean
 }
 
 export interface DecodedPEXFlags {
@@ -12,6 +14,7 @@ export interface DecodedPEXFlags {
   supportsUtp: boolean
   supportsUtHolepunch: boolean
   isReachable: boolean
+  supportsV2?: boolean
 }
 
 export interface PEXMessage {

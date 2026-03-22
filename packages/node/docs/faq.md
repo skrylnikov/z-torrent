@@ -1,21 +1,19 @@
 # Frequently Asked Questions
 
-## What is WebTorrent?
+**Z-Torrent** is a TypeScript fork of [WebTorrent](https://webtorrent.io) with a monorepo of `@z-torrent/*` packages. The ideas below (WebRTC in the browser, same wire protocol as BitTorrent) still apply; use **`npm install @z-torrent/node`** (Node.js) or **`npm install @z-torrent/browser`** (bundled browser build).
 
-**WebTorrent** is the first torrent client that works in the **browser**. YEP,
-THAT'S RIGHT. THE BROWSER.
+## What is WebTorrent / Z-Torrent?
 
-It's written completely in JavaScript – the language of the web – and uses
-**WebRTC** for true peer-to-peer transport. No browser plugin, extension, or
-installation is required.
+**WebTorrent** was the first torrent stack aimed at the **browser**, using **WebRTC** for peer-to-peer transport without plugins.
 
-Using open web standards, WebTorrent connects website users together to form a
-distributed, decentralized browser-to-browser network for efficient file transfer.
+**Z-Torrent** continues that model in this repository: JavaScript/TypeScript clients that use WebRTC (in the browser) and TCP/uTP (in Node) where supported, sharing the same piece exchange as standard BitTorrent.
+
+Using open web standards, browser clients connect users into a distributed network for efficient file transfer.
 
 ## Why is this cool?
 
 Imagine a video site like YouTube, where **visitors help to host the site's
-content**. The more people that use a WebTorrent-powered website, the faster and
+content**. The more people that use a WebTorrent- or Z-Torrent-powered website, the faster and
 more resilient it becomes.
 
 Browser-to-browser communication **cuts out the middle-man** and lets people
@@ -232,7 +230,7 @@ changes to the tracker protocol. Therefore, a browser-based WebTorrent client or
 
 The protocol changes we made will be published as a
 [BEP](http://www.bittorrent.org/beps/bep_0001.html). Until a spec is written, you
-can view the source code of the [`bittorrent-tracker`][bittorrent-tracker] package.
+can view the source code of [@z-torrent/tracker][bittorrent-tracker] in this repo.
 
 Once peers are connected, the wire protocol used to communicate is exactly the same
 as in normal BitTorrent. This should make it easy for existing popular torrent
@@ -246,43 +244,43 @@ clients like Transmission, and uTorrent to add support for WebTorrent. **Vuze**
 [tcp]: https://en.wikipedia.org/wiki/Transmission_Control_Protocol
 [utp]: https://en.wikipedia.org/wiki/Micro_Transport_Protocol
 [webrtc]: https://en.wikipedia.org/wiki/WebRTC
-[bittorrent-tracker]: https://npmjs.com/package/bittorrent-tracker
+[bittorrent-tracker]: https://github.com/skrylnikov/z-torrent/tree/main/packages/tracker
 [vuze-support]: https://wiki.vuze.com/w/WebTorrent
 
 ## How do I get started?
 
-To start using WebTorrent, simply include the
-[`webtorrent.min.js`](https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js)
-script on your page. If you use [browserify](http://browserify.org/) or [webpack](https://webpack.js.org/), you can
-`npm install webtorrent` and `import WebTorrent from 'webtorrent'`.
+**Browser:** install `@z-torrent/browser`, register the service worker from that package (see [packages/browser README](https://github.com/skrylnikov/z-torrent/tree/main/packages/browser)), then bundle with your app (Vite, Webpack, etc.).
 
-It's easy to download a torrent and add it to the page.
+**Node.js:** `npm install @z-torrent/node` and `import { WebTorrent } from '@z-torrent/node'`.
+
+Example (browser, with service worker):
 
 ```js
+import { WebTorrent } from '@z-torrent/browser'
+
 const client = new WebTorrent()
 
 const torrentId =
-  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
 
 const controller = await navigator.serviceWorker.register('./sw.min.js', { scope: './' })
 await navigator.serviceWorker.ready
 client.createServer({ controller })
 
 client.add(torrentId, (torrent) => {
-  // Torrents can contain many files. Let's use the .mp4 file
   const file = torrent.files.find((file) => {
     return file.name.endsWith('.mp4')
   })
-  file.streamTo(document.querySelector('video')) // append the file to the DOM
+  file.streamTo(document.querySelector('video'))
 })
 ```
 
 This supports video, audio, images, PDFs, Markdown, [and more][render-media], right
 out of the box. There are additional ways to access file content directly, including
-as a node-style stream, Buffer, or Blob URL.
+as a node-style stream, `Buffer`, or Blob URL.
 
 Video and audio content can be streamed, i.e. playback will start before the full
-file is downloaded. Seeking works too – WebTorrent dynamically fetches
+file is downloaded. Seeking works too – the client dynamically fetches
 the needed torrent pieces from the network on-demand.
 
 ## What is WebRTC?
@@ -326,22 +324,11 @@ Right now, we know of these WebRTC-capable torrent clients:
 - **[TorrentMedia][torrentmedia]** - Desktop WebTorrent client
 - _More coming soon – [Send a PR][pr] to add your client to the list!_
 
-### A bit more about `webtorrent-hybrid`
+### Node.js and WebRTC peers
 
-In node.js, `webtorrent-hybrid` can download torrents from WebRTC peers or TCP peers
-(i.e. normal peers). You can use WebTorrent as a command line program, or
-programmatically as a node.js package.
+In Node.js, **`@z-torrent/node`** can talk to both TCP/uTP peers and WebRTC peers (via the same discovery and wire stack as upstream WebTorrent). Use it programmatically as in the [API docs](./api.md).
 
-To install `webtorrent-hybrid` run the following command in your terminal (add the
-`-g` flag to install the command line program, omit it to install locally):
-
-```
-npm install webtorrent-hybrid -g
-```
-
-Note: If you just need to use WebTorrent in the browser (where WebRTC is available
-natively) then use [`webtorrent`][webtorrent] instead, which is faster to install
-because it won't need to install a WebRTC implementation.
+For **browser-only** usage (WebRTC available natively), use **`@z-torrent/browser`** instead of the Node package.
 
 ## Can WebTorrent clients on different websites connect to each other?
 
@@ -352,11 +339,9 @@ The same-origin policy does not apply to WebRTC connections since they are not
 client-to-server. Browser-to-browser connections require the cooperation of both
 websites (i.e. the WebTorrent script must be present on both sites).
 
-## Who builds WebTorrent?
+## Who builds Z-Torrent?
 
-WebTorrent is built by [Feross Aboukhadijeh][feross] and hundreds of open source
-contributors. The WebTorrent project is managed by
-[WebTorrent, LLC][webtorrent-io], as a non-profit project.
+**Z-Torrent** is maintained in [this repository](https://github.com/skrylnikov/z-torrent). It is a fork of **WebTorrent**, which was built by [Feross Aboukhadijeh][feross] and many contributors and is associated with [WebTorrent, LLC][webtorrent-io].
 
 Feross's other projects include [JavaScript Standard Style][standard],
 [PeerCDN][peercdn] (sold to Yahoo), [Study Notes][studynotes], and
@@ -415,19 +400,14 @@ file without trusting servers or peers at any point.
 
 ## How can I contribute?
 
-WebTorrent is an **OPEN Open Source Project**. Individuals who make significant and
-valuable contributions are given commit access to the project to contribute as they
-see fit. (See the full [contributor guidelines][contributing].)
-
-There are many ways to help out!
+Contributions are welcome on the Z-Torrent repo.
 
 - Report bugs by [creating a GitHub issue][issues].
-- Write code to [fix an open issue][open-issues].
+- Open pull requests against [open issues][open-issues] or propose improvements.
 
-If you're looking for help getting started, come join us in [Gitter][gitter] or on
-IRC at `#webtorrent` (freenode) and how you can get started.
+Upstream WebTorrent [contributor guidelines][contributing] may still be useful as a style reference.
 
-[open-issues]: https://github.com/webtorrent/webtorrent/issues?state=open
+[open-issues]: https://github.com/skrylnikov/z-torrent/issues?q=is%3Aissue+is%3Aopen
 [contributing]: https://github.com/webtorrent/.github/blob/master/CONTRIBUTING.md
 
 ## Where can I learn more?
@@ -574,17 +554,16 @@ the respective repository.
 
 ## Got more questions?
 
-Open an issue on the WebTorrent [issue tracker][issues], or join us in
-[Gitter][gitter] or on IRC at `#webtorrent` (freenode).
+Open an issue on the [Z-Torrent issue tracker][issues]. For historical WebTorrent community chat, see upstream [Gitter][gitter].
 
 [webtorrent-io]: https://webtorrent.io
 [render-media]: https://github.com/feross/render-media/blob/master/index.js
 [gitter]: https://gitter.im/webtorrent/webtorrent
 [instant.io]: https://instant.io
-[issues]: https://github.com/webtorrent/webtorrent/issues
-[license]: https://github.com/webtorrent/webtorrent/blob/master/LICENSE
+[issues]: https://github.com/skrylnikov/z-torrent/issues
+[license]: https://github.com/skrylnikov/z-torrent/blob/main/LICENSE
 [peercdn]: http://www.peercdn.com/
 [playback]: https://mafintosh.github.io/playback/
-[pr]: https://github.com/webtorrent/webtorrent
-[webtorrent-hybrid]: https://npmjs.com/package/webtorrent-hybrid
-[webtorrent]: https://npmjs.com/package/webtorrent
+[pr]: https://github.com/skrylnikov/z-torrent
+[webtorrent-hybrid]: https://www.npmjs.com/package/webtorrent-hybrid
+[webtorrent]: https://www.npmjs.com/package/webtorrent

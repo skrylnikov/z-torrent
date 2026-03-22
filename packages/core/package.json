@@ -33,6 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@z-torrent/merkle-tree": "workspace:*",
     "@z-torrent/parse": "workspace:*",
     "@z-torrent/protocol": "workspace:*",
     "@z-torrent/utils": "workspace:*",
