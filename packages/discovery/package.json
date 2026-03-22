@@ -2,39 +2,33 @@
   "name": "@z-torrent/discovery",
   "description": "Discover BitTorrent and WebTorrent peers",
   "version": "0.0.5",
-  "author": {
-    "name": "WebTorrent LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "browser": {
     "@z-torrent/dht": false,
     "@z-torrent/lsd": false
   },
   "bugs": {
-    "url": "https://github.com/webtorrent/torrent-discovery/issues"
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "type": "module",
   "dependencies": {
     "@z-torrent/dht": "workspace:*",
-    "eventemitter3": "^5.0.4",
-    "@z-torrent/tracker": "workspace:*",
     "@z-torrent/lsd": "workspace:*",
+    "@z-torrent/tracker": "workspace:*",
     "debug": "^4.4.3",
-    "run-parallel": "^1.2.0"
-  },
-  "optionalDependencies": {
-    "webrtc-polyfill": "^1.1.5"
+    "eventemitter3": "^5.0.4",
+    "run-parallel": "^1.2.0",
+    "uint8-util": "^2.2.6"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
-    "@types/run-parallel": "^1.1.2",
-    "uint8-util": "^2.2.5"
+    "@types/run-parallel": "^1.1.2"
   },
   "keywords": [
     "webtorrent",
     "torrent",
     "bittorrent",
+    "z-torrent",
     "peers",
     "discovery",
     "tracker",
@@ -47,7 +41,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "exports": {
     ".": {
@@ -72,26 +66,13 @@
   "scripts": {
     "build": "tsdown",
     "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "size": "size-limit"
   },
   "size-limit": [
     {
       "path": "dist/index.js",
       "limit": "120 KB"
-    }
-  ],
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/feross"
-    },
-    {
-      "type": "patreon",
-      "url": "https://www.patreon.com/feross"
-    },
-    {
-      "type": "consulting",
-      "url": "https://feross.org/support"
     }
   ]
 }

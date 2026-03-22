@@ -1,7 +1,7 @@
 import { IncomingMessage } from 'http'
 import { bin2hex } from 'uint8-util'
 
-import common from '../common.js'
+import * as common from '../common.js'
 
 interface ParseOptions {
   action?: 'announce' | 'scrape'
@@ -23,7 +23,7 @@ interface ParsedParams {
   headers?: IncomingMessage['headers']
 }
 
-export default function parseHttpRequest(req: IncomingMessage, opts?: ParseOptions): ParsedParams {
+export function parseHttpRequest(req: IncomingMessage, opts?: ParseOptions): ParsedParams {
   if (!opts) opts = {}
   const s = req.url!.split('?')
   const queryParams = common.querystringParse(s[1])

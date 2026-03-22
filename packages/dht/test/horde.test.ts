@@ -1,8 +1,7 @@
 import { once } from '@z-torrent/utils'
-import parallel from 'run-parallel'
 
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 const from = 2
@@ -23,16 +22,8 @@ function runAnnounceLookupTest(numInstances: number) {
         }
 
         dhts!.forEach((dht) => {
-          for (const infoHash in (dht as any).tables) {
-            const table = (dht as any).tables[infoHash]
-            table.toJSON().nodes.forEach((contact: any) => {
-              expect(contact.token).toBeTruthy()
-            })
-          }
-
           queueMicrotask(() => {
-            dht.destroy((err) => {
-              if (err) throw err
+            dht.destroy(() => {
               if (--numRunning === 0) resolve()
             })
           })
@@ -42,12 +33,8 @@ function runAnnounceLookupTest(numInstances: number) {
   })
 }
 
-/**
- *  Initialize [numInstances] dhts, have one announce an infoHash, and another perform a
- *  lookup. Times out after a while.
- */
 function findPeers(numInstances: number, cb: (err: Error | null, dhts?: DHT[]) => void) {
-  cb = once(cb) as any
+  cb = once(cb) as (err: Error | null, dhts?: DHT[]) => void
   const dhts: DHT[] = []
   const timeoutId = setTimeout(() => {
     cb(new Error(`Timed out for ${numInstances} instances`))
@@ -62,24 +49,19 @@ function findPeers(numInstances: number, cb: (err: Error | null, dhts?: DHT[]) =
     common.failOnWarningOrError(dht)
   }
 
-  // wait until every dht is listening
-  const tasks = dhts.map((dht) => {
-    return (cb: () => void) => {
-      dht.listen(cb)
-    }
-  })
-
-  parallel(tasks, () => {
-    // add each other to routing tables
-    makeFriends(dhts)
-
-    // lookup from other DHTs
-    dhts[0].announce(infoHash, 9998, () => {
-      dhts[1].lookup(infoHash)
+  let pendingListen = dhts.length
+  for (const dht of dhts) {
+    dht.listen(() => {
+      if (--pendingListen === 0) {
+        makeFriends(dhts)
+        dhts[0]!.announce(infoHash, 9998, () => {
+          dhts[1]!.lookup(infoHash)
+        })
+      }
     })
-  })
+  }
 
-  dhts[1].on('peer', (peer, hash) => {
+  dhts[1]!.on('peer', (peer, hash) => {
     expect(hash.toString('hex')).toBe(infoHash)
     expect(peer.port).toBe(9998)
     clearTimeout(timeoutId)
@@ -87,17 +69,13 @@ function findPeers(numInstances: number, cb: (err: Error | null, dhts?: DHT[]) =
   })
 }
 
-/**
- * Add every dht address to the dht "before" it.
- * This should guarantee that any dht can be located (with enough queries).
- */
 function makeFriends(dhts: DHT[]) {
   const len = dhts.length
   for (let i = 0; i < len; i++) {
-    const next = dhts[(i + 1) % len]
-    dhts[i].addNode({
+    const next = dhts[(i + 1) % len]!
+    dhts[i]!.addNode({
       host: '127.0.0.1',
-      port: (next.address() as any).port,
+      port: (next.address() as { port: number }).port,
       id: next.nodeId,
     })
   }

@@ -1,75 +1,74 @@
-# bittorrent-lsd [![ci][ci-image]][ci-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# @z-torrent/lsd
 
-[ci-image]: https://github.com/webtorrent/bittorrent-lsd/actions/workflows/ci.yml/badge.svg?branch=master
-[ci-url]: https://github.com/webtorrent/bittorrent-lsd/actions/workflows/ci.yml
-[npm-image]: https://img.shields.io/npm/v/bittorrent-lsd.svg
-[npm-url]: https://npmjs.org/package/bittorrent-lsd
-[downloads-image]: https://img.shields.io/npm/dm/bittorrent-lsd.svg
-[downloads-url]: https://npmjs.org/package/bittorrent-lsd
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+### Local Service Discovery (BEP14)
 
-### Local Service Discovery (BEP14) implementation.
+Node.js implementation of [BEP 14](https://www.bittorrent.org/beps/bep_0014.html) — a SSDP-like mechanism (HTTP over UDP multicast) to announce participation in torrent swarms on the local network.
 
-Local Service Discovery (LSD) provides a SSDP-like (http over udp-multicast) mechanism to announce the presence in specific swarms to local neighbors.
+Used by [Z-Torrent](https://github.com/skrylnikov/z-torrent) discovery.
 
-This module is used by [WebTorrent](http://webtorrent.io).
+## Install
 
-## install
-
-```
-npm install bittorrent-lsd
+```bash
+npm install @z-torrent/lsd
 ```
 
-## example
+## Usage
 
-```
+```js
+import { LSD } from '@z-torrent/lsd'
+import crypto from 'crypto'
+
 const opts = {
-  peerId: new Buffer('01234567890123456789'), // hex string or Buffer
-  infoHash: new Buffer('01234567890123456789'), // hex string or Buffer
-  port: common.randomPort() // torrent client port
+  peerId: crypto.randomBytes(20), // hex string or Uint8Array (e.g. Buffer)
+  infoHash: crypto.randomBytes(20),
+  port: 51413, // torrent client listen port
 }
 
 const lsd = new LSD(opts)
 
-// start getting peers from local network
 lsd.start()
 
 lsd.on('peer', (peerAddress, infoHash) => {
-  console.log('found a peer: ' + peerAddress)
+  console.log('peer:', peerAddress, 'infoHash:', infoHash)
 })
 
 lsd.destroy()
 ```
 
-## api
+## API
 
-### `lsd = new LSD([opts])`
+### `new LSD(opts)`
 
-Create a new `lsd` instance.
+- `opts.peerId` — required, `string` or `Uint8Array` (20-byte id, hex string if string)
+- `opts.infoHash` — required, `string` or `Uint8Array` (40-char hex or 20 raw bytes)
+- `opts.port` — required, client port as `number` or `string`
 
 ### `lsd.start()`
 
-Start listening and sending (every 5 minutes) for local network announces.
+Binds the multicast socket, joins the group, sends an announce, then repeats every 5 minutes.
 
 ### `lsd.destroy([callback])`
 
-Destroy the LSD. Closes the socket and cleans up resources.
+Closes the socket and clears the announce interval. Optional callback runs when the socket has closed.
 
-## events
+### `lsd.destroyed`
 
-### `lsd.on('peer', (peerAddress, infoHash) => { ... })`
+Read-only: whether `destroy()` has been called.
 
-Emitted when a potential peer is found. `peerAddress` is of the form `host:port`. `infoHash` is the torrent info hash.
+## Events
 
-### `lsd.on('warning', (err) => { ... })`
+### `peer`
 
-Emitted when the LSD gets an unexpected message.
+`(peerAddress, infoHash)` — `peerAddress` is `host:port`; `infoHash` is the 40-character hex string from the announce.
 
-### `lsd.on('error', (err) => { ... })`
+### `warning`
 
-Emitted when the LSD has a fatal error.
+Non-fatal issues (invalid remote message, multicast join failure, etc.). Payload may be a string or other value.
 
-## license
+### `error`
 
-MIT. Copyright (c) [Julen Garcia Leunda](https://github.com/hicom150) and [WebTorrent, LLC](https://webtorrent.io).
+Fatal socket errors.
+
+## License
+
+MIT

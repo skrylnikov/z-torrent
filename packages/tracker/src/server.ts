@@ -10,11 +10,11 @@ import { string2compact } from '@z-torrent/utils'
 import { WebSocketServer, WebSocket } from 'ws'
 import { hex2bin } from 'uint8-util'
 
-import common from './common.js'
-import Swarm from './server/swarm.js'
-import parseHttpRequest from './server/parse-http.js'
-import parseUdpRequest from './server/parse-udp.js'
-import parseWebSocketRequest from './server/parse-websocket.js'
+import * as common from './common.js'
+import { Swarm } from './server/swarm.js'
+import { parseHttpRequest } from './server/parse-http.js'
+import { parseUdpRequest } from './server/parse-udp.js'
+import { parseWebSocketRequest } from './server/parse-websocket.js'
 
 const debug = Debug('bittorrent-tracker:server')
 const hasOwnProperty = Object.prototype.hasOwnProperty
@@ -95,7 +95,7 @@ interface ScrapeResponse {
   flags: { min_request_interval: number }
 }
 
-class Server extends EventEmitter {
+export class Server extends EventEmitter {
   intervalMs: number
   _trustProxy: boolean
   _filter?: (infoHash: string, params: RequestParams, cb: (err?: Error) => void) => void
@@ -653,7 +653,11 @@ class Server extends EventEmitter {
           }
           const toPeer = swarm!.peers.get((params as any).to_peer_id)
           if (!toPeer) {
-            return this.emit('warning', new Error('no peer with that `to_peer_id`'))
+            debug(
+              'dropping answer: no peer for to_peer_id=%s (evicted or race)',
+              (params as any).to_peer_id
+            )
+            return
           }
           if (!toPeer.socket) return
 
@@ -925,4 +929,3 @@ function toNumber(x: any): number | false {
 
 function noop() {}
 
-export default Server

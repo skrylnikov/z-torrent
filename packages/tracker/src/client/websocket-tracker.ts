@@ -3,8 +3,9 @@ import Peer from '@thaunknown/simple-peer/lite.js'
 import Socket from '@thaunknown/simple-websocket'
 import { arr2text, arr2hex, hex2bin, bin2hex, randomBytes } from 'uint8-util'
 
-import common from '../common.js'
-import Tracker from './tracker.js'
+import * as common from '../common.js'
+import type { TrackerClientContext } from '../client-context.js'
+import { Tracker } from './tracker.js'
 
 const debug = Debug('bittorrent-tracker:websocket-tracker')
 const socketPool: Record<string, any> = {}
@@ -13,7 +14,7 @@ const RECONNECT_MAXIMUM = 60 * 60 * 1000
 const RECONNECT_VARIANCE = 5 * 60 * 1000
 const OFFER_TIMEOUT = 50 * 1000
 
-class WebSocketTracker extends Tracker {
+export class WebSocketTracker extends Tracker {
   peers: Record<string, any>
   socket: any
   reconnecting: boolean
@@ -26,9 +27,9 @@ class WebSocketTracker extends Tracker {
   _onSocketDataBound!: (data: any) => void
   _onSocketCloseBound!: () => void
   DEFAULT_ANNOUNCE_INTERVAL = 30 * 1000
-  static _socketPool: Record<string, any>
+  static _socketPool = socketPool
 
-  constructor(client: any, announceUrl: string) {
+  constructor(client: TrackerClientContext, announceUrl: string) {
     super(client, announceUrl)
     debug('new websocket tracker %s', announceUrl)
 
@@ -49,8 +50,8 @@ class WebSocketTracker extends Tracker {
     }
     const params = Object.assign({}, opts, {
       action: 'announce',
-      info_hash: this.client._infoHashBinary,
-      peer_id: this.client._peerIdBinary,
+      info_hash: this.client.infoHashBinary,
+      peer_id: this.client.peerIdBinary,
     })
     if (this._trackerId) params.trackerid = this._trackerId
     if (opts.event === 'stopped' || opts.event === 'completed') {
@@ -74,7 +75,7 @@ class WebSocketTracker extends Tracker {
     const infoHashes =
       Array.isArray(opts.infoHash) && opts.infoHash.length > 0
         ? opts.infoHash.map((infoHash: string) => hex2bin(infoHash))
-        : (opts.infoHash && hex2bin(opts.infoHash)) || this.client._infoHashBinary
+        : (opts.infoHash && hex2bin(opts.infoHash)) || this.client.infoHashBinary
     const params = {
       action: 'scrape',
       info_hash: infoHashes,
@@ -140,12 +141,12 @@ class WebSocketTracker extends Tracker {
     } else {
       const parsedUrl = new URL(this.announceUrl)
       let agent
-      if (this.client._proxyOpts) {
+      if (this.client.proxyOpts) {
         agent =
           parsedUrl.protocol === 'wss:'
-            ? this.client._proxyOpts.httpsAgent
-            : this.client._proxyOpts.httpAgent
-        if (!agent && this.client._proxyOpts.socksProxy) agent = this.client._proxyOpts.socksProxy
+            ? this.client.proxyOpts.httpsAgent
+            : this.client.proxyOpts.httpAgent
+        if (!agent && this.client.proxyOpts.socksProxy) agent = this.client.proxyOpts.socksProxy
       }
       this.socket = socketPool[this.announceUrl] = new Socket({
         url: this.announceUrl,
@@ -164,7 +165,7 @@ class WebSocketTracker extends Tracker {
     if (this.reconnecting) {
       this.reconnecting = false
       this.retries = 0
-      this.announce(this.client._defaultAnnounceOpts())
+      this.announce(this.client.getDefaultAnnounceOpts())
     }
   }
 
@@ -188,7 +189,7 @@ class WebSocketTracker extends Tracker {
   }
 
   _onAnnounceResponse(data: any): void {
-    if (data.info_hash !== this.client._infoHashBinary) {
+    if (data.info_hash !== this.client.infoHashBinary) {
       debug(
         'ignoring websocket data from %s for %s (looking for %s: reused socket)',
         this.announceUrl,
@@ -197,7 +198,7 @@ class WebSocketTracker extends Tracker {
       )
       return
     }
-    if (data.peer_id && data.peer_id === this.client._peerIdBinary) return
+    if (data.peer_id && data.peer_id === this.client.peerIdBinary) return
     debug(
       'received %s from %s for %s',
       JSON.stringify(data),
@@ -205,7 +206,10 @@ class WebSocketTracker extends Tracker {
       this.client.infoHash
     )
     const failure = data['failure reason']
-    if (failure) return this.client.emit('warning', new Error(failure))
+    if (failure) {
+      this.client.emit('warning', new Error(failure))
+      return
+    }
     const warning = data['warning message']
     if (warning) this.client.emit('warning', new Error(warning))
     const interval = data.interval || data['min interval']
@@ -227,8 +231,8 @@ class WebSocketTracker extends Tracker {
       peer.once('signal', (answer: any) => {
         const params = {
           action: 'announce',
-          info_hash: this.client._infoHashBinary,
-          peer_id: this.client._peerIdBinary,
+          info_hash: this.client.infoHashBinary,
+          peer_id: this.client.peerIdBinary,
           to_peer_id: data.peer_id,
           answer,
           offer_id: data.offer_id,
@@ -345,8 +349,8 @@ class WebSocketTracker extends Tracker {
     opts = Object.assign(
       {
         trickle: false,
-        config: self.client._rtcConfig,
-        wrtc: self.client._wrtc,
+        config: self.client.rtcConfig,
+        wrtc: self.client.wrtc,
       },
       opts
     )
@@ -365,8 +369,4 @@ class WebSocketTracker extends Tracker {
   }
 }
 
-WebSocketTracker._socketPool = socketPool
-
 function noop() {}
-
-export default WebSocketTracker

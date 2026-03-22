@@ -1,6 +1,8 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
 import common from './common.js'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
+
+import { testWrtc } from './helpers.js'
 
 const peerId = Buffer.from('01234567890123456789')
 const port = 6681
@@ -13,10 +15,9 @@ test('ensure client.destroy() callback is called with re-used websockets in sock
         announce: announceUrl,
         peerId,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
-      common.mockWebsocketTracker(client1)
       client1.on('error', (err) => {
         throw err
       })
@@ -32,10 +33,9 @@ test('ensure client.destroy() callback is called with re-used websockets in sock
           announce: announceUrl,
           peerId,
           port,
-          wrtc: {},
+          wrtc: testWrtc,
         })
 
-        common.mockWebsocketTracker(client2)
         client2.on('error', (err) => {
           throw err
         })

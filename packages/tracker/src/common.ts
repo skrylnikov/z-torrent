@@ -1,7 +1,6 @@
 /**
  * Functions/constants needed by both the client and server.
  */
-import * as common from './common-node.js'
 export * from './common-node.js'
 
 export const DEFAULT_ANNOUNCE_PEERS = 50
@@ -30,11 +29,4 @@ export const parseUrl = (str: string): URL => {
   }
 
   return url
-}
-
-export default {
-  DEFAULT_ANNOUNCE_PEERS,
-  MAX_ANNOUNCE_PEERS,
-  parseUrl,
-  ...common,
 }

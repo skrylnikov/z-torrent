@@ -103,7 +103,15 @@ export class Selections {
           break
         }
       } else {
-        if (_isLowerIntersecting(item, existing)) {
+        if (item.from > existing.from && item.from <= existing.to && item.to > existing.to) {
+          existing.to = Math.max(item.from - 1, 0)
+        } else if (item.from < existing.from && item.to >= existing.from && item.to < existing.to) {
+          existing.from = item.to + 1
+        } else if (item.from === existing.to && item.to === existing.to) {
+          existing.to = existing.to - 1
+        } else if (item.from > existing.from && item.to === existing.to && item.from <= existing.to) {
+          existing.to = Math.max(item.from - 1, 0)
+        } else if (_isLowerIntersecting(item, existing)) {
           existing.to = Math.max(item.from - 1, 0)
         } else if (_isUpperIntersecting(item, existing)) {
           existing.from = item.to + 1
@@ -164,7 +172,7 @@ export class Selections {
     this.remove(newItem)
   }
 
-  insert(newItem: SelectionItem & NotificationItem): void {
+  insert(newItem: SelectionItem): void {
     if (newItem.from > newItem.to) {
       throw new Error('Invalid interval')
     }

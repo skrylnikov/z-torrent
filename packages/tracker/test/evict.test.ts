@@ -1,8 +1,7 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
+import type { Server } from '../src/server.js'
 import common from './common.js'
-import type { default as ClientType } from '../client.js'
-import type Server from '../server.js'
-import wrtc from 'webrtc-polyfill'
+import { testWrtc } from './helpers.js'
 
 const infoHash = '4cb67059ed6bd08362da625b3ae77f6f4a075705'
 const peerId = Buffer.from('01234567890123456789')
@@ -30,27 +29,23 @@ function serverTest(
           ? `${serverType}://${hostname}:${port}`
           : `${serverType}://${hostname}:${port}/announce`
 
-      const client1: ClientType = new Client({
+      const client1: InstanceType<typeof Client> = new Client({
         infoHash,
         announce: [announceUrl],
         peerId,
         port: 6881,
-        wrtc,
+        wrtc: testWrtc,
       })
-      if (serverType === 'ws') common.mockWebsocketTracker(client1)
-
       client1.start()
 
       client1.once('update', () => {
-        const client2: ClientType = new Client({
+        const client2: InstanceType<typeof Client> = new Client({
           infoHash,
           announce: [announceUrl],
           peerId: peerId2,
           port: 6882,
-          wrtc,
+          wrtc: testWrtc,
         })
-        if (serverType === 'ws') common.mockWebsocketTracker(client2)
-
         client2.start()
 
         client2.once('update', () => {
@@ -66,15 +61,13 @@ function serverTest(
               evicted = true
             })
 
-            const client3: ClientType = new Client({
+            const client3: InstanceType<typeof Client> = new Client({
               infoHash,
               announce: [announceUrl],
               peerId: peerId3,
               port: 6880,
-              wrtc,
+              wrtc: testWrtc,
             })
-            if (serverType === 'ws') common.mockWebsocketTracker(client3)
-
             client3.start()
 
             client3.once('update', () => {

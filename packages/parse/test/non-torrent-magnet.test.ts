@@ -1,4 +1,4 @@
-import parseTorrent from '../dist/index.js'
+import { parse } from '@z-torrent/parse'
 import { expect, test } from 'bun:test'
 
 test('exception thrown with non-bittorrent URNs', async () => {
@@ -15,7 +15,7 @@ test('exception thrown with non-bittorrent URNs', async () => {
 
   await Promise.all(
     magnets.map(async (magnet) => {
-      await expect(parseTorrent(magnet)).rejects.toBeInstanceOf(Error)
+      await expect(parse.decode(magnet)).rejects.toBeInstanceOf(Error)
     })
   )
 })

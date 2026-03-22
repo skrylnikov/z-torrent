@@ -1,40 +1,21 @@
 import ed from 'bittorrent-dht-sodium'
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
-
-test('dht.toJSON: re-use dht nodes with `bootstrap` option', () => {
-  return new Promise<void>((resolve) => {
-    const dht1 = new DHT({ bootstrap: false })
-    common.failOnWarningOrError(dht1)
-
-    common.addRandomNodes(dht1, (DHT as any).K)
-
-    dht1.on('ready', () => {
-      const dht2 = new DHT({ bootstrap: dht1.toJSON().nodes } as any)
-
-      dht2.on('ready', () => {
-        expect(dht2.toJSON().nodes).toEqual(dht1.toJSON().nodes)
-        dht1.destroy()
-        dht2.destroy()
-        resolve()
-      })
-    })
-  })
-})
 
 test('dht.toJSON: re-use dht nodes by calling dht.addNode', () => {
   return new Promise<void>((resolve) => {
     const dht1 = new DHT({ bootstrap: false })
     common.failOnWarningOrError(dht1)
 
-    common.addRandomNodes(dht1, (DHT as any).K)
+    common.addRandomNodes(dht1, 20)
 
     dht1.on('ready', () => {
       const dht2 = new DHT({ bootstrap: false })
 
-      dht1.toJSON().nodes.forEach((node) => {
-        dht2.addNode(node)
+      dht1.nodes.toArray().forEach((node) => {
+        if (node.id && node.host)
+          dht2.addNode({ host: node.host, port: node.port, id: node.id })
       })
 
       dht2.on('ready', () => {

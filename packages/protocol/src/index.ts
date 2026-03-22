@@ -5,7 +5,7 @@ import Debug from 'debug'
 import RC4 from 'rc4'
 import { Duplex } from 'streamx'
 import { hash, concat, equal, hex2arr, arr2hex, text2arr, arr2text, randomBytes } from 'uint8-util'
-import { createDiffieHellman } from './dh-browser.js'
+import { createDiffieHellman, type DiffieHellman } from './dh-browser.js'
 import throughput from 'throughput'
 import arrayRemove from 'unordered-array-remove'
 
@@ -98,25 +98,25 @@ class HaveAllBitField {
   set(_index: number, _value?: boolean): void {}
 }
 
-interface Extensions {
+export interface ProtocolExtensions {
   extended: boolean
   dht: boolean
   fast: boolean
 }
 
-interface ExtendedHandshake {
+export interface ProtocolExtendedHandshake {
   m?: Record<string, number | Uint8Array>
   [key: string]: unknown
 }
 
-interface Extension {
+export interface ProtocolExtension {
   name: string
-  onHandshake: (infoHash: string, peerId: string, extensions: Extensions) => void
-  onExtendedHandshake: (handshake: ExtendedHandshake) => void
+  onHandshake: (infoHash: string, peerId: string, extensions: ProtocolExtensions) => void
+  onExtendedHandshake: (handshake: ProtocolExtendedHandshake) => void
   onMessage: (buf: Uint8Array) => void
 }
 
-type ExtensionConstructor = new (wire: Wire) => Extension
+export type ProtocolExtensionConstructor = new (wire: Wire) => ProtocolExtension
 
 type BitFieldLike = BitField | HaveAllBitField
 
@@ -134,8 +134,8 @@ class Wire extends Duplex {
 
   peerPieces: BitFieldLike
 
-  extensions: Extensions
-  peerExtensions: Extensions
+  extensions: ProtocolExtensions
+  peerExtensions: ProtocolExtensions
 
   requests: Request[]
   peerRequests: Request[]
@@ -143,14 +143,14 @@ class Wire extends Duplex {
   extendedMapping: Record<number, string>
   peerExtendedMapping: Record<string, number>
 
-  extendedHandshake: ExtendedHandshake
-  peerExtendedHandshake: ExtendedHandshake
+  extendedHandshake: ProtocolExtendedHandshake
+  peerExtendedHandshake: ProtocolExtendedHandshake
 
   hasFast: boolean
   allowedFastSet: number[]
   peerAllowedFastSet: number[]
 
-  _ext: Record<string, Extension>
+  _ext: Record<string, ProtocolExtension>
   _nextExt: number
 
   uploaded: number
@@ -173,7 +173,7 @@ class Wire extends Duplex {
   _bufferSize: number
 
   _peEnabled: boolean
-  _dh: ReturnType<typeof createDiffieHellman> | null
+  _dh: DiffieHellman | null
   _myPubKey: string | null
   _peerPubKey: string | null
   _sharedSecret: string | null
@@ -327,15 +327,15 @@ class Wire extends Duplex {
     return super.end(data) as this
   }
 
-  use(Extension: ExtensionConstructor): void {
-    const name = Extension.prototype.name
+  use(ExtCtor: ProtocolExtensionConstructor): void {
+    const name = ExtCtor.prototype.name
     if (!name) {
       throw new Error('Extension class requires a "name" property on the prototype')
     }
     this._debug('use extension.name=%s', name)
 
     const ext = this._nextExt
-    const handler = new Extension(this)
+    const handler = new ExtCtor(this)
 
     function noop(): void {}
 
@@ -480,7 +480,7 @@ class Wire extends Duplex {
 
   _sendExtendedHandshake(): void {
     // Create extended message object from registered extensions
-    const msg: ExtendedHandshake = Object.assign({}, this.extendedHandshake)
+    const msg: ProtocolExtendedHandshake = Object.assign({}, this.extendedHandshake)
     msg.m = {}
     for (const ext in this.extendedMapping) {
       const name = this.extendedMapping[ext as unknown as number]
@@ -751,7 +751,7 @@ class Wire extends Duplex {
     this.emit('pe4')
   }
 
-  _onHandshake(infoHashBuffer: Uint8Array, peerIdBuffer: Uint8Array, extensions: Extensions): void {
+  _onHandshake(infoHashBuffer: Uint8Array, peerIdBuffer: Uint8Array, extensions: ProtocolExtensions): void {
     const infoHash = arr2hex(infoHashBuffer)
     const peerId = arr2hex(peerIdBuffer)
 
@@ -939,9 +939,9 @@ class Wire extends Duplex {
 
   _onExtended(ext: number, buf: Uint8Array): void {
     if (ext === 0) {
-      let info: ExtendedHandshake | undefined
+      let info: ProtocolExtendedHandshake | undefined
       try {
-        info = bencode.decode(buf) as ExtendedHandshake
+        info = bencode.decode(buf) as ProtocolExtendedHandshake
       } catch (err) {
         const error = err as Error
         this._debug('ignoring invalid extended handshake: %s', error.message || error)
@@ -1329,3 +1329,5 @@ class Wire extends Duplex {
 }
 
 export default Wire
+
+export type { DiffieHellman } from './dh-browser.js'

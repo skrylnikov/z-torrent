@@ -1,29 +1,30 @@
 import fs from 'fs'
 import { expect, test } from 'bun:test'
-import fixtures from '@z-torrent/fixtures'
-import parseTorrent from '@z-torrent/parse'
+import { fixtures } from '@z-torrent/fixtures'
+import { parseTorrent } from '@z-torrent/parse'
 import path from 'path'
 import { hash } from 'uint8-util'
-import { createTorrentPromise } from './helpers.js'
+import { createTorrentPromise, torrentFilesOf } from './helpers.js'
 
 type ReadStreamWithName = fs.ReadStream & { name?: string }
 
 test('create single file torrent from a stream', async () => {
-  const stream = fs.createReadStream(fixtures.leaves.contentPath) as ReadStreamWithName
+  const stream = fs.createReadStream(fixtures.leaves.contentPath!) as ReadStreamWithName
   stream.name = 'Leaves of Grass by Walt Whitman.epub'
 
   const startTime = Date.now()
   const torrent = await createTorrentPromise(stream, { pieceLength: 16384 })
   const parsedTorrent = await parseTorrent(torrent)
+  const tfiles = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('Leaves of Grass by Walt Whitman.epub')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  expect(path.normalize(parsedTorrent.files[0].path)).toBe(
+  expect(path.normalize(tfiles[0]!.path)).toBe(
     path.normalize('Leaves of Grass by Walt Whitman.epub')
   )
-  expect(parsedTorrent.files[0].length).toBe(362017)
+  expect(tfiles[0]!.length).toBe(362017)
   expect(parsedTorrent.length).toBe(362017)
   expect(parsedTorrent.pieceLength).toBe(16384)
   expect(parsedTorrent.pieces).toEqual([
@@ -51,15 +52,15 @@ test('create single file torrent from a stream', async () => {
     '56dcc242d03293e9446cf5e457d8eb3d9588fd90',
     'c698de9b0dad92980906c026d8c1408fa08fe4ec',
   ])
-  expect(await hash(parsedTorrent.infoBuffer, 'hex')).toBe(
+  expect(await hash(parsedTorrent.infoBuffer!, 'hex')).toBe(
     'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36'
   )
 })
 
 test('create multi file torrent with streams', async () => {
-  const files = fs.readdirSync(fixtures.numbers.contentPath).map((file) => {
+  const files = fs.readdirSync(fixtures.numbers.contentPath!).map((file) => {
     const stream = fs.createReadStream(
-      `${fixtures.numbers.contentPath}/${file}`
+      `${fixtures.numbers.contentPath!}/${file}`
     ) as ReadStreamWithName
     stream.name = file
     return stream
@@ -75,32 +76,33 @@ test('create multi file torrent with streams', async () => {
 
   expect(parsedTorrent.name).toBe('numbers')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  const sortedFiles = parsedTorrent.files.sort((a, b) => a.path.localeCompare(b.path))
-  expect(path.normalize(sortedFiles[0].path)).toBe(path.normalize('numbers/1.txt'))
-  expect(sortedFiles[0].length).toBe(1)
-  expect(path.normalize(sortedFiles[1].path)).toBe(path.normalize('numbers/2.txt'))
-  expect(sortedFiles[1].length).toBe(2)
-  expect(path.normalize(sortedFiles[2].path)).toBe(path.normalize('numbers/3.txt'))
-  expect(sortedFiles[2].length).toBe(3)
+  const sortedFiles = torrentFilesOf(parsedTorrent).sort((a, b) => a.path.localeCompare(b.path))
+  expect(path.normalize(sortedFiles[0]!.path)).toBe(path.normalize('numbers/1.txt'))
+  expect(sortedFiles[0]!.length).toBe(1)
+  expect(path.normalize(sortedFiles[1]!.path)).toBe(path.normalize('numbers/2.txt'))
+  expect(sortedFiles[1]!.length).toBe(2)
+  expect(path.normalize(sortedFiles[2]!.path)).toBe(path.normalize('numbers/3.txt'))
+  expect(sortedFiles[2]!.length).toBe(3)
   expect(parsedTorrent.length).toBe(6)
-  expect(parsedTorrent.info.pieces.length).toBe(20)
+  expect(parsedTorrent.info!.pieces!.length).toBe(20)
   expect(parsedTorrent.pieceLength).toBe(32768)
   expect(parsedTorrent.pieces).toHaveLength(1)
-  expect(parsedTorrent.pieces[0]).toMatch(/^[a-f0-9]{40}$/)
+  expect(parsedTorrent.pieces![0]).toMatch(/^[a-f0-9]{40}$/)
   expect(parsedTorrent.infoHash).toMatch(/^[a-f0-9]{40}$/)
 })
 
 test('implicit name and pieceLength for stream', async () => {
-  const stream = fs.createReadStream(fixtures.leaves.contentPath)
+  const stream = fs.createReadStream(fixtures.leaves.contentPath!)
 
   const torrent = await createTorrentPromise(stream)
   const parsedTorrent = await parseTorrent(torrent)
+  const tfiles = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toContain('Unnamed Torrent')
   expect(parsedTorrent.pieceLength).toBe(16384)
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toContain('Unnamed Torrent')
-  expect(parsedTorrent.files[0].path).toContain('Unnamed Torrent')
+  expect(tfiles.length).toBe(1)
+  expect(tfiles[0]!.name).toContain('Unnamed Torrent')
+  expect(tfiles[0]!.path).toContain('Unnamed Torrent')
 })

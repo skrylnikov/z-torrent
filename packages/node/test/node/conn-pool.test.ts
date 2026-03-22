@@ -1,8 +1,8 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import dgram from 'dgram'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('client.conn-pool: use TCP when uTP disabled', async () => {
   const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })

@@ -1,7 +1,8 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
+import { WebTorrent } from '../dist/index.js'
+import { SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
 test('client.seed followed by duplicate client.add (sync)', async () => {
   const client = new WebTorrent({
@@ -28,16 +29,9 @@ test('client.seed followed by duplicate client.add (sync)', async () => {
       (torrent1) => {
         expect(client.torrents.length).toBe(1)
 
-        const torrent2 = client.add(torrent1.infoHash)
-
-        torrent2.once('ready', () => {
-          throw new Error('torrent ready is not called')
-        })
-
-        torrent2.once('error', (err) => {
-          expect(err).toBeTruthy()
+        client.add(torrent1.infoHash, {}, (t) => {
+          expect(t).toBe(torrent1)
           expect(client.torrents.length).toBe(1)
-          expect(torrent2.destroyed).toBeTruthy()
           client.destroy((err) => {
             if (err) reject(err)
             expect(client.torrents.length).toBe(0)
@@ -47,7 +41,7 @@ test('client.seed followed by duplicate client.add (sync)', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed followed by duplicate client.add (async)', async () => {
   const client = new WebTorrent({
@@ -74,16 +68,9 @@ test('client.seed followed by duplicate client.add (async)', async () => {
       (torrent1) => {
         expect(client.torrents.length).toBe(1)
 
-        const torrent2 = client.add(fixtures.leaves.torrentPath)
-
-        torrent2.once('ready', () => {
-          throw new Error('torrent ready is not called')
-        })
-
-        torrent2.once('error', (err) => {
-          expect(err).toBeTruthy()
+        client.add(fixtures.leaves.torrentPath, {}, (t) => {
+          expect(t).toBe(torrent1)
           expect(client.torrents.length).toBe(1)
-          expect(torrent2.destroyed).toBeTruthy()
           client.destroy((err) => {
             if (err) reject(err)
             expect(client.torrents.length).toBe(0)
@@ -93,7 +80,7 @@ test('client.seed followed by duplicate client.add (async)', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed followed by two duplicate client.add calls (sync)', async () => {
   const client = new WebTorrent({
@@ -120,27 +107,13 @@ test('client.seed followed by two duplicate client.add calls (sync)', async () =
       (torrent1) => {
         expect(client.torrents.length).toBe(1)
 
-        const torrent2 = client.add(torrent1.infoHash)
-
-        torrent2.once('ready', () => {
-          throw new Error('torrent ready is not called')
-        })
-
-        torrent2.once('error', (err) => {
-          expect(err).toBeTruthy()
+        client.add(torrent1.infoHash, {}, (t) => {
+          expect(t).toBe(torrent1)
           expect(client.torrents.length).toBe(1)
-          expect(torrent2.destroyed).toBeTruthy()
 
-          const torrent3 = client.add(torrent1.infoHash)
-
-          torrent3.once('ready', () => {
-            throw new Error('torrent ready is not called')
-          })
-
-          torrent3.once('error', (err) => {
-            expect(err).toBeTruthy()
+          client.add(torrent1.infoHash, {}, (t2) => {
+            expect(t2).toBe(torrent1)
             expect(client.torrents.length).toBe(1)
-            expect(torrent3.destroyed).toBeTruthy()
             client.destroy((err) => {
               if (err) reject(err)
               expect(client.torrents.length).toBe(0)
@@ -151,7 +124,7 @@ test('client.seed followed by two duplicate client.add calls (sync)', async () =
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed followed by two duplicate client.add calls (async)', async () => {
   const client = new WebTorrent({
@@ -178,27 +151,13 @@ test('client.seed followed by two duplicate client.add calls (async)', async () 
       (torrent1) => {
         expect(client.torrents.length).toBe(1)
 
-        const torrent2 = client.add(fixtures.leaves.torrentPath)
-
-        torrent2.once('ready', () => {
-          throw new Error('torrent ready is not called')
-        })
-
-        torrent2.once('error', (err) => {
-          expect(err).toBeTruthy()
+        client.add(fixtures.leaves.torrentPath, {}, (t) => {
+          expect(t).toBe(torrent1)
           expect(client.torrents.length).toBe(1)
-          expect(torrent2.destroyed).toBeTruthy()
 
-          const torrent3 = client.add(fixtures.leaves.torrentPath)
-
-          torrent3.once('ready', () => {
-            throw new Error('torrent ready is not called')
-          })
-
-          torrent3.once('error', (err) => {
-            expect(err).toBeTruthy()
+          client.add(fixtures.leaves.torrentPath, {}, (t2) => {
+            expect(t2).toBe(torrent1)
             expect(client.torrents.length).toBe(1)
-            expect(torrent3.destroyed).toBeTruthy()
             client.destroy((err) => {
               if (err) reject(err)
               expect(client.torrents.length).toBe(0)
@@ -209,7 +168,7 @@ test('client.seed followed by two duplicate client.add calls (async)', async () 
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('successive sync client.add, client.remove, client.add, client.remove (sync)', async () => {
   const client = new WebTorrent({
@@ -237,8 +196,8 @@ test('successive sync client.add, client.remove, client.add, client.remove (sync
         expect(client.torrents.length).toBe(1)
 
         client.remove(torrent1.infoHash, () => {
-          client.add(torrent1.infoHash)
-          client.remove(torrent1.infoHash, () => {
+          const t2 = client.add(torrent1.infoHash)
+          client.remove(t2, () => {
             client.destroy((err) => {
               if (err) reject(err)
               expect(client.torrents.length).toBe(0)
@@ -249,4 +208,4 @@ test('successive sync client.add, client.remove, client.add, client.remove (sync
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })

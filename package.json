@@ -12,6 +12,7 @@
   "scripts": {
     "build": "turbo build",
     "test": "turbo test",
+    "typecheck": "turbo typecheck",
     "test-live": "turbo run test-live",
     "lint": "eslint packages",
     "lint:fix": "eslint packages --fix",
@@ -42,5 +43,11 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.15.0"
   },
-  "packageManager": "bun@1.3.9"
+  "packageManager": "bun@1.3.9",
+  "dependencies": {
+    "@types/bencode": "^2.0.4",
+    "bencode": "^4.0.0",
+    "sync-sha1": "^1.0.1",
+    "uint8-util": "^2.2.6"
+  }
 }

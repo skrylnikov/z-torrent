@@ -3,7 +3,7 @@
 import fs from 'fs'
 import minimist from 'minimist'
 import { createRequire } from 'module'
-import createTorrent from '../index.js'
+import { createTorrent, type CreateTorrentOptions } from '../index.js'
 
 const require = createRequire(import.meta.url)
 
@@ -22,7 +22,7 @@ const argv = minimist(process.argv.slice(2), {
 })
 
 const infile = argv._[0]
-const outfile = argv.outfile
+const outfile = typeof argv.outfile === 'string' ? argv.outfile : undefined
 const help = `usage: create-torrent <directory OR file> [OPTIONS]
 
 Create a torrent file from a directory or file.
@@ -50,12 +50,12 @@ if (!infile || argv.help) {
   process.exit(0)
 }
 
-createTorrent(infile, argv, (err: Error | null, torrent?: Buffer) => {
+createTorrent(infile, argv as unknown as CreateTorrentOptions, (err: Error | null, torrent?: Uint8Array) => {
   if (err) {
     console.error(err.stack)
     process.exit(1)
   } else if (outfile && torrent) {
-    fs.writeFile(outfile, torrent, (writeErr: NodeJS.ErrnoException | null) => {
+    fs.writeFile(outfile, torrent, (writeErr: Error | null) => {
       if (writeErr) {
         console.error(writeErr.stack)
         process.exit(1)

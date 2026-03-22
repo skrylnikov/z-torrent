@@ -1,6 +1,6 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('ut_metadata transfer', async () => {
   const client1 = new WebTorrent({

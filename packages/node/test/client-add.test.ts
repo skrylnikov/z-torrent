@@ -1,7 +1,8 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
+import { WebTorrent } from '../dist/index.js'
+import { expectSameMagnet } from './common.js'
 
 test('client.add: magnet uri, utf-8 string', async () => {
   const client = new WebTorrent({
@@ -25,7 +26,7 @@ test('client.add: magnet uri, utf-8 string', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('infoHash', async () => {
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
       await new Promise<void>((res, rej) =>
         client.remove(fixtures.leaves.magnetURI, (err) => {
@@ -65,7 +66,7 @@ test('client.add: torrent file, buffer', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('infoHash', async () => {
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
       await new Promise<void>((res, rej) =>
         client.remove(fixtures.leaves.torrent, (err) => {
@@ -105,7 +106,8 @@ test('client.add: info hash, hex string', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('infoHash', async () => {
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(
+      expectSameMagnet(
+        torrent.magnetURI,
         `magnet:?xt=urn:btih:${fixtures.leaves.parsedTorrent.infoHash}`
       )
 
@@ -191,7 +193,7 @@ test('client.add: parsed torrent, from `parse-torrent`', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('infoHash', async () => {
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
       await new Promise<void>((res, rej) =>
         client.remove(fixtures.leaves.parsedTorrent, (err) => {
@@ -236,7 +238,7 @@ test('client.add: parsed torrent, with string type announce property', async () 
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
 
       const expectedMagnetURI = `${fixtures.leaves.magnetURI}&tr=${encodeURIComponent('http://tracker.local:80')}`
-      expect(torrent.magnetURI).toBe(expectedMagnetURI)
+      expectSameMagnet(torrent.magnetURI, expectedMagnetURI)
       expect(torrent.announce).toEqual(['http://tracker.local:80'])
 
       await new Promise<void>((res, rej) =>
@@ -282,7 +284,7 @@ test('client.add: parsed torrent, with array type announce property', async () =
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
 
       const expectedMagnetURI = `${fixtures.leaves.magnetURI}&tr=${encodeURIComponent('http://tracker.local:80')}&tr=${encodeURIComponent('http://tracker.local:81')}`
-      expect(torrent.magnetURI).toBe(expectedMagnetURI)
+      expectSameMagnet(torrent.magnetURI, expectedMagnetURI)
       expect(torrent.announce).toEqual(['http://tracker.local:80', 'http://tracker.local:81'])
 
       await new Promise<void>((res, rej) =>

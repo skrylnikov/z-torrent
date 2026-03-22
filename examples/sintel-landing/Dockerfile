@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 
 RUN bun install --frozen-lockfile
-RUN bun run build --filter=sintel-landing
+RUN bun run build -- --filter=sintel-landing
 
 # --- Runtime stage ---
 FROM nginx:alpine

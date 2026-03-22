@@ -1,8 +1,13 @@
 import { defineConfig } from 'tsdown'
-import { resolve, dirname } from 'path'
+import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { createRequire } from 'node:module'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+
+const cryptoPath = require.resolve('crypto-browserify')
+const trackerClientBrowser = resolve(__dirname, '../tracker/dist/client.browser.js')
 
 export default defineConfig({
   entry: {
@@ -18,11 +23,8 @@ export default defineConfig({
   clean: false,
   resolve: {
     alias: {
-      crypto: resolve(
-        __dirname,
-        '../../node_modules/.bun/crypto-browserify@3.12.1/node_modules/crypto-browserify/index.js'
-      ),
-      '@z-torrent/tracker/client': resolve(__dirname, '../../packages/tracker/dist/client.js'),
+      crypto: cryptoPath,
+      '@z-torrent/tracker/client': trackerClientBrowser,
     },
   },
   deps: {

@@ -1,8 +1,9 @@
-import fs from 'fs'
-import parseTorrent from '../dist/index.js'
-import path, { dirname } from 'path'
+import fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { parse } from '@z-torrent/parse'
 import { expect, test } from 'bun:test'
-import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -14,5 +15,5 @@ const leavesDuplicateTracker = fs.readFileSync(
 const expectedAnnounce = ['http://tracker.example.com/announce']
 
 test('dedupe announce list', async () => {
-  expect((await parseTorrent(leavesDuplicateTracker)).announce).toEqual(expectedAnnounce)
+  expect((await parse.decode(leavesDuplicateTracker)).announce).toEqual(expectedAnnounce)
 })

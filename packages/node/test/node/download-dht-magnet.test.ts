@@ -1,11 +1,11 @@
 import fs from 'fs'
-import { Server as DHT } from 'bittorrent-dht'
-import fixtures from 'webtorrent-fixtures'
+import { DHT } from '@z-torrent/dht'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import networkAddress from 'network-address'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('Download using DHT (via magnet uri)', async () => {
   const dhtServer = new DHT({ bootstrap: false })

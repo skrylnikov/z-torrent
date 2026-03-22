@@ -17,6 +17,9 @@
       "dependsOn": ["build"],
       "outputs": []
     },
+    "typecheck": {
+      "outputs": []
+    },
     "size": {
       "dependsOn": ["build"],
       "outputs": []

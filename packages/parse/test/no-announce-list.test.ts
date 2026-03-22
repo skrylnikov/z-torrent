@@ -1,8 +1,9 @@
-import fs from 'fs'
-import parseTorrent from '../dist/index.js'
-import path, { dirname } from 'path'
+import fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { parse } from '@z-torrent/parse'
 import { expect, test } from 'bun:test'
-import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -64,8 +65,9 @@ const bitloveParsed = {
       'base64'
     )
   ),
+  version: 'v1' as const,
 }
 
 test('parse torrent with no announce-list', async () => {
-  expect(await parseTorrent(bitloveIntro)).toEqual(bitloveParsed)
+  expect(await parse.decode(bitloveIntro)).toEqual(bitloveParsed)
 })

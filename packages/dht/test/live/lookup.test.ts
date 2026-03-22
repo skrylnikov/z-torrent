@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import DHT from '../../src/index.js'
+import { DHT } from '../../src/index.js'
 
 const ubuntu = '62a4d9e139f3315f8716bcccca0cc984a9809da1'
 

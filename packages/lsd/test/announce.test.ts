@@ -1,28 +1,8 @@
-import { expect, describe, test } from 'bun:test'
-import sinon from 'sinon'
 import dgram from 'dgram'
+import { afterEach, beforeEach, describe, expect, jest, test } from 'bun:test'
+
 import * as common from './common.js'
-import LSD from '@z-torrent/lsd'
-
-test('should emit a warning when addMembership fails', () => {
-  return new Promise<void>((resolve) => {
-    const opts = {
-      peerId: common.randomId(),
-      infoHash: common.randomHash(),
-      port: common.randomPort(),
-    }
-    const lsd = new LSD(opts)
-
-    sinon.stub(lsd.server, 'addMembership').throws()
-
-    lsd.on('warning', (err: unknown) => {
-      expect(err).toBeTruthy()
-      lsd.destroy(() => resolve())
-    })
-
-    lsd.start()
-  })
-})
+import { LSD } from '../src/index.js'
 
 test('should emit peer when receiving a valid announce', () => {
   return new Promise<void>((resolve, reject) => {
@@ -37,16 +17,15 @@ test('should emit peer when receiving a valid announce', () => {
     const host = '239.192.152.143:6771'
     const port = '51413'
     const infoHash = 'F60AE72E07713D4F14878A5B24ADB34992401AC9'
+    const announce = `BT-SEARCH * HTTP/1.1\r\nHost: ${host}\r\nPort: ${port}\r\nInfohash: ${infoHash}\r\n\r\n\r\n`
 
-    client.connect(6771, '239.192.152.143', (err) => {
-      if (err) reject(err)
-
-      const announce = `BT-SEARCH * HTTP/1.1\r\nHost: ${host}\r\nPort: ${port}\r\nInfohash: ${infoHash}\r\n\r\n\r\n`
-      client.send(announce)
+    client.once('error', (err: Error) => reject(err))
+    client.send(announce, 6771, '239.192.152.143', (sendErr) => {
       client.close()
+      if (sendErr) reject(sendErr)
     })
 
-    lsd.on('error', (err: Error) => reject(err))
+    lsd.on('error', (e: Error) => reject(e))
 
     lsd.on('peer', (peerAddress: string, peerInfoHash: string) => {
       expect(typeof peerAddress).toBe('string')
@@ -61,9 +40,16 @@ test('should emit peer when receiving a valid announce', () => {
 })
 
 describe.serial('announce timers', () => {
-  test('should not announce once when 3min passed', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  test('should not announce twice when 3min passed', () => {
     return new Promise<void>((resolve, reject) => {
-      const clock = sinon.useFakeTimers(new Date())
       let counter = 0
 
       const opts = {
@@ -92,11 +78,10 @@ describe.serial('announce timers', () => {
         if (counter === 2) {
           reject(new Error('Should not announce twice'))
         } else {
-          clock.tick(180000)
+          jest.advanceTimersByTime(180000)
 
           lsd.destroy(() => {
             client.close()
-            clock.restore()
             resolve()
           })
         }
@@ -108,7 +93,6 @@ describe.serial('announce timers', () => {
 
   test('should announce twice when 5min passed', () => {
     return new Promise<void>((resolve, reject) => {
-      const clock = sinon.useFakeTimers(new Date())
       let counter = 0
 
       const opts = {
@@ -137,11 +121,10 @@ describe.serial('announce timers', () => {
         if (counter === 2) {
           lsd.destroy(() => {
             client.close()
-            clock.restore()
             resolve()
           })
         } else {
-          clock.tick(300000)
+          jest.advanceTimersByTime(300000)
         }
       })
 

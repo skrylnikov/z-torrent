@@ -19,14 +19,8 @@ export interface TorrentWire {
   on(event: string, fn: (...args: unknown[]) => void): void
   removeListener(event: string, fn: (...args: unknown[]) => void): void
   emit(event: string, ...args: unknown[]): boolean
-  _select(
-    start: number,
-    end: number,
-    priority: number,
-    notify: (() => void) | null,
-    isStreamSelection: boolean
-  ): void
-  _deselect(start: number, end: number, isStreamSelection?: boolean): void
+  selectStreamPieces(start: number, end: number): void
+  deselectStreamPieces(start: number, end: number): void
   critical(start: number, end: number): void
 }
 
@@ -38,7 +32,7 @@ export interface FileWire {
 /** Torrent interface for File — extends TorrentWire with client, select, deselect */
 export interface TorrentForFile extends TorrentWire {
   infoHash: string
-  client: { _server?: { pathname: string } }
+  client: { httpServer?: { pathname: string } | null; peerId: string; dht?: unknown }
   select(start: number, end: number, priority?: number): void
   deselect(start: number, end: number): void
 }

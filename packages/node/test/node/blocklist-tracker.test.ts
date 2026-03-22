@@ -1,11 +1,11 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { Server as TrackerServer } from 'bittorrent-tracker'
-import WebTorrent from '../../dist/index.js'
-import common from '../common.js'
+import { Server as TrackerServer } from '@z-torrent/tracker'
+import { WebTorrent } from '../../dist/index.js'
+import { getDownloadPath, LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test('blocklist blocks peers discovered via tracker', { timeout: 15000 }, async () => {
+test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via tracker', async () => {
   const parsedTorrent = Object.assign({}, fixtures.leaves.parsedTorrent)
   let tracker: any
   let client1: any
@@ -39,7 +39,7 @@ test('blocklist blocks peers discovered via tracker', { timeout: 15000 }, async 
           })
 
           const torrent1 = client1.add(parsedTorrent, {
-            path: common.getDownloadPath('client_1', parsedTorrent.infoHash),
+            path: getDownloadPath('client_1', parsedTorrent.infoHash),
           })
 
           torrent1.on('invalidPeer', () => {
@@ -65,7 +65,7 @@ test('blocklist blocks peers discovered via tracker', { timeout: 15000 }, async 
           })
 
           const torrent2 = client2.add(parsedTorrent, {
-            path: common.getDownloadPath('client_2', parsedTorrent.infoHash),
+            path: getDownloadPath('client_2', parsedTorrent.infoHash),
           })
 
           torrent2.once('blockedPeer', () => {
@@ -95,4 +95,4 @@ test('blocklist blocks peers discovered via tracker', { timeout: 15000 }, async 
       }
     )
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })

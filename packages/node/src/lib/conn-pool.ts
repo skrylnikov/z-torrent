@@ -7,66 +7,64 @@ import utp from './utp.cjs'
 
 const debug = debugFactory('webtorrent:conn-pool')
 
-export default class ConnPool {
-  private _client: any
-  private _pendingConns: Set<net.Socket | any>
-  private _onTCPConnectionBound: (conn: net.Socket) => void
-  private _onUTPConnectionBound: (conn: any) => void
-  private _onListening: () => void
-  private _onTCPError: (err: Error) => void
-  private _onUTPError: (err: Error) => void
-  tcpServer: net.Server
-  utpServer: any
+export class ConnPool {
+  #client: any
+  #pendingConns: Set<net.Socket | any>
+  #onTCPConnectionBound: (conn: net.Socket) => void
+  #onUTPConnectionBound: (conn: any) => void
+  #onListening: () => void
+  #onTCPError: (err: Error) => void
+  #onUTPError: (err: Error) => void
+  tcpServer: net.Server | null
+  utpServer: any = null
 
   constructor(client: any) {
     debug('create pool (port %s)', client.torrentPort)
 
-    this._client = client
+    this.#client = client
 
-    this._pendingConns = new Set()
+    this.#pendingConns = new Set()
 
-    this._onTCPConnectionBound = (conn: net.Socket) => {
-      this._onConnection(conn, 'tcp')
+    this.#onTCPConnectionBound = (conn: net.Socket) => {
+      this.#onConnection(conn, 'tcp')
     }
 
-    this._onUTPConnectionBound = (conn: any) => {
-      this._onConnection(conn, 'utp')
+    this.#onUTPConnectionBound = (conn: any) => {
+      this.#onConnection(conn, 'utp')
     }
 
-    this._onListening = () => {
-      this._client._onListening()
+    this.#onListening = () => {
+      this.#client.notifyListening()
     }
 
-    this._onTCPError = (err: Error) => {
-      this._client._destroy(err)
+    this.#onTCPError = (err: Error) => {
+      this.#client.shutdownWithError(err)
     }
 
-    this._onUTPError = (err: Error) => {
-      this._client.utp = false
-      this._client.emit('error', err)
-      if (!this._client.listening) this._onListening()
+    this.#onUTPError = (err: Error) => {
+      this.#client.utp = false
+      this.#client.emit('error', err)
+      if (!this.#client.listening) this.#onListening()
     }
 
-    // Setup TCP
-    this.tcpServer = net.createServer()
-    this.tcpServer.on('connection', this._onTCPConnectionBound)
-    this.tcpServer.on('error', this._onTCPError)
+    const tcp = net.createServer()
+    this.tcpServer = tcp
+    tcp.on('connection', this.#onTCPConnectionBound)
+    tcp.on('error', this.#onTCPError)
 
-    // Start TCP
-    this.tcpServer.listen(client.torrentPort, () => {
-      debug('creating tcpServer in port %s', (this.tcpServer.address() as any).port)
-      if (this._client.utp) {
-        // Setup uTP
+    tcp.listen(client.torrentPort, () => {
+      const addr = tcp.address() as net.AddressInfo
+      debug('creating tcpServer in port %s', addr.port)
+      if (this.#client.utp) {
         this.utpServer = utp.createServer()
-        this.utpServer.on('connection', this._onUTPConnectionBound)
-        this.utpServer.on('listening', this._onListening)
-        this.utpServer.on('error', this._onUTPError)
+        this.utpServer.on('connection', this.#onUTPConnectionBound)
+        this.utpServer.on('listening', this.#onListening)
+        this.utpServer.on('error', this.#onUTPError)
 
-        // Start uTP
-        debug('creating utpServer in port %s', (this.tcpServer.address() as any).port)
-        this.utpServer.listen((this.tcpServer.address() as any).port)
+        debug('creating utpServer in port %s', addr.port)
+        this.utpServer.listen(addr.port)
       } else {
-        this._onListening()
+        this.#onListening()
       }
     })
   }
@@ -75,17 +73,18 @@ export default class ConnPool {
     debug('destroy conn pool')
 
     if (this.utpServer) {
-      this.utpServer.removeListener('connection', this._onUTPConnectionBound)
-      this.utpServer.removeListener('listening', this._onListening)
-      this.utpServer.removeListener('error', this._onUTPError)
+      this.utpServer.removeListener('connection', this.#onUTPConnectionBound)
+      this.utpServer.removeListener('listening', this.#onListening)
+      this.utpServer.removeListener('error', this.#onUTPError)
     }
 
-    this.tcpServer.removeListener('connection', this._onTCPConnectionBound)
-    this.tcpServer.removeListener('error', this._onTCPError)
+    const srv = this.tcpServer
+    if (srv) {
+      srv.removeListener('connection', this.#onTCPConnectionBound)
+      srv.removeListener('error', this.#onTCPError)
+    }
 
-    // Destroy all open connection objects so server can close gracefully without waiting
-    // for connection timeout or remote peer to disconnect.
-    this._pendingConns.forEach((conn: any) => {
+    this.#pendingConns.forEach((conn: any) => {
       conn.on('error', noop)
       conn.destroy()
     })
@@ -93,53 +92,65 @@ export default class ConnPool {
     if (this.utpServer) {
       try {
         this.utpServer.close(cb)
-      } catch (err) {
+      } catch {
         if (cb) queueMicrotask(cb)
       }
     }
 
-    try {
-      this.tcpServer.close(cb)
-    } catch (err) {
-      if (cb) queueMicrotask(cb)
+    if (srv) {
+      try {
+        srv.close(cb)
+      } catch {
+        if (cb) queueMicrotask(cb)
+      }
     }
 
-    ;(this as any).tcpServer = null
-    ;(this as any).utpServer = null
-    this._client = null
-    this._pendingConns = null as any
+    this.tcpServer = null
+    this.utpServer = null
+    this.#client = null
+    this.#pendingConns = new Set()
   }
 
-  private _onConnection(conn: net.Socket | any, type: 'tcp' | 'utp'): void {
+  address(): { address: string; port: number } | null {
+    const s = this.tcpServer
+    if (!s) return null
+    const a = s.address()
+    if (a === null || typeof a === 'string') return null
+    return { address: a.address, port: a.port }
+  }
+
+  #onConnection(conn: net.Socket | any, type: 'tcp' | 'utp'): void {
     const self = this
 
-    // If the connection has already been closed before the `connect` event is fired,
-    // then `remoteAddress` will not be available, and we can't use this connection.
-    // - Node.js issue: https://github.com/nodejs/node-v0.x-archive/issues/7566
-    // - WebTorrent issue: https://github.com/webtorrent/webtorrent/issues/398
     if (!conn.remoteAddress) {
       conn.on('error', noop)
       conn.destroy()
       return
     }
 
-    self._pendingConns.add(conn)
+    self.#pendingConns.add(conn)
     conn.once('close', cleanupPending)
 
     const peer =
       type === 'utp'
-        ? Peer.createUTPIncomingPeer(conn, this._client.throttleGroups)
-        : Peer.createTCPIncomingPeer(conn, this._client.throttleGroups)
+        ? Peer.createUTPIncomingPeer(conn, this.#client.throttleGroups)
+        : Peer.createTCPIncomingPeer(conn, this.#client.throttleGroups)
 
     const wire = peer.wire
-    wire.once('pe3', onPe3)
-    wire.once('handshake', onHandshake)
+    if (!wire) {
+      conn.destroy()
+      return
+    }
+    const wireEvents = wire as unknown as {
+      once(event: string, fn: (...args: unknown[]) => void): void
+      removeListener(event: string, fn: (...args: unknown[]) => void): void
+    }
 
     async function onPe3(infoHashHash: string): Promise<void> {
-      const torrent = await self._client._getByHash(infoHashHash)
+      const torrent = await self.#client.getTorrentByPe3Hash(infoHashHash)
       if (torrent) {
         peer.swarm = torrent
-        torrent._addIncomingPeer(peer)
+        torrent.acceptIncomingPeer(peer)
         peer.onPe3(infoHashHash)
       } else {
         peer.destroy(
@@ -151,12 +162,11 @@ export default class ConnPool {
     async function onHandshake(infoHash: string, peerId: string): Promise<void> {
       cleanupPending()
 
-      const torrent = await self._client.get(infoHash)
-      // only add incoming peer if didn't already do so in protocol encryption handshake
+      const torrent = await self.#client.get(infoHash)
       if (torrent) {
         if (!peer.swarm) {
           peer.swarm = torrent
-          torrent._addIncomingPeer(peer)
+          torrent.acceptIncomingPeer(peer)
         }
         peer.onHandshake(infoHash, peerId)
       } else {
@@ -165,12 +175,19 @@ export default class ConnPool {
       }
     }
 
+    const onHandshakeBound = (...args: unknown[]) => {
+      void onHandshake(args[0] as string, args[1] as string)
+    }
+
+    wireEvents.once('pe3', (...args: unknown[]) => {
+      void onPe3(args[0] as string)
+    })
+    wireEvents.once('handshake', onHandshakeBound)
+
     function cleanupPending(): void {
       conn.removeListener('close', cleanupPending)
-      wire.removeListener('handshake', onHandshake)
-      if (self._pendingConns) {
-        self._pendingConns.delete(conn)
-      }
+      wireEvents.removeListener('handshake', onHandshakeBound)
+      self.#pendingConns.delete(conn)
     }
   }
 

@@ -2,7 +2,7 @@ import { IncomingMessage } from 'http'
 import { WebSocket } from 'ws'
 import { bin2hex } from 'uint8-util'
 
-import common from '../common.js'
+import * as common from '../common.js'
 
 interface ParseOptions {
   trustProxy?: boolean
@@ -35,7 +35,7 @@ interface ParsedParams {
   headers?: IncomingMessage['headers']
 }
 
-export default function parseWebSocketRequest(
+export function parseWebSocketRequest(
   socket: WebSocketWithExtra,
   opts: ParseOptions | undefined,
   paramsData: string | Buffer

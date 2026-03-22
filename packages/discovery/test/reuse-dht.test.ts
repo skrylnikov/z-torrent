@@ -1,7 +1,8 @@
-import Discovery from '../dist/index.js'
-import DHT from 'bittorrent-dht'
-import { randomBytes } from 'uint8-util'
+import { DHT } from '@z-torrent/dht'
 import { expect, test } from 'bun:test'
+import { randomBytes } from 'uint8-util'
+
+import { Discovery } from '../src/index.js'
 
 test('re-use dht, verify that peers are filtered', () => {
   return new Promise<void>((resolve) => {

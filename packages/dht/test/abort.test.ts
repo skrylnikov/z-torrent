@@ -1,5 +1,5 @@
 import { test } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 test('explicitly set nodeId', () => {

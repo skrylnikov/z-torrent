@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('WebTorrent.WEBRTC_SUPPORT', async () => {
   const client = new WebTorrent({

@@ -1,8 +1,9 @@
-import fs from 'fs'
-import parseTorrent from '../dist/index.js'
-import path, { dirname } from 'path'
+import fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { parse } from '@z-torrent/parse'
 import { expect, test } from 'bun:test'
-import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -12,7 +13,7 @@ const leavesAnnounceList = fs.readFileSync(
 )
 
 test('parse torrent with empty announce-list', async () => {
-  expect((await parseTorrent(leavesAnnounceList)).announce).toEqual([
+  expect((await parse.decode(leavesAnnounceList)).announce).toEqual([
     'udp://tracker.publicbt.com:80/announce',
   ])
 })

@@ -2,6 +2,7 @@ import { EventEmitter } from 'eventemitter3'
 import { Transform, pipeline } from 'streamx'
 import arrayRemove from 'unordered-array-remove'
 import debugFactory from 'debug'
+import type { ThrottleGroup } from 'speed-limiter'
 import Wire from '@z-torrent/protocol'
 import type { TorrentWire } from './types.js'
 
@@ -44,13 +45,12 @@ export interface PeerSwarm extends TorrentWire {
   infoHash: string
   infoHashHash?: string
   private?: boolean
-  wires: unknown[]
   client: { peerId: string; dht?: unknown }
-  _onWire(wire: unknown, addr?: string): void
+  handleWire(wire: unknown, addr?: string): void
   removePeer(id: string): void
 }
 
-export default class Peer extends EventEmitter {
+export class Peer extends EventEmitter {
   id: string
   type: PeerType
   addr: string | null
@@ -63,8 +63,8 @@ export default class Peer extends EventEmitter {
   destroyed: boolean
   timeout: ReturnType<typeof setTimeout> | null
   retries: number
-  connectTimeout: ReturnType<typeof setTimeout> | null
-  handshakeTimeout: ReturnType<typeof setTimeout> | null
+  connectTimeout!: ReturnType<typeof setTimeout> | null
+  handshakeTimeout!: ReturnType<typeof setTimeout> | null
   sentPe1: boolean
   sentPe2: boolean
   sentPe3: boolean
@@ -121,7 +121,7 @@ export default class Peer extends EventEmitter {
       this.destroy(err)
     })
 
-    const wire = (this.wire = new Wire(this.type as any, this.retries, secure))
+    const wire = (this.wire = new Wire(this.type as any, this.retries, secure) as any)
 
     wire.once('end', () => {
       this.destroy()
@@ -142,8 +142,8 @@ export default class Peer extends EventEmitter {
     wire.once('pe2', () => {
       this.onPe2()
     })
-    wire.once('pe3', () => {
-      this.onPe3()
+    wire.once('pe3', (infoHashHash: string) => {
+      void this.onPe3(infoHashHash)
     })
     wire.once('pe4', () => {
       this.onPe4()
@@ -215,7 +215,7 @@ export default class Peer extends EventEmitter {
       this.conn,
       this.throttleGroups!.down.throttle(),
       new Transform({
-        transform(chunk: Uint8Array, callback: (err?: Error | null, data?: Uint8Array) => void) {
+        transform(chunk: Uint8Array, callback: (err?: Error | null, data?: Uint8Array) => void): void {
           self.emit('download', chunk.length)
           if (self.destroyed) return
           callback(null, chunk)
@@ -224,7 +224,7 @@ export default class Peer extends EventEmitter {
       this.wire,
       this.throttleGroups!.up.throttle(),
       new Transform({
-        transform(chunk: Uint8Array, callback: (err?: Error | null, data?: Uint8Array) => void) {
+        transform(chunk: Uint8Array, callback: (err?: Error | null, data?: Uint8Array) => void): void {
           self.emit('upload', chunk.length)
           if (self.destroyed) return
           callback(null, chunk)
@@ -258,7 +258,7 @@ export default class Peer extends EventEmitter {
     if (!addr && this.conn.remoteAddress && this.conn.remotePort) {
       addr = `${this.conn.remoteAddress}:${this.conn.remotePort}`
     }
-    this.swarm._onWire(this.wire, addr)
+    this.swarm.handleWire(this.wire, addr ?? undefined)
 
     if (!this.swarm || this.swarm.destroyed) return
 

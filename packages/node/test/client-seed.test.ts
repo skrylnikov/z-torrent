@@ -1,8 +1,9 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
-import type { default as Torrent } from '../src/lib/torrent.js'
+import { WebTorrent } from '../dist/index.js'
+import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from './common.js'
+import type { Torrent } from '@z-torrent/core'
 
 test('client.seed: torrent file (Buffer)', async () => {
   const client = new WebTorrent({
@@ -30,7 +31,7 @@ test('client.seed: torrent file (Buffer)', async () => {
       async (torrent: Torrent) => {
         expect((client as any).torrents.length).toBe(1)
         expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
         await new Promise<void>((res, rej) =>
           (client as any).remove(torrent, null, (err?: Error) => {
@@ -47,7 +48,7 @@ test('client.seed: torrent file (Buffer)', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: torrent file (Buffer), set name on buffer', async () => {
   const client = new WebTorrent({
@@ -72,7 +73,7 @@ test('client.seed: torrent file (Buffer), set name on buffer', async () => {
     client.seed(buf, { announce: [] }, async (torrent: Torrent) => {
       expect((client as any).torrents.length).toBe(1)
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
       await new Promise<void>((res, rej) =>
         (client as any).remove(torrent, null, (err?: Error) => {
@@ -88,7 +89,7 @@ test('client.seed: torrent file (Buffer), set name on buffer', async () => {
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: torrent file (Blob)', async () => {
   if (typeof Blob === 'undefined') return
@@ -118,7 +119,7 @@ test('client.seed: torrent file (Blob)', async () => {
       async (torrent: Torrent) => {
         expect((client as any).torrents.length).toBe(1)
         expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
         await new Promise<void>((res, rej) =>
           (client as any).remove(torrent, null, (err?: Error) => {
@@ -135,7 +136,7 @@ test('client.seed: torrent file (Blob)', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: duplicate seed', async () => {
   const client = new WebTorrent({
@@ -154,17 +155,19 @@ test('client.seed: duplicate seed', async () => {
   })
 
   await new Promise<void>((resolve, reject) => {
-    ;(client as any).seed(fixtures.leaves.content, function (torrent1: Torrent) {
-      ;(client as any).seed(fixtures.leaves.content, function (torrent2: Torrent) {
+    client.seed(fixtures.leaves.content, function (torrent1: Torrent) {
+      client.seed(fixtures.leaves.content, function (torrent2: Torrent) {
         expect(torrent1).toBe(torrent2)
         expect((client as any).torrents.length).toBe(1)
 
         client.destroy((err?: Error) => {
           if (err) reject(err)
-          else resolve()
+          else {
+            expect((client as any).torrents.length).toBe(0)
+            resolve()
+          }
         })
-        expect((client as any).torrents.length).toBe(0)
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })

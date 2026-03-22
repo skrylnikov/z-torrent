@@ -1,7 +1,7 @@
 import fs from 'fs'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('client.createServer: programmatic http server', async () => {
   const client = new WebTorrent({ tracker: false, dht: false, lsd: false })

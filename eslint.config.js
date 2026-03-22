@@ -18,6 +18,24 @@ export default [
     }
   },
   {
+    files: ['packages/create/src/**/*.ts', 'packages/create/test/**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+    },
+  },
+  {
+    files: ['packages/browser/src/**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.serviceworker,
+      },
+    },
+  },
+  {
     rules: {
       // Ослабляем правила для постепенной миграции (741 → ~60 ошибок)
       '@typescript-eslint/no-explicit-any': 'warn',

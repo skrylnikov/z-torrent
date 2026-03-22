@@ -1,10 +1,11 @@
 import fs from 'fs'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
+import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test('Download via torrent.addPeer()', { timeout: 5000 }, async () => {
+test.skipIf(!LIVE_NETWORK)('Download via torrent.addPeer()', async () => {
   const seeder = new WebTorrent({ tracker: false, dht: false, lsd: false })
 
   seeder.on('error', (err) => {
@@ -63,9 +64,9 @@ test('Download via torrent.addPeer()', { timeout: 5000 }, async () => {
       )
     })
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })
 
-test('Download via magnet x.pe (BEP09)', { timeout: 15000 }, async () => {
+test.skipIf(!LIVE_NETWORK)('Download via magnet x.pe (BEP09)', async () => {
   const seeder = new WebTorrent({
     tracker: false,
     dht: false,
@@ -127,4 +128,4 @@ test('Download via magnet x.pe (BEP09)', { timeout: 15000 }, async () => {
       })
     })
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })

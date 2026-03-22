@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noImplicitOverride": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "lib": ["ES2022", "WebWorker"],
+    "customConditions": ["browser"],
+    "types": []
+  },
+  "include": ["src/lib/worker.ts", "src/lib/worker-server.ts"],
+  "exclude": ["node_modules", "dist"]
+}

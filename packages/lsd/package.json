@@ -2,42 +2,18 @@
   "name": "@z-torrent/lsd",
   "description": "Local Service Discovery (BEP14) implementation",
   "version": "0.0.5",
-  "author": {
-    "name": "WebTorrent LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
-  "contributors": [
-    {
-      "name": "Julen Garcia Leunda",
-      "email": "hicom150@gmail.com"
-    }
-  ],
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
-    "url": "https://github.com/webtorrent/bittorrent-lsd/issues"
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "type": "module",
   "dependencies": {
-    "eventemitter3": "^5.0.4",
-    "debug": "^4.2.0"
+    "debug": "^4.4.3",
+    "eventemitter3": "^5.0.4"
   },
   "devDependencies": {
-    "sinon": "^17.0.0"
+    "@types/debug": "^4.1.12"
   },
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/feross"
-    },
-    {
-      "type": "patreon",
-      "url": "https://www.patreon.com/feross"
-    },
-    {
-      "type": "consulting",
-      "url": "https://feross.org/support"
-    }
-  ],
   "keywords": [
     "bittorrent",
     "bep14",
@@ -47,8 +23,11 @@
     "peer",
     "p2p",
     "peer-to-peer",
-    "webtorrent"
+    "torrent",
+    "webtorrent",
+    "z-torrent"
   ],
+  "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -64,7 +43,6 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/skrylnikov/z-torrent.git",
@@ -76,6 +54,7 @@
   "scripts": {
     "build": "tsdown",
     "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "size": "size-limit"
   },
   "size-limit": [

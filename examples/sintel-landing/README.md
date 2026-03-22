@@ -9,7 +9,7 @@ Landing page with video player and P2P graph, inspired by [webtorrent.io](https:
 From the repository root:
 
 ```bash
-bun run build --filter=z-torrent-browser
+bun run build -- --filter=@z-torrent/browser
 cd examples/sintel-landing
 bun run dev
 ```

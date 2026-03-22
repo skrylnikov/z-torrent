@@ -1,19 +1,23 @@
-# z-torrent-browser
+# @z-torrent/browser
 
 Browser build of Z-Torrent — WebRTC, Service Worker, Web API bindings.
 
-Use this package for browser/SPA projects. For Node.js, use `z-torrent` instead.
+Use this package for browser/SPA projects. For Node.js, use [`@z-torrent/node`](https://www.npmjs.com/package/@z-torrent/node).
 
-## Installation
+## Install
 
 ```bash
-bun add z-torrent-browser webrtc-polyfill
+npm install @z-torrent/browser
+# optional, for WebRTC in environments that need it:
+npm install webrtc-polyfill
 ```
+
+Some setups alias this package as `z-torrent-browser` (see example below).
 
 ## Usage
 
 ```javascript
-import WebTorrent from 'z-torrent-browser'
+import { WebTorrent } from '@z-torrent/browser'
 
 const client = new WebTorrent()
 
@@ -28,4 +32,14 @@ client.add(magnetUri, (torrent) => {
 })
 ```
 
-Ensure `sw.min.js` is served from your app's public directory (copy from `node_modules/z-torrent-browser/dist/sw.min.js`).
+Copy `node_modules/@z-torrent/browser/dist/sw.min.js` into your public directory (or serve it at a stable URL). The package also exposes the subpath `@z-torrent/browser/sw` → `./dist/sw.min.js` for bundlers that copy dependencies from `exports`.
+
+## TypeScript
+
+Types for the entry bundle are published as `dist/z-torrent.min.d.ts`. For full client/torrent typings, depend on `@z-torrent/core` as well.
+
+## Scripts
+
+- `bun run build` — browser client bundle + service worker
+- `bun run typecheck` — `tsc --noEmit`
+- `bun test` — public API tests (run after build)

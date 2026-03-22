@@ -1,11 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@tsconfig/bun/tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "src",
-    "lib": ["ES2022", "DOM"],
-    "types": ["node"]
+    "rootDir": ".",
+    "outDir": "dist",
+    "lib": ["ESNext", "DOM"],
+    "types": ["node"],
+    "noUncheckedIndexedAccess": false
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "test", "scripts"]
+  "include": ["src/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

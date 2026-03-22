@@ -1,7 +1,7 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
+import { WebTorrent } from '../dist/index.js'
 import type { default as Torrent } from '../src/lib/torrent.js'
 
 test('torrent.destroy: destroy and remove torrent', async () => {

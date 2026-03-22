@@ -1,49 +1,49 @@
 import Wire from '@z-torrent/protocol'
 import type { TorrentWire } from './types.js'
 
-export default class RarityMap {
-  private _torrent: TorrentWire | null
-  private readonly _numPieces: number
-  private _pieces: number[] | null
-  private _onWire: ((wire: Wire) => void) | null
-  private _onWireHave: ((index: number) => void) | null
-  private _onWireBitfield: (() => void) | null
+export class RarityMap {
+  #torrent: TorrentWire | null
+  readonly #numPieces: number
+  #pieces: number[] | null
+  #onWireBound: ((wire: Wire) => void) | null
+  #onWireHave: ((index: number) => void) | null
+  #onWireBitfield: (() => void) | null
 
   constructor(torrent: TorrentWire) {
-    this._torrent = torrent
-    this._numPieces = torrent.pieces.length
-    this._pieces = new Array(this._numPieces)
+    this.#torrent = torrent
+    this.#numPieces = torrent.pieces.length
+    this.#pieces = new Array(this.#numPieces).fill(0)
 
-    this._onWire = (wire: Wire) => {
+    this.#onWireBound = (wire: Wire) => {
       this.recalculate()
-      this._initWire(wire)
+      this.#initWire(wire)
     }
-    this._onWireHave = (index: number) => {
-      if (this._pieces) {
-        this._pieces[index] += 1
+    this.#onWireHave = (index: number) => {
+      if (this.#pieces && index >= 0 && index < this.#numPieces) {
+        this.#pieces[index] = (this.#pieces[index] ?? 0) + 1
       }
     }
-    this._onWireBitfield = () => {
+    this.#onWireBitfield = () => {
       this.recalculate()
     }
 
-    this._torrent.wires.forEach((wire) => {
-      this._initWire(wire)
+    this.#torrent.wires.forEach((w) => {
+      this.#initWire(w as Wire)
     })
-    this._torrent.on('wire', this._onWire)
+    this.#torrent.on('wire', this.#onWireBound as (...args: unknown[]) => void)
     this.recalculate()
   }
 
   getRarestPiece(pieceFilterFunc?: (index: number) => boolean): number {
-    if (!this._pieces) return -1
+    if (!this.#pieces) return -1
 
     let candidates: number[] = []
     let min = Infinity
 
-    for (let i = 0; i < this._numPieces; ++i) {
+    for (let i = 0; i < this.#numPieces; ++i) {
       if (pieceFilterFunc && !pieceFilterFunc(i)) continue
 
-      const availability = this._pieces[i]
+      const availability = this.#pieces[i] ?? 0
       if (availability === min) {
         candidates.push(i)
       } else if (availability < min) {
@@ -54,55 +54,59 @@ export default class RarityMap {
 
     if (candidates.length) {
       return candidates[(Math.random() * candidates.length) | 0]
-    } else {
-      return -1
     }
+    return -1
   }
 
   destroy(): void {
-    if (!this._torrent) return
-    this._torrent.removeListener('wire', this._onWire!)
-    this._torrent.wires.forEach((wire) => {
-      this._cleanupWireEvents(wire)
+    if (!this.#torrent) return
+    this.#torrent.removeListener('wire', this.#onWireBound as (...args: unknown[]) => void)
+    this.#torrent.wires.forEach((wire) => {
+      this.#cleanupWireEvents(wire as Wire)
     })
-    this._torrent = null
-    this._pieces = null
+    this.#torrent = null
+    this.#pieces = null
 
-    this._onWire = null
-    this._onWireHave = null
-    this._onWireBitfield = null
+    this.#onWireBound = null
+    this.#onWireHave = null
+    this.#onWireBitfield = null
   }
 
-  private _initWire(wire: Wire): void {
-    ;(wire as any)._onClose = () => {
-      this._cleanupWireEvents(wire)
-      if (this._pieces) {
-        for (let i = 0; i < this._numPieces; ++i) {
-          this._pieces[i] -= wire.peerPieces.get(i)
+  #initWire(wire: Wire): void {
+    const w = wire as any
+    w._onClose = () => {
+      this.#cleanupWireEvents(wire)
+      if (this.#pieces) {
+        for (let i = 0; i < this.#numPieces; ++i) {
+          const has = wire.peerPieces?.get(i) ? 1 : 0
+          this.#pieces[i] = Math.max(0, (this.#pieces[i] ?? 0) - has)
         }
       }
     }
 
-    wire.on('have', this._onWireHave!)
-    wire.on('bitfield', this._onWireBitfield!)
-    wire.once('close', (wire as any)._onClose)
+    wire.on('have', this.#onWireHave as (...args: unknown[]) => void)
+    wire.on('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
+    wire.once('close', w._onClose)
   }
 
   recalculate(): void {
-    if (!this._pieces || !this._torrent) return
-    this._pieces.fill(0)
+    if (!this.#pieces || !this.#torrent) return
+    this.#pieces.fill(0)
 
-    for (const wire of this._torrent.wires) {
-      for (let i = 0; i < this._numPieces; ++i) {
-        this._pieces[i] += wire.peerPieces.get(i)
+    for (const wire of this.#torrent.wires) {
+      const w = wire as Wire
+      for (let i = 0; i < this.#numPieces; ++i) {
+        this.#pieces[i] += w.peerPieces?.get(i) ? 1 : 0
       }
     }
   }
 
-  private _cleanupWireEvents(wire: Wire): void {
-    if (this._onWireHave) wire.removeListener('have', this._onWireHave)
-    if (this._onWireBitfield) wire.removeListener('bitfield', this._onWireBitfield)
-    if ((wire as any)._onClose) wire.removeListener('close', (wire as any)._onClose)
-    ;(wire as any)._onClose = null
+  #cleanupWireEvents(wire: Wire): void {
+    if (this.#onWireHave) wire.removeListener('have', this.#onWireHave as (...args: unknown[]) => void)
+    if (this.#onWireBitfield)
+      wire.removeListener('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
+    const w = wire as any
+    if (w._onClose) wire.removeListener('close', w._onClose)
+    w._onClose = null
   }
 }

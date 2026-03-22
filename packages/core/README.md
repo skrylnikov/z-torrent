@@ -1,6 +1,6 @@
 # @z-torrent/core
 
-Z-Torrent core logic — platform-agnostic torrent client implementation.
+Platform-agnostic torrent client logic shared by Node.js and browser builds. Adapters implement `PlatformAdapter` (chunk store, discovery, optional TCP pool, HTTP server, DHT, etc.).
 
 ## Install
 
@@ -10,37 +10,60 @@ npm install @z-torrent/core
 
 ## Usage
 
-This package contains the core torrent client logic that works in both Node.js and browser environments. It's designed to be used with platform-specific adapters.
-
 ```js
-import { WebTorrentCore } from '@z-torrent/core'
+import { WebTorrentCore, FileIterator, VERSION } from '@z-torrent/core'
 
-// Create a torrent client with platform adapter
 const client = new WebTorrentCore({
-  // platform adapter configuration
+  platform: myPlatformAdapter,
 })
 
-// Add a torrent
-const torrent = client.add('magnet:?xt=urn:btih:...')
+const torrent = client.add('magnet:?xt=urn:btih:...', {}, (t) => {
+  console.log('ready', t.infoHash)
+})
 
-// Access the first file in the torrent
 const file = torrent.files[0]
-
-// Get a ReadableStream for the file's contents (Web Streams API)
 const stream = await file.stream()
-
-// Or get the full contents as a Blob or ArrayBuffer
-const blob = await file.blob()
-const arrayBuffer = await file.arrayBuffer()
 ```
 
-## Features
+## Public API (high level)
 
-- Platform-agnostic torrent client implementation
-- Support for streaming downloads
-- BitTorrent protocol extensions (ut_metadata, ut_pex, lt_donthave)
-- File prioritization and selection
-- Piece management with caching
+| Export | Role |
+|--------|------|
+| `WebTorrentCore` | Client; requires `platform` in constructor options |
+| `Torrent` | Single swarm / transfer |
+| `File`, `FileIterator` | File view and async byte iteration |
+| `Peer`, `WebConn`, `RarityMap` | Wire / peer helpers |
+| `ServerBase` | Shared HTTP index/file serving logic |
+| `Selections` | Piece interval selection utilities |
+| `VERSION` | Package version string |
+| Types | `PlatformAdapter`, `WebTorrentClient`, `TorrentOpts`, server types, etc. |
+
+### Platform hooks on `WebTorrentCore`
+
+Used by the Node connection pool and similar integrations:
+
+- `notifyListening()` — TCP/uTP listeners are up
+- `shutdownWithError(err, cb?)` — tear down client after a fatal error
+- `getTorrentByPe3Hash(hash)` — lookup by PE3 handshake hash
+- `detachTorrent(torrent, opts?, cb?)` — remove torrent from client list and destroy it
+- `removeTorrentFromClient` — alias of `detachTorrent` for the `WebTorrentClient` interface
+
+### Torrent helpers
+
+- `applyTorrentInput(id)` — apply magnet / buffer / parsed torrent (used when extending the client)
+- `acceptIncomingPeer(peer)` — attach an incoming `Peer`
+- `handleWire(wire, addr?)` — register a connected wire
+- `destroyWithError(err, cb?)` — destroy torrent and surface an error
+- `getPieceSelectionRanges()` — `{ from, to }[]` snapshot of piece selections (e.g. tests)
+- `selectStreamPieces` / `deselectStreamPieces` — stream-scoped selection (used by `FileIterator`)
+
+## Scripts
+
+```bash
+bun run build      # tsdown → dist/
+bun run typecheck  # tsc --noEmit
+bun test           # bun:test in test/
+```
 
 ## License
 

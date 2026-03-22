@@ -1,21 +1,36 @@
-import { ServerBase, type Request, type Response, type File } from '../../../core/src/index.js'
+import {
+  ServerBase,
+  type Request,
+  type File,
+  type ClientWithTorrents,
+  type ServerOptions,
+} from '@z-torrent/core'
 
-export interface BrowserServerOptions {
-  origin?: string | false
+export interface BrowserServerOptions extends ServerOptions {
   controller: ServiceWorkerRegistration
 }
 
 const keepAliveTime = 20000
 
+type StreamBody = { destroy?: () => void; [Symbol.asyncIterator]?: () => AsyncIterator<Uint8Array> }
+
 export class BrowserServer extends ServerBase {
   registration: ServiceWorkerRegistration
   workerKeepAliveInterval: ReturnType<typeof setInterval> | null
   workerPortCount: number
-  pathname: string
-  _address: { port: string; family: string; address: string }
-  boundHandler: (event: MessageEvent) => void
+  override pathname: string
+  #address: { port: string; family: string; address: string }
+  #boundHandler: (event: MessageEvent) => void
 
-  constructor(client: any, opts: BrowserServerOptions) {
+  constructor(client: ClientWithTorrents, opts: BrowserServerOptions) {
+    if (!(opts.controller instanceof ServiceWorkerRegistration)) {
+      throw new Error('Invalid worker registration')
+    }
+    const ctrl = opts.controller
+    if (ctrl.active?.state !== 'activated' && ctrl.active?.state !== 'activating') {
+      throw new Error("Worker isn't activated")
+    }
+
     super(client, opts)
 
     this.registration = opts.controller
@@ -24,14 +39,14 @@ export class BrowserServer extends ServerBase {
 
     const scope = new URL(opts.controller.scope)
     this.pathname = scope.pathname + 'z-torrent'
-    this._address = {
+    this.#address = {
       port: scope.port,
       family: 'IPv4',
       address: scope.hostname,
     }
 
-    this.boundHandler = this.wrapRequest.bind(this)
-    navigator.serviceWorker.addEventListener('message', this.boundHandler)
+    this.#boundHandler = this.wrapRequest.bind(this)
+    navigator.serviceWorker.addEventListener('message', this.#boundHandler)
     void fetch(`${this.pathname}/cancel/`).then((res) => {
       void res.body?.cancel()
     })
@@ -47,17 +62,20 @@ export class BrowserServer extends ServerBase {
   }
 
   wrapRequest(event: MessageEvent): void {
-    const req = event.data
+    const req = event.data as { type?: string; url?: string } | undefined
 
     if (req?.type !== 'z-torrent' || !req.url) return
 
-    const [port] = event.ports
-    this.onRequest(req, ({ status, headers, body }) => {
-      const asyncIterator = (body as any)?.[Symbol.asyncIterator]?.()
+    const port = event.ports[0]
+    if (port === undefined) return
+
+    this.onRequest(req as Request, ({ status, headers, body }) => {
+      const streamBody = body as StreamBody | undefined
+      const asyncIterator = streamBody?.[Symbol.asyncIterator]?.()
 
       const cleanup = (): void => {
         port.onmessage = null
-        if ((body as any)?.destroy) (body as any).destroy()
+        streamBody?.destroy?.()
         this.workerPortCount--
         if (!this.workerPortCount) {
           clearInterval(this.workerKeepAliveInterval!)
@@ -67,10 +85,10 @@ export class BrowserServer extends ServerBase {
 
       port.onmessage = async (msg: MessageEvent) => {
         if (msg.data) {
-          let chunk
+          let chunk: Uint8Array | undefined
           try {
-            chunk = (await asyncIterator.next()).value
-          } catch (e) {
+            chunk = asyncIterator ? (await asyncIterator.next()).value : undefined
+          } catch {
             // chunk is yet to be downloaded or it somehow failed
           }
           port.postMessage(chunk)
@@ -93,20 +111,20 @@ export class BrowserServer extends ServerBase {
     })
   }
 
-  listen(_: any, cb: () => void): void {
+  listen(_port: unknown, cb: () => void): void {
     cb()
   }
 
   address(): { port: string; family: string; address: string } {
-    return this._address
+    return this.#address
   }
 
-  close(cb?: () => void): void {
-    navigator.serviceWorker.removeEventListener('message', this.boundHandler)
+  override close(cb?: () => void): void {
+    navigator.serviceWorker.removeEventListener('message', this.#boundHandler)
     super.close(cb || (() => {}))
   }
 
-  destroy(cb?: () => void): void {
+  override destroy(cb?: () => void): void {
     super.destroy(cb || (() => {}))
   }
 }

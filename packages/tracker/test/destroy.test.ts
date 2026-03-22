@@ -1,6 +1,8 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
 import common from './common.js'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
+
+import { testWrtc } from './helpers.js'
 
 const peerId = Buffer.from('01234567890123456789')
 const port = 6881
@@ -13,10 +15,8 @@ function testNoEventsAfterDestroy(serverType: 'http' | 'udp' | 'ws'): Promise<vo
         announce: announceUrl,
         peerId,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })

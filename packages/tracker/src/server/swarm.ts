@@ -1,6 +1,7 @@
 import arrayRemove from 'unordered-array-remove'
 import Debug from 'debug'
-import LRU from 'lru'
+import { EventEmitter } from 'eventemitter3'
+import { LRUCache } from 'lru-cache'
 import randomIterate from 'random-iterate'
 import type { WebSocket } from 'ws'
 
@@ -43,11 +44,63 @@ interface ServerLike {
   peersCacheTtl?: number
 }
 
-class Swarm {
+/**
+ * LRU peer map with the same surface as the former `lru` package:
+ * `length`, `keys`, `get` / `set` / `peek` / `delete`, and `evict` events.
+ */
+class PeersCache extends EventEmitter {
+  readonly #cache: LRUCache<string, PeerData>
+
+  constructor(
+    max: number,
+    ttlMs: number,
+    onEvictOrExpire: (peer: PeerData, id: string) => void
+  ) {
+    super()
+    this.#cache = new LRUCache<string, PeerData>({
+      max,
+      ttl: ttlMs,
+      // Run after the triggering `set()` finishes so eviction + insert are atomic
+      // (matches ordering assumptions of WS announce / offer relay).
+      disposeAfter: (peer, id, reason) => {
+        if (reason !== 'evict' && reason !== 'expire') return
+        onEvictOrExpire(peer, id)
+        this.emit('evict', { key: id, value: peer })
+      },
+    })
+  }
+
+  get length(): number {
+    return this.#cache.size
+  }
+
+  /** Snapshot of keys (new array each read), like the old `lru` getter. */
+  get keys(): string[] {
+    return [...this.#cache.keys()]
+  }
+
+  get(id: string): PeerData | undefined {
+    return this.#cache.get(id)
+  }
+
+  set(id: string, peer: PeerData): void {
+    this.#cache.set(id, peer)
+  }
+
+  delete(id: string): void {
+    this.#cache.delete(id)
+  }
+
+  peek(id: string): PeerData | undefined {
+    return this.#cache.peek(id)
+  }
+}
+
+export class Swarm {
   infoHash!: string
   complete!: number
   incomplete!: number
-  peers!: LRU<string, PeerData>
+  peers!: PeersCache
 
   constructor(infoHash: string, server: ServerLike) {
     const self = this
@@ -55,22 +108,20 @@ class Swarm {
     self.complete = 0
     self.incomplete = 0
 
-    self.peers = new LRU({
-      max: server.peersCacheLength || 1000,
-      maxAge: server.peersCacheTtl || 20 * 60 * 1000,
-    })
-
-    self.peers.on('evict', (data: { key: string; value: PeerData }) => {
-      const peer = data.value
-      const params: AnnounceParams = {
-        type: peer.type,
-        event: 'stopped',
-        numwant: 0,
-        peer_id: peer.peerId,
+    self.peers = new PeersCache(
+      server.peersCacheLength || 1000,
+      server.peersCacheTtl || 20 * 60 * 1000,
+      (peer, id) => {
+        const params: AnnounceParams = {
+          type: peer.type,
+          event: 'stopped',
+          numwant: 0,
+          peer_id: peer.peerId,
+        }
+        self._onAnnounceStopped(params, peer, id)
+        peer.socket = undefined
       }
-      self._onAnnounceStopped(params, peer, peer.peerId)
-      peer.socket = undefined
-    })
+    )
   }
 
   announce(
@@ -142,7 +193,7 @@ class Swarm {
       arrayRemove(peer.socket.infoHashes!, index)
     }
 
-    this.peers.remove(id)
+    this.peers.delete(id)
   }
 
   _onAnnounceCompleted(params: AnnounceParams, peer: PeerData | undefined, id: string): void {
@@ -198,5 +249,3 @@ class Swarm {
     return peers
   }
 }
-
-export default Swarm

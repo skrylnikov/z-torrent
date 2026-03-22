@@ -1,6 +1,8 @@
-import Client, { Server } from '../index.js'
+import { Client, Server } from '../src/index.js'
 import common from './common.js'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
+
+import { testWrtc } from './helpers.js'
 
 const peerId = Buffer.from('01234567890123456789')
 
@@ -31,20 +33,19 @@ function testRequestHandler(serverType: 'http' | 'ws'): Promise<void> {
   const OldSwarm = Server.Swarm
   Server.Swarm = TestSwarm as typeof Server.Swarm
 
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve) => {
     common.createServer(opts, (server, announceUrl) => {
       const client1 = new Client({
         infoHash: fixtures.alice.parsedTorrent.infoHash,
         announce: announceUrl,
         peerId,
         port: 6881,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
       client1.on('error', (err) => {
         throw err
       })
-      if (serverType === 'ws') common.mockWebsocketTracker(client1)
 
       server.once('start', () => {})
 
@@ -53,16 +54,16 @@ function testRequestHandler(serverType: 'http' | 'ws'): Promise<void> {
         expect(Buffer.from(data.extraData as string).toString()).toBe('hi')
 
         client1.destroy(() => {
-          Server.Swarm = OldSwarm
-        })
-
-        server.close(() => {
-          resolve()
+          server.close(() => {
+            resolve()
+          })
         })
       })
 
       client1.start()
     })
+  }).finally(() => {
+    Server.Swarm = OldSwarm
   })
 }
 

@@ -1,7 +1,8 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent, { FileIterator } from '../dist/index.js'
+import { WebTorrent, FileIterator } from '../dist/index.js'
+import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
 test('file iterator: use chunk store iterator if done', async () => {
   const client = new WebTorrent({
@@ -29,7 +30,7 @@ test('file iterator: use chunk store iterator if done', async () => {
       async (torrent) => {
         expect(client.torrents.length).toBe(1)
         expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
         const iterator = torrent.files[0][Symbol.asyncIterator]()
         expect(torrent.files[0].done).toBeTruthy()
@@ -51,7 +52,7 @@ test('file iterator: use chunk store iterator if done', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('file iterator: use file iterator if not done', async () => {
   const client = new WebTorrent({
@@ -75,7 +76,7 @@ test('file iterator: use file iterator if not done', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', async () => {
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
       expect(!torrent.files[0].done).toBeTruthy()
       const iterator = torrent.files[0][Symbol.asyncIterator]()

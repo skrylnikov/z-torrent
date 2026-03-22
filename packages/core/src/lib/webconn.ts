@@ -6,7 +6,7 @@ import { hash, concat } from 'uint8-util'
 import Wire from '@z-torrent/protocol'
 import { once } from '@z-torrent/utils'
 
-import VERSION from '../version.js'
+import { VERSION } from '../version.js'
 import type { TorrentWire } from './types.js'
 
 const debug = debugFactory('webtorrent:webconn')
@@ -20,7 +20,7 @@ export interface FileWireForWebConn {
   length: number
 }
 
-export default class WebConn extends Wire {
+export class WebConn extends Wire {
   url: string
   connId: string
   private _torrent: TorrentWire & {
@@ -28,7 +28,7 @@ export default class WebConn extends Wire {
     pieceLength: number
     files: FileWireForWebConn[]
   }
-  lt_donthave: {
+  lt_donthave!: {
     on: (event: string, listener: () => void) => void
     donthave: (index: number) => void
   }
@@ -198,8 +198,9 @@ export default class WebConn extends Wire {
     cb(null, concat(chunks))
   }
 
-  destroy(): void {
+  override destroy(): this {
     super.destroy()
     this._torrent = null as any
+    return this
   }
 }

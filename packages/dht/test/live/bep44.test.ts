@@ -1,6 +1,6 @@
 import ed from 'bittorrent-dht-sodium'
 import { test, expect } from 'bun:test'
-import DHT from '../../src/index.js'
+import { DHT } from '../../src/index.js'
 
 function sign(k: { sk: Buffer; pk: Buffer }) {
   return (buf: Buffer) => {

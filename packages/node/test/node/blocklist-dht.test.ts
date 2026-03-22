@@ -1,11 +1,11 @@
-import { Server as DHT } from 'bittorrent-dht'
-import fixtures from 'webtorrent-fixtures'
+import { DHT } from '@z-torrent/dht'
+import { fixtures } from '@z-torrent/fixtures'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
-import common from '../common.js'
+import { WebTorrent } from '../../dist/index.js'
+import { getDownloadPath, LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test('blocklist blocks peers discovered via DHT', { timeout: 15000 }, async () => {
+test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via DHT', async () => {
   let dhtServer: DHT
   let client1: any
   let client2: any
@@ -41,7 +41,7 @@ test('blocklist blocks peers discovered via DHT', { timeout: 15000 }, async () =
           })
 
           const torrent1 = client1.add(fixtures.leaves.parsedTorrent, {
-            path: common.getDownloadPath('client_1', fixtures.leaves.parsedTorrent.infoHash),
+            path: getDownloadPath('client_1', fixtures.leaves.parsedTorrent.infoHash),
           })
 
           torrent1.on('peer', () => {
@@ -85,7 +85,7 @@ test('blocklist blocks peers discovered via DHT', { timeout: 15000 }, async () =
           })
 
           const torrent2 = client2.add(fixtures.leaves.parsedTorrent, {
-            path: common.getDownloadPath('client_2', fixtures.leaves.parsedTorrent.infoHash),
+            path: getDownloadPath('client_2', fixtures.leaves.parsedTorrent.infoHash),
           })
 
           torrent2.on('blockedPeer', () => {
@@ -125,4 +125,4 @@ test('blocklist blocks peers discovered via DHT', { timeout: 15000 }, async () =
       }
     )
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })

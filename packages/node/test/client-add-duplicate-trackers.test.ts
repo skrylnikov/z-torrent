@@ -1,7 +1,8 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
+import { WebTorrent } from '../dist/index.js'
+import { expectSameMagnet } from './common.js'
 
 test('client.add: duplicate trackers', async () => {
   const client = new WebTorrent({
@@ -25,7 +26,8 @@ test('client.add: duplicate trackers', async () => {
 
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', async () => {
-      expect(torrent.magnetURI).toBe(
+      expectSameMagnet(
+        torrent.magnetURI,
         `${fixtures.leaves.magnetURI}&tr=${encodeURIComponent('wss://example.com')}`
       )
       await new Promise<void>((res, rej) =>
@@ -66,14 +68,16 @@ test('client.add: duplicate trackers, with multiple torrents', async () => {
 
   await new Promise<void>((resolve, reject) => {
     torrent1.on('ready', () => {
-      expect(torrent1.magnetURI).toBe(
+      expectSameMagnet(
+        torrent1.magnetURI,
         `${fixtures.leaves.magnetURI}&tr=${encodeURIComponent('wss://example.com')}`
       )
 
       const torrent2 = client.add(fixtures.alice.torrent, opts)
 
       torrent2.on('ready', async () => {
-        expect(torrent2.magnetURI).toBe(
+        expectSameMagnet(
+          torrent2.magnetURI,
           `${fixtures.alice.magnetURI}&tr=${encodeURIComponent('wss://example.com')}`
         )
 
@@ -128,14 +132,16 @@ test('client.add: duplicate trackers (including in .torrent file), multiple torr
 
   await new Promise<void>((resolve, reject) => {
     torrent1.on('ready', () => {
-      expect(torrent1.magnetURI).toBe(
+      expectSameMagnet(
+        torrent1.magnetURI,
         `${fixtures.leaves.magnetURI}&tr=${encodeURIComponent('wss://example.com')}`
       )
 
       const torrent2 = client.add(parsedTorrentAlice, opts)
 
       torrent2.on('ready', async () => {
-        expect(torrent2.magnetURI).toBe(
+        expectSameMagnet(
+          torrent2.magnetURI,
           `${fixtures.alice.magnetURI}&tr=${encodeURIComponent('wss://example.com')}`
         )
 

@@ -1,25 +1,47 @@
-# webtorrent-fixtures [![ci][ci-image]][ci-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# @z-torrent/fixtures
 
-[ci-image]: https://github.com/webtorrent/webtorrent-fixtures/actions/workflows/ci.yml/badge.svg
-[ci-url]: https://github.com/webtorrent/webtorrent-fixtures/actions/workflows/ci.yml
-[npm-image]: https://img.shields.io/npm/v/webtorrent-fixtures.svg
-[npm-url]: https://npmjs.org/package/webtorrent-fixtures
-[downloads-image]: https://img.shields.io/npm/dm/webtorrent-fixtures.svg
-[downloads-url]: https://npmjs.org/package/webtorrent-fixtures
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+Test torrent files and related content for the [Z-Torrent](https://github.com/skrylnikov/z-torrent) monorepo. Files are Public Domain or Creative Commons where applicable.
 
-### Sample torrent files for the WebTorrent test suite
+This package is primarily for internal tests; it is marked `private` in the workspace.
 
-Torrent and content test files. All files are Public Domain or Creative Commons.
+## Install
+
+In the monorepo, depend on the workspace package:
+
+```json
+{
+  "devDependencies": {
+    "@z-torrent/fixtures": "workspace:*"
+  }
+}
+```
 
 ## Usage
 
+The module exports a single object `fixtures` and TypeScript types `Fixture` and `Fixtures`.
+
 ```js
-import fixtures from 'webtorrent-fixtures'
-console.log(fixtures.leaves)
+import { fixtures } from '@z-torrent/fixtures'
+
+console.log(fixtures.leaves.torrentPath)
+console.log(fixtures.alice.magnetURI)
 ```
+
+### `Fixture`
+
+Each named fixture may include:
+
+- `contentPath` — path to raw content on disk (when bundled with the package)
+- `torrentPath` — path to the `.torrent` file
+- `content` / `torrent` — `Buffer` with file contents (read at load time in Node)
+- `parsedTorrent` — lazy getter: parsed torrent via `@z-torrent/parse`
+- `magnetURI` — lazy getter: magnet link string
+- `blocklist` — `{ path, gzipPath }` for blocklist samples only
+
+### Keys on `fixtures`
+
+`leaves`, `alice`, `folder`, `numbers`, `lotsOfNumbers`, `bunny`, `sintel`, `leavesMetadata`, `corrupt`, and `blocklist`.
 
 ## License
 
-MIT. Copyright (c) [Feross Aboukhadijeh](https://feross.org) and [WebTorrent, LLC](https://webtorrent.io).
+MIT. See [LICENSE](LICENSE). Original WebTorrent fixtures copyright remains with prior authors where noted in history.

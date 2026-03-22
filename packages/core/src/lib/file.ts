@@ -1,7 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
 import { chunkStoreRead } from 'chunk-store-iterator'
 import mime from 'mime/lite.js'
-import FileIterator from './file-iterator.js'
+import { FileIterator } from './file-iterator.js'
 import type { FileWire, TorrentForFile } from './types.js'
 
 interface FileStreamOptions {
@@ -16,7 +16,7 @@ export interface FileMetadata {
   offset: number
 }
 
-export default class File extends EventEmitter implements FileWire {
+export class File extends EventEmitter implements FileWire {
   _torrent: TorrentForFile
   private _destroyed: boolean
   private _iterators: Set<FileIterator>
@@ -126,7 +126,7 @@ export default class File extends EventEmitter implements FileWire {
       return chunkStoreRead(this._torrent.store!, {
         offset: start + this.offset,
         length: end - start + 1,
-      })
+      }) as AsyncIterable<Uint8Array>
     }
 
     const iterator = new FileIterator(this, { start, end })
@@ -162,8 +162,11 @@ export default class File extends EventEmitter implements FileWire {
     let iterator: AsyncIterator<Uint8Array> | undefined
     return new ReadableStream({
       start: () => {
-        const asyncIterable = this[Symbol.asyncIterator](opts)
-        iterator = asyncIterable as AsyncIterator<Uint8Array>
+        const it = this[Symbol.asyncIterator](opts) as unknown
+        iterator =
+          typeof (it as AsyncIterator<Uint8Array>).next === 'function'
+            ? (it as AsyncIterator<Uint8Array>)
+            : (it as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]()
       },
       async pull(controller) {
         if (!iterator) return
@@ -181,9 +184,10 @@ export default class File extends EventEmitter implements FileWire {
   }
 
   get streamURL(): string {
-    if (!(this._client as any)._server) throw new Error('No server created')
+    const hs = this._torrent.client.httpServer
+    if (!hs) throw new Error('No server created')
     const path = this.path.replace(/\\/g, '/')
-    return `${(this._client as any)._server.pathname}/${this._torrent.infoHash}/${path}`
+    return `${hs.pathname}/${this._torrent.infoHash}/${path}`
   }
 
   /** Browser: stream file to media element (video/audio). Requires createServer. */

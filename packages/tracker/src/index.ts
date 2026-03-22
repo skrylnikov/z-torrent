@@ -1,6 +1,3 @@
-/*! bittorrent-tracker. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
-import Client from './client.js'
-import Server from './server.js'
-
-export default Client
-export { Client, Server }
+/*! @z-torrent/tracker. MIT License. */
+export { Client } from './client.js'
+export { Server } from './server.js'

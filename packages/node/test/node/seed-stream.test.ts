@@ -1,10 +1,11 @@
 import { Readable } from 'stream'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { Server as Tracker } from 'bittorrent-tracker'
-import WebTorrent from '../../dist/index.js'
+import { Server as Tracker } from '@z-torrent/tracker'
+import { WebTorrent } from '../../dist/index.js'
+import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test('client.seed: stream', async () => {
+test.skipIf(!LIVE_NETWORK)('client.seed: stream', async () => {
   const tracker = new Tracker({ udp: false, ws: false })
 
   tracker.on('error', (err) => {
@@ -38,10 +39,7 @@ test('client.seed: stream', async () => {
             throw err
           })
 
-          const stream = new Readable()
-          stream._read = () => {}
-          stream.push('HELLO WORLD\n')
-          stream.push(null)
+          const stream = Readable.from([Buffer.from('HELLO WORLD\n')])
 
           const seederOpts = {
             name: 'hello.txt',
@@ -96,4 +94,4 @@ test('client.seed: stream', async () => {
       }
     )
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })

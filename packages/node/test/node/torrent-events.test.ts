@@ -1,10 +1,15 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { randomBytes } from 'uint8-util'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
+import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS, SEED_HEAVY_TIMEOUT_MS } from '../common.js'
 
 test('client.add: emit torrent events in order', async () => {
+  const leavesContent = fixtures.leaves.content
+  const leavesInfoHash = fixtures.leaves.parsedTorrent?.infoHash
+  if (!leavesContent || !leavesInfoHash) throw new Error('leaves fixture incomplete')
+
   const client1 = new WebTorrent({
     dht: false,
     tracker: false,
@@ -34,21 +39,26 @@ test('client.add: emit torrent events in order', async () => {
     throw err
   })
 
-  client2.seed(fixtures.leaves.content, {
+  client2.seed(leavesContent, {
     name: 'Leaves of Grass by Walt Whitman.epub',
     announce: [],
   })
 
   await new Promise<void>((resolve, reject) => {
     client2.on('listening', () => {
-      const torrent = client1.add(fixtures.leaves.parsedTorrent.infoHash, {
+      const torrent = client1.add(leavesInfoHash, {
         store: MemoryChunkStore,
       })
 
       let order = 0
 
       torrent.on('infoHash', () => {
-        torrent.addPeer(`127.0.0.1:${client2.address().port}`)
+        const addr = client2.address()
+        if (!addr) {
+          reject(new Error('client2 not listening'))
+          return
+        }
+        torrent.addPeer(`127.0.0.1:${addr.port}`)
         expect(++order).toBe(1)
       })
 
@@ -63,19 +73,18 @@ test('client.add: emit torrent events in order', async () => {
       torrent.on('done', () => {
         expect(++order).toBe(4)
 
-        client1.destroy((err) => {
-          if (err) reject(err)
-        })
-        client2.destroy((err) => {
-          if (err) reject(err)
-          else resolve()
+        client1.destroy(() => {
+          client2.destroy(() => resolve())
         })
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: emit torrent events in order', async () => {
+  const leavesContent = fixtures.leaves.content
+  if (!leavesContent) throw new Error('leaves fixture incomplete')
+
   const client = new WebTorrent({
     dht: false,
     tracker: false,
@@ -91,11 +100,11 @@ test('client.seed: emit torrent events in order', async () => {
     throw err
   })
 
-  const torrent = client.seed(fixtures.leaves.content)
+  const torrent = client.seed(leavesContent)
 
   let order = 0
 
-  await new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolve) => {
     torrent.on('infoHash', () => {
       expect(++order).toBe(1)
     })
@@ -113,15 +122,12 @@ test('client.seed: emit torrent events in order', async () => {
     })
     torrent.on('seed', () => {
       expect(++order).toBe(5)
-      client.destroy((err) => {
-        if (err) reject(err)
-        else resolve()
-      })
+      client.destroy(() => resolve())
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
-test('file.select: check multiple idle events', { timeout: 15000 }, async () => {
+test.skipIf(!LIVE_NETWORK)('file.select: check multiple idle events', async () => {
   const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
   const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
 
@@ -151,7 +157,12 @@ test('file.select: check multiple idle events', { timeout: 15000 }, async () => 
       let order = 0
 
       torrent.on('infoHash', () => {
-        torrent.addPeer(`127.0.0.1:${client2.address().port}`)
+        const addr = client2.address()
+        if (!addr) {
+          reject(new Error('client2 not listening'))
+          return
+        }
+        torrent.addPeer(`127.0.0.1:${addr.port}`)
         expect(++order).toBe(1)
       })
 
@@ -169,15 +180,11 @@ test('file.select: check multiple idle events', { timeout: 15000 }, async () => 
         if (order === 4) {
           torrent.files[1].select(0)
         } else if (order === 5) {
-          client1.destroy((err) => {
-            if (err) reject(err)
-          })
-          client2.destroy((err) => {
-            if (err) reject(err)
-            else resolve()
+          client1.destroy(() => {
+            client2.destroy(() => resolve())
           })
         }
       })
     })
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })

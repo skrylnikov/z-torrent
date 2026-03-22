@@ -1,11 +1,11 @@
 import arrayRemove from 'unordered-array-remove'
 import bencode from 'bencode'
 import Debug from 'debug'
-import fetch from 'cross-fetch-ponyfill'
 import { bin2hex, hex2bin, arr2text, text2arr, arr2hex } from 'uint8-util'
 
-import common from '../common.js'
-import Tracker from './tracker.js'
+import * as common from '../common.js'
+import type { TrackerClientContext } from '../client-context.js'
+import { Tracker } from './tracker.js'
 import { compact2stringMulti, compact2stringMulti6 } from '@z-torrent/utils'
 
 const debug = Debug('bittorrent-tracker:http-tracker')
@@ -22,15 +22,6 @@ interface AnnounceOpts {
 
 interface ScrapeOpts {
   infoHash?: string | string[]
-}
-
-interface ClientLike {
-  _infoHashBinary: string
-  _peerIdBinary: string
-  _port: number
-  _userAgent?: string
-  _proxyOpts?: any
-  emit(event: string, ...args: any[]): void
 }
 
 interface BencodeResponse {
@@ -56,14 +47,14 @@ function abortTimeout(ms: number): AbortController {
   return controller
 }
 
-class HTTPTracker extends Tracker {
+export class HTTPTracker extends Tracker {
   scrapeUrl: string | null
   cleanupFns: Array<() => void>
   maybeDestroyCleanup: (() => void) | null
   _trackerId?: string
   DEFAULT_ANNOUNCE_INTERVAL = 30 * 60 * 1000
 
-  constructor(client: ClientLike, announceUrl: string) {
+  constructor(client: TrackerClientContext, announceUrl: string) {
     super(client, announceUrl)
 
     debug('new http tracker %s', announceUrl)
@@ -86,16 +77,19 @@ class HTTPTracker extends Tracker {
 
     const params: any = Object.assign({}, opts, {
       compact: opts.compact == null ? 1 : opts.compact,
-      info_hash: (this.client as ClientLike)._infoHashBinary,
-      peer_id: (this.client as ClientLike)._peerIdBinary,
-      port: (this.client as ClientLike)._port,
+      info_hash: this.client.infoHashBinary,
+      peer_id: this.client.peerIdBinary,
+      port: this.client.port,
     })
 
     if (params.left !== 0 && !params.left) params.left = 16384
     if (this._trackerId) params.trackerid = this._trackerId
 
     this._request(this.announceUrl, params, (err, data) => {
-      if (err) return (this.client as ClientLike).emit('warning', err)
+      if (err) {
+        this.client.emit('warning', err)
+        return
+      }
       this._onAnnounceResponse(data!)
     })
   }
@@ -104,7 +98,7 @@ class HTTPTracker extends Tracker {
     if (this.destroyed) return
 
     if (!this.scrapeUrl) {
-      ;(this.client as ClientLike).emit(
+      this.client.emit(
         'error',
         new Error(`scrape not supported ${this.announceUrl}`)
       )
@@ -115,12 +109,15 @@ class HTTPTracker extends Tracker {
       Array.isArray(opts.infoHash) && opts.infoHash.length > 0
         ? opts.infoHash.map((infoHash) => hex2bin(infoHash))
         : (opts.infoHash && hex2bin(opts.infoHash as string)) ||
-          (this.client as ClientLike)._infoHashBinary
+          this.client.infoHashBinary
     const params = {
       info_hash: infoHashes,
     }
     this._request(this.scrapeUrl, params, (err, data) => {
-      if (err) return (this.client as ClientLike).emit('warning', err)
+      if (err) {
+        this.client.emit('warning', err)
+        return
+      }
       this._onScrapeResponse(data!)
     })
   }
@@ -166,13 +163,13 @@ class HTTPTracker extends Tracker {
         common.querystringStringify(params)
     )
     let agent: any
-    if ((this.client as ClientLike)._proxyOpts) {
+    if (this.client.proxyOpts) {
       agent =
         parsedUrl.protocol === 'https:'
-          ? (this.client as ClientLike)._proxyOpts.httpsAgent
-          : (this.client as ClientLike)._proxyOpts.httpAgent
-      if (!agent && (this.client as ClientLike)._proxyOpts.socksProxy) {
-        agent = (this.client as ClientLike)._proxyOpts.socksProxy
+          ? this.client.proxyOpts.httpsAgent
+          : this.client.proxyOpts.httpAgent
+      if (!agent && this.client.proxyOpts.socksProxy) {
+        agent = this.client.proxyOpts.socksProxy
       }
     }
 
@@ -189,16 +186,16 @@ class HTTPTracker extends Tracker {
 
     this.cleanupFns.push(cleanup)
 
-    let res: any
+    let res: Response
     try {
-      res = await fetch(parsedUrl.toString(), {
-        agent,
+      const init: RequestInit & { dispatcher?: unknown } = {
         signal: controller.signal,
-        dispatcher: agent,
         headers: {
-          'user-agent': (this.client as ClientLike)._userAgent || '',
+          'user-agent': this.client.userAgent || '',
         },
-      })
+      }
+      if (agent) init.dispatcher = agent
+      res = await globalThis.fetch(parsedUrl.toString(), init)
       if ((res.body as any).on) (res.body as any).on('error', cb)
     } catch (err: any) {
       if (err) return cb(err)
@@ -230,7 +227,7 @@ class HTTPTracker extends Tracker {
     const warning = decoded['warning message'] && arr2text(decoded['warning message'] as Uint8Array)
     if (warning) {
       debug(`warning from ${requestUrl} (${warning})`)
-      ;(this.client as ClientLike).emit('warning', new Error(warning))
+      this.client.emit('warning', new Error(warning))
     }
 
     debug(`response from ${requestUrl}`)
@@ -251,21 +248,22 @@ class HTTPTracker extends Tracker {
       announce: this.announceUrl,
       infoHash: bin2hex((data.info_hash || String(data.info_hash)) as any),
     })
-    ;(this.client as ClientLike).emit('update', response)
+    this.client.emit('update', response)
 
     let addrs: string[]
     if (ArrayBuffer.isView(data.peers)) {
       try {
         addrs = compact2stringMulti(Buffer.from(data.peers as Uint8Array))
       } catch (err: any) {
-        return (this.client as ClientLike).emit('warning', err)
+        this.client.emit('warning', err)
+        return
       }
       addrs.forEach((addr) => {
-        ;(this.client as ClientLike).emit('peer', addr)
+        this.client.emit('peer', addr)
       })
     } else if (Array.isArray(data.peers)) {
       data.peers.forEach((peer) => {
-        ;(this.client as ClientLike).emit('peer', `${peer.ip}:${peer.port}`)
+        this.client.emit('peer', `${peer.ip}:${peer.port}`)
       })
     }
 
@@ -273,15 +271,16 @@ class HTTPTracker extends Tracker {
       try {
         addrs = compact2stringMulti6(Buffer.from(data.peers6 as Uint8Array))
       } catch (err: any) {
-        return (this.client as ClientLike).emit('warning', err)
+        this.client.emit('warning', err)
+        return
       }
       addrs.forEach((addr) => {
-        ;(this.client as ClientLike).emit('peer', addr)
+        this.client.emit('peer', addr)
       })
     } else if (Array.isArray(data.peers6)) {
       data.peers6.forEach((peer) => {
         const ip = /^\[/.test(peer.ip) || !/:/.test(peer.ip) ? peer.ip : `[${peer.ip}]`
-        ;(this.client as ClientLike).emit('peer', `${ip}:${peer.port}`)
+        this.client.emit('peer', `${ip}:${peer.port}`)
       })
     }
   }
@@ -291,7 +290,7 @@ class HTTPTracker extends Tracker {
 
     const keys = Object.keys(data)
     if (keys.length === 0) {
-      ;(this.client as ClientLike).emit('warning', new Error('invalid scrape response'))
+      this.client.emit('warning', new Error('invalid scrape response'))
       return
     }
 
@@ -305,9 +304,8 @@ class HTTPTracker extends Tracker {
         announce: this.announceUrl,
         infoHash,
       })
-      ;(this.client as ClientLike).emit('scrape', response)
+      this.client.emit('scrape', response)
     })
   }
 }
 
-export default HTTPTracker

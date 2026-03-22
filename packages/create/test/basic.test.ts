@@ -1,8 +1,7 @@
-import parseTorrent from '@z-torrent/parse'
+import { parseTorrent } from '@z-torrent/parse'
 import path from 'path'
 import { expect, test } from 'bun:test'
-import createTorrent from '@z-torrent/create'
-import { createTorrentPromise } from './helpers.js'
+import { createTorrentPromise, torrentFilesOf } from './helpers.js'
 
 type BufferWithPath = Buffer & { name?: string; fullPath?: string }
 
@@ -10,22 +9,24 @@ test('implicit torrent name and file name', async () => {
   const buf1 = Buffer.from('buf1')
   const torrent = await createTorrentPromise(buf1)
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toContain('Unnamed Torrent')
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toContain('Unnamed Torrent')
-  expect(parsedTorrent.files[0].path).toContain('Unnamed Torrent')
+  expect(files.length).toBe(1)
+  expect(files[0]!.name).toContain('Unnamed Torrent')
+  expect(files[0]!.path).toContain('Unnamed Torrent')
 })
 
 test('implicit file name from torrent name', async () => {
   const buf1 = Buffer.from('buf1')
   const torrent = await createTorrentPromise(buf1, { name: 'My Cool File' })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool File')
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File')
-  expect(parsedTorrent.files[0].path).toBe('My Cool File')
+  expect(files.length).toBe(1)
+  expect(files[0]!.name).toBe('My Cool File')
+  expect(files[0]!.path).toBe('My Cool File')
 })
 
 test('implicit torrent name from file name', async () => {
@@ -34,11 +35,12 @@ test('implicit torrent name from file name', async () => {
 
   const torrent = await createTorrentPromise(buf1)
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool File')
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File')
-  expect(parsedTorrent.files[0].path).toBe('My Cool File')
+  expect(files.length).toBe(1)
+  expect(files[0]!.name).toBe('My Cool File')
+  expect(files[0]!.path).toBe('My Cool File')
 })
 
 test('implicit file names from torrent name', async () => {
@@ -47,13 +49,14 @@ test('implicit file names from torrent name', async () => {
 
   const torrent = await createTorrentPromise([buf1, buf2], { name: 'My Cool File' })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool File')
-  expect(parsedTorrent.files.length).toBe(2)
-  expect(parsedTorrent.files[0].name).toContain('Unknown File')
-  expect(parsedTorrent.files[0].path).toContain('Unknown File')
-  expect(parsedTorrent.files[1].name).toContain('Unknown File')
-  expect(parsedTorrent.files[1].path).toContain('Unknown File')
+  expect(files.length).toBe(2)
+  expect(files[0]!.name).toContain('Unknown File')
+  expect(files[0]!.path).toContain('Unknown File')
+  expect(files[1]!.name).toContain('Unknown File')
+  expect(files[1]!.path).toContain('Unknown File')
 })
 
 test('set file name with `name` property', async () => {
@@ -62,11 +65,12 @@ test('set file name with `name` property', async () => {
 
   const torrent = await createTorrentPromise(buf1)
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool File')
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File')
-  expect(parsedTorrent.files[0].path).toBe('My Cool File')
+  expect(files.length).toBe(1)
+  expect(files[0]!.name).toBe('My Cool File')
+  expect(files[0]!.path).toBe('My Cool File')
 })
 
 test('set file names with `name` property', async () => {
@@ -77,13 +81,14 @@ test('set file names with `name` property', async () => {
 
   const torrent = await createTorrentPromise([buf1, buf2], { name: 'My Cool Torrent' })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool Torrent')
-  expect(parsedTorrent.files.length).toBe(2)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File 1')
-  expect(parsedTorrent.files[0].path).toBe(path.join('My Cool Torrent', 'My Cool File 1'))
-  expect(parsedTorrent.files[1].name).toBe('My Cool File 2')
-  expect(parsedTorrent.files[1].path).toBe(path.join('My Cool Torrent', 'My Cool File 2'))
+  expect(files.length).toBe(2)
+  expect(files[0]!.name).toBe('My Cool File 1')
+  expect(files[0]!.path).toBe(path.join('My Cool Torrent', 'My Cool File 1'))
+  expect(files[1]!.name).toBe('My Cool File 2')
+  expect(files[1]!.path).toBe(path.join('My Cool Torrent', 'My Cool File 2'))
 })
 
 test('set file name with `fullPath` property', async () => {
@@ -92,11 +97,12 @@ test('set file name with `fullPath` property', async () => {
 
   const torrent = await createTorrentPromise(buf1)
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool File')
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File')
-  expect(parsedTorrent.files[0].path).toBe('My Cool File')
+  expect(files.length).toBe(1)
+  expect(files[0]!.name).toBe('My Cool File')
+  expect(files[0]!.path).toBe('My Cool File')
 })
 
 test('set file names with `fullPath` property', async () => {
@@ -107,13 +113,14 @@ test('set file names with `fullPath` property', async () => {
 
   const torrent = await createTorrentPromise([buf1, buf2], { name: 'My Cool Torrent' })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool Torrent')
-  expect(parsedTorrent.files.length).toBe(2)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File 1')
-  expect(parsedTorrent.files[0].path).toBe(path.join('My Cool Torrent', 'My Cool File 1'))
-  expect(parsedTorrent.files[1].name).toBe('My Cool File 2')
-  expect(parsedTorrent.files[1].path).toBe(path.join('My Cool Torrent', 'My Cool File 2'))
+  expect(files.length).toBe(2)
+  expect(files[0]!.name).toBe('My Cool File 1')
+  expect(files[0]!.path).toBe(path.join('My Cool Torrent', 'My Cool File 1'))
+  expect(files[1]!.name).toBe('My Cool File 2')
+  expect(files[1]!.path).toBe(path.join('My Cool Torrent', 'My Cool File 2'))
 })
 
 test('implicit torrent name from file name with slashes in it', async () => {
@@ -122,11 +129,12 @@ test('implicit torrent name from file name with slashes in it', async () => {
 
   const torrent = await createTorrentPromise(buf1)
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool File')
-  expect(parsedTorrent.files.length).toBe(1)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File')
-  expect(parsedTorrent.files[0].path).toBe('My Cool File')
+  expect(files.length).toBe(1)
+  expect(files[0]!.name).toBe('My Cool File')
+  expect(files[0]!.path).toBe('My Cool File')
 })
 
 test('implicit torrent name from file names with slashes in them', async () => {
@@ -137,13 +145,14 @@ test('implicit torrent name from file names with slashes in them', async () => {
 
   const torrent = await createTorrentPromise([buf1, buf2])
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool Folder')
-  expect(parsedTorrent.files.length).toBe(2)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File 1')
-  expect(parsedTorrent.files[0].path).toBe(path.join('My Cool Folder', 'My Cool File 1'))
-  expect(parsedTorrent.files[1].name).toBe('My Cool File 2')
-  expect(parsedTorrent.files[1].path).toBe(path.join('My Cool Folder', 'My Cool File 2'))
+  expect(files.length).toBe(2)
+  expect(files[0]!.name).toBe('My Cool File 1')
+  expect(files[0]!.path).toBe(path.join('My Cool Folder', 'My Cool File 1'))
+  expect(files[1]!.name).toBe('My Cool File 2')
+  expect(files[1]!.path).toBe(path.join('My Cool Folder', 'My Cool File 2'))
 })
 
 test('verify torrent length with maxPieceLength set', async () => {
@@ -154,13 +163,14 @@ test('verify torrent length with maxPieceLength set', async () => {
 
   const torrent = await createTorrentPromise([buf1, buf2], { maxPieceLength: 10 })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool Folder')
-  expect(parsedTorrent.files.length).toBe(2)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File 1')
-  expect(parsedTorrent.files[0].path).toBe(path.join('My Cool Folder', 'My Cool File 1'))
-  expect(parsedTorrent.files[1].name).toBe('My Cool File 2')
-  expect(parsedTorrent.files[1].path).toBe(path.join('My Cool Folder', 'My Cool File 2'))
+  expect(files.length).toBe(2)
+  expect(files[0]!.name).toBe('My Cool File 1')
+  expect(files[0]!.path).toBe(path.join('My Cool Folder', 'My Cool File 1'))
+  expect(files[1]!.name).toBe('My Cool File 2')
+  expect(files[1]!.path).toBe(path.join('My Cool Folder', 'My Cool File 2'))
   expect(parsedTorrent.pieceLength).toBe(10)
 })
 
@@ -175,12 +185,13 @@ test('verify maxPieceLength is ignored when pieceLength is manually set', async 
     maxPieceLength: 10,
   })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('My Cool Folder')
-  expect(parsedTorrent.files.length).toBe(2)
-  expect(parsedTorrent.files[0].name).toBe('My Cool File 1')
-  expect(parsedTorrent.files[0].path).toBe(path.join('My Cool Folder', 'My Cool File 1'))
-  expect(parsedTorrent.files[1].name).toBe('My Cool File 2')
-  expect(parsedTorrent.files[1].path).toBe(path.join('My Cool Folder', 'My Cool File 2'))
+  expect(files.length).toBe(2)
+  expect(files[0]!.name).toBe('My Cool File 1')
+  expect(files[0]!.path).toBe(path.join('My Cool Folder', 'My Cool File 1'))
+  expect(files[1]!.name).toBe('My Cool File 2')
+  expect(files[1]!.path).toBe(path.join('My Cool Folder', 'My Cool File 2'))
   expect(parsedTorrent.pieceLength).toBe(1024)
 })

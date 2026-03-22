@@ -1,12 +1,16 @@
-/// <reference types="node" />
 import { EventEmitter } from 'eventemitter3'
 import bencode from 'bencode'
 
 import Debug from 'debug'
 import KBucket from 'k-bucket'
-import krpc, { KRpc, KRpcNode, KRpcMessage, KRpcPeer } from 'k-rpc'
+import krpc, {
+  type KRpc,
+  type KRpcNode,
+  type KRpcMessage,
+  type KRpcPeer,
+} from 'k-rpc'
 import low from 'last-one-wins'
-import LRU from 'lru'
+import { LRUCache } from 'lru-cache'
 import records from 'record-cache'
 import { randomBytes } from 'uint8-util'
 import sha1Hash from 'sync-sha1/rawSha1.js'
@@ -56,20 +60,20 @@ interface GetValueResponse {
   salt?: Buffer
 }
 
-class DHT extends EventEmitter {
-  _tables: InstanceType<typeof LRU<string, KBucket>>
-  _values: InstanceType<typeof LRU<string, TableValue>>
-  _peers: ReturnType<typeof records>
-  _secrets: [Buffer, Buffer] | null
-  _hash: (buf: Buffer) => Buffer
-  _hashLength: number
-  _rpc: KRpc
-  _verify: ((sig: Buffer, data: Buffer, key: Buffer) => boolean) | null
-  _host: string | null
-  _interval: ReturnType<typeof setInterval>
-  _runningBucketCheck: boolean
-  _bucketCheckTimeout: ReturnType<typeof setTimeout> | null
-  _bucketOutdatedTimeSpan: number
+export class DHT extends EventEmitter {
+  #tables: LRUCache<string, KBucket>
+  #values: LRUCache<string, TableValue>
+  #peers: ReturnType<typeof records>
+  #secrets: [Buffer, Buffer] | null
+  #hash: (buf: Buffer) => Buffer
+  #hashLength: number
+  #rpc: KRpc
+  #verify: ((sig: Buffer, data: Buffer, key: Buffer) => boolean) | null
+  #host: string | false | null
+  #interval: ReturnType<typeof setInterval>
+  #runningBucketCheck: boolean
+  #bucketCheckTimeout: ReturnType<typeof setTimeout> | null
+  #bucketOutdatedTimeSpan: number
 
   listening: boolean
   destroyed: boolean
@@ -86,9 +90,10 @@ class DHT extends EventEmitter {
       hash?: (buf: Buffer) => Buffer
       krpc?: KRpc
       verify?: (sig: Buffer, data: Buffer, key: Buffer) => boolean
-      host?: string
+      host?: string | false | null
       timeBucketOutdated?: number
-      bootstrap?: boolean | string[]
+      bootstrap?: boolean | string | string[]
+      nodes?: string | string[] | KRpcNode[]
       nodeId?: Buffer | string
       id?: Buffer | string
     } = {}
@@ -106,49 +111,50 @@ class DHT extends EventEmitter {
       ]
     }
 
-    this._tables = new LRU({
-      maxAge: ROTATE_INTERVAL,
+    this.#tables = new LRUCache<string, KBucket>({
       max: opts.maxTables || 1000,
-    }) as InstanceType<typeof LRU<string, KBucket>>
-    this._values = new LRU({ max: opts.maxValues || 1000 }) as InstanceType<
-      typeof LRU<string, TableValue>
-    >
-    this._peers = records({
+      ttl: ROTATE_INTERVAL,
+      ttlAutopurge: true,
+    })
+    this.#values = new LRUCache<string, TableValue>({
+      max: opts.maxValues || 1000,
+    })
+    this.#peers = records({
       maxAge: opts.maxAge || 0,
       maxSize: opts.maxPeers || 10000,
     })
 
-    this._secrets = null
-    this._hash = opts.hash || sha1
-    this._hashLength = this._hash(Buffer.from('')).length
-    this._rpc =
+    this.#secrets = null
+    this.#hash = opts.hash || sha1
+    this.#hashLength = this.#hash(Buffer.from('')).length
+    this.#rpc =
       opts.krpc ||
       krpc(
         Object.assign(
           {
-            idLength: this._hashLength,
+            idLength: this.#hashLength,
             timeout: 2000, // Увеличено с 2s — bootstrap ноды часто отвечают медленно
           },
           opts
         )
       )
-    this._rpc.on('query', onquery)
-    this._rpc.on('node', onnode)
-    this._rpc.on('warning', onwarning)
-    this._rpc.on('error', onerror)
-    this._rpc.on('listening', onlistening)
-    this._rotateSecrets()
-    this._verify = opts.verify || null
-    this._host = opts.host || null
-    this._interval = setInterval(rotateSecrets, ROTATE_INTERVAL)
-    this._runningBucketCheck = false
-    this._bucketCheckTimeout = null
-    this._bucketOutdatedTimeSpan = opts.timeBucketOutdated || BUCKET_OUTDATED_TIMESPAN
+    this.#rpc.on('query', onquery)
+    this.#rpc.on('node', onnode)
+    this.#rpc.on('warning', onwarning)
+    this.#rpc.on('error', onerror)
+    this.#rpc.on('listening', onlistening)
+    this.#rotateSecrets()
+    this.#verify = opts.verify || null
+    this.#host = opts.host ?? null
+    this.#interval = setInterval(rotateSecrets, ROTATE_INTERVAL)
+    this.#runningBucketCheck = false
+    this.#bucketCheckTimeout = null
+    this.#bucketOutdatedTimeSpan = opts.timeBucketOutdated || BUCKET_OUTDATED_TIMESPAN
 
     this.listening = false
     this.destroyed = false
-    this.nodeId = this._rpc.id
-    this.nodes = this._rpc.nodes
+    this.nodeId = this.#rpc.id
+    this.nodes = this.#rpc.nodes
     this.ready = false
 
     // ensure only *one* ping it running at the time to avoid infinite async
@@ -156,13 +162,13 @@ class DHT extends EventEmitter {
     // are disregarded
     const onping = low(ping)
 
-    this._rpc.on('ping', (older: KRpcNode[], swap: (node: KRpcNode) => void) => {
+    this.#rpc.on('ping', (older: KRpcNode[], swap: (node: KRpcNode) => void) => {
       onping({ older, swap }, noop)
     })
 
     queueMicrotask(bootstrap as () => void)
 
-    this._debug('new DHT %s', this.nodeId)
+    this.#debug('new DHT %s', this.nodeId)
 
     const self = this
 
@@ -170,37 +176,37 @@ class DHT extends EventEmitter {
       const older = opts.older
       const swap = opts.swap
 
-      self._debug('received ping', older)
-      self._checkNodes(older, false, (_, deadNode) => {
+      self.#debug('received ping', older)
+      self.#checkNodes(older, false, (_, deadNode) => {
         if (deadNode) {
-          self._debug('swaping dead node with newer', deadNode)
+          self.#debug('swaping dead node with newer', deadNode)
           swap(deadNode)
           return cb()
         }
 
-        self._debug('no node added, all other nodes ok')
+        self.#debug('no node added, all other nodes ok')
         cb()
       })
     }
 
     function onlistening() {
       self.listening = true
-      self._debug('listening %d', (self.address() as any).port)
+      self.#debug('listening %d', (self.address() as any).port)
       self.updateBucketTimestamp()
-      self._setBucketCheckInterval()
+      self.#setBucketCheckInterval()
       self.emit('listening')
     }
 
     function onquery(query: KRpcMessage, peer: KRpcPeer) {
-      self._onquery(query, peer)
+      self.#onquery(query, peer)
     }
 
     function rotateSecrets() {
-      self._rotateSecrets()
+      self.#rotateSecrets()
     }
 
     function bootstrap() {
-      if (!self.destroyed) self._bootstrap(opts.bootstrap !== false)
+      if (!self.destroyed) self.#bootstrap(opts.bootstrap !== false)
     }
 
     function onwarning(err: Error) {
@@ -216,25 +222,25 @@ class DHT extends EventEmitter {
     }
   }
 
-  _setBucketCheckInterval() {
+  #setBucketCheckInterval() {
     const self = this
     const interval = 1 * 60 * 1000 // check age of bucket every minute
 
-    this._runningBucketCheck = true
+    this.#runningBucketCheck = true
     queueNext()
 
     function checkBucket() {
-      const diff = Date.now() - self._rpc.nodes.metadata.lastChange
+      const diff = Date.now() - self.#rpc.nodes.metadata.lastChange
 
-      if (diff < self._bucketOutdatedTimeSpan) return queueNext()
+      if (diff < self.#bucketOutdatedTimeSpan) return queueNext()
 
-      self._pingAll(() => {
+      self.#pingAll(() => {
         if (self.destroyed) return
 
         if (self.nodes.toArray().length < 1) {
           // node is currently isolated,
           // retry with initial bootstrap nodes
-          self._bootstrap(true)
+          self.#bootstrap(true)
         }
 
         queueNext()
@@ -242,35 +248,35 @@ class DHT extends EventEmitter {
     }
 
     function queueNext() {
-      if (!self._runningBucketCheck || self.destroyed) return
+      if (!self.#runningBucketCheck || self.destroyed) return
       const nextTimeout = Math.floor(Math.random() * interval + interval / 2)
-      self._bucketCheckTimeout = setTimeout(checkBucket, nextTimeout)
+      self.#bucketCheckTimeout = setTimeout(checkBucket, nextTimeout)
     }
   }
 
-  _pingAll(cb: () => void) {
-    this._checkAndRemoveNodes(this.nodes.toArray(), cb)
+  #pingAll(cb: () => void) {
+    this.#checkAndRemoveNodes(this.nodes.toArray(), cb)
   }
 
   removeBucketCheckInterval() {
-    this._runningBucketCheck = false
-    clearTimeout(this._bucketCheckTimeout!)
+    this.#runningBucketCheck = false
+    clearTimeout(this.#bucketCheckTimeout!)
   }
 
   updateBucketTimestamp() {
-    this._rpc.nodes.metadata.lastChange = Date.now()
+    this.#rpc.nodes.metadata.lastChange = Date.now()
   }
 
-  _checkAndRemoveNodes(nodes: KRpcNode[], cb: (err: Error | null, node?: KRpcNode | null) => void) {
+  #checkAndRemoveNodes(nodes: KRpcNode[], cb: (err: Error | null, node?: KRpcNode | null) => void) {
     const self = this
 
-    this._checkNodes(nodes, true, (_, node) => {
+    this.#checkNodes(nodes, true, (_, node) => {
       if (node && node.id) self.removeNode(node.id)
       cb(null, node)
     })
   }
 
-  _checkNodes(nodes: KRpcNode[], force: boolean, cb: (err: null, node?: KRpcNode | null) => void) {
+  #checkNodes(nodes: KRpcNode[], force: boolean, cb: (err: null, node?: KRpcNode | null) => void) {
     const self = this
 
     test([...nodes])
@@ -287,7 +293,7 @@ class DHT extends EventEmitter {
 
       if (!current) return cb(null)
 
-      self._sendPing(current, (err) => {
+      self.#sendPing(current, (err) => {
         if (!err) {
           self.updateBucketTimestamp()
           return test(acc)
@@ -301,27 +307,27 @@ class DHT extends EventEmitter {
     const self = this
     if (node.id) {
       node.id = toBuffer(node.id)
-      const old = !!this._rpc.nodes.get(node.id)
-      this._rpc.nodes.add(node as KRpcNode)
+      const old = !!this.#rpc.nodes.get(node.id)
+      this.#rpc.nodes.add(node as KRpcNode)
       if (!old) {
         this.emit('node', node)
         this.updateBucketTimestamp()
       }
       return
     }
-    this._sendPing(node as KRpcNode, (_, node) => {
+    this.#sendPing(node as KRpcNode, (_, node) => {
       if (node) self.addNode(node)
     })
   }
 
   removeNode(id: Buffer | string) {
-    this._rpc.nodes.remove(toBuffer(id))
+    this.#rpc.nodes.remove(toBuffer(id))
   }
 
-  _sendPing(node: KRpcNode, cb: (err: Error | null, node?: KRpcNode) => void) {
+  #sendPing(node: KRpcNode, cb: (err: Error | null, node?: KRpcNode) => void) {
     const self = this
     const expectedId = node.id
-    this._rpc.query(
+    this.#rpc.query(
       node,
       { q: 'ping' },
       (err: Error | null, pong?: KRpcMessage, node?: KRpcNode) => {
@@ -331,7 +337,7 @@ class DHT extends EventEmitter {
           !pong.r ||
           !pong.r.id ||
           !Buffer.isBuffer(pong.r.id) ||
-          pong.r.id.length !== self._hashLength
+          pong.r.id.length !== self.#hashLength
         ) {
           return cb(new Error('Bad reply'))
         }
@@ -350,10 +356,8 @@ class DHT extends EventEmitter {
   }
 
   toJSON(): { nodes: Array<{ host: string; port: number }>; values: any } {
-    const self = this
     const values: any = {}
-    Object.keys(this._values.cache).forEach((key) => {
-      const value = self._values.cache[key].value
+    this.#values.forEach((value, key) => {
       values[key] = {
         v: value.v.toString('hex'),
         id: value.id.toString('hex'),
@@ -363,7 +367,7 @@ class DHT extends EventEmitter {
       if (value.k != null) values[key].k = value.k.toString('hex')
     })
     return {
-      nodes: this._rpc.nodes.toArray().map(toNode),
+      nodes: this.#rpc.nodes.toArray().map(toNode),
       values,
     }
   }
@@ -407,23 +411,23 @@ class DHT extends EventEmitter {
       throw new Error('opts.seq not an integer')
     }
 
-    return this._put(opts as PutOpts, cb || noop)
+    return this.#put(opts as PutOpts, cb || noop)
   }
 
-  _put(opts: PutOpts, cb: (err: Error | null, key?: Buffer, n?: number) => void): Buffer {
+  #put(opts: PutOpts, cb: (err: Error | null, key?: Buffer, n?: number) => void): Buffer {
     const isMutable = !!opts.k
     const v = typeof opts.v === 'string' ? Buffer.from(opts.v) : opts.v
     const key = isMutable
-      ? this._hash(opts.salt ? Buffer.concat([opts.k!, opts.salt]) : opts.k!)
-      : this._hash(bencode.encode(v) as Buffer)
+      ? this.#hash(opts.salt ? Buffer.concat([opts.k!, opts.salt]) : opts.k!)
+      : this.#hash(bencode.encode(v) as Buffer)
 
-    const table = this._tables.get(key.toString('hex'))
-    if (!table) return this._preput(key, opts, cb)
+    const table = this.#tables.get(key.toString('hex'))
+    if (!table) return this.#preput(key, opts, cb)
 
     const message: any = {
       q: 'put',
       a: {
-        id: this._rpc.id,
+        id: this.#rpc.id,
         token: null as Buffer | null, // queryAll sets this
         v,
       },
@@ -437,10 +441,10 @@ class DHT extends EventEmitter {
       if (typeof opts.sign === 'function') message.a.sig = opts.sign(encodeSigData(message.a))
       else if (Buffer.isBuffer(opts.sig)) message.a.sig = opts.sig
     } else {
-      this._values.set(key.toString('hex'), message.a)
+      this.#values.set(key.toString('hex'), message.a)
     }
 
-    this._rpc.queryAll(table.closest(key) as any, message, null, (err, n) => {
+    this.#rpc.queryAll(table.closest(key) as any, message, null, (err, n) => {
       if (err) return cb(err, key, n)
       cb(null, key, n)
     })
@@ -448,19 +452,19 @@ class DHT extends EventEmitter {
     return key
   }
 
-  _preput(
+  #preput(
     key: Buffer,
     opts: PutOpts,
     cb: (err: Error | null, key?: Buffer, n?: number) => void
   ): Buffer {
     const self = this
 
-    this._closest(
+    this.#closest(
       key,
       {
         q: 'get',
         a: {
-          id: this._rpc.id,
+          id: this.#rpc.id,
           target: key,
         },
       },
@@ -486,29 +490,29 @@ class DHT extends EventEmitter {
     }
 
     if (!opts) opts = {}
-    const verify = (opts as GetOpts).verify || this._verify
-    const hash = this._hash
-    let value: GetValueResponse | null = this._values.get(keyBuf.toString('hex')) || null
+    const verify = (opts as GetOpts).verify || this.#verify
+    const hash = this.#hash
+    let value: GetValueResponse | null = this.#values.get(keyBuf.toString('hex')) || null
 
     if (value && (opts as GetOpts).cache !== false) {
       const tableVal: TableValue = {
         v: value.v,
-        id: value.id || this._rpc.id,
+        id: value.id || this.#rpc.id,
         seq: value.seq,
         sig: value.sig,
         k: value.k,
         salt: value.salt,
       }
-      value = createGetResponse(this._rpc.id, null, tableVal)
+      value = createGetResponse(this.#rpc.id, null, tableVal)
       return queueMicrotask(done)
     }
 
-    this._closest(
+    this.#closest(
       keyBuf,
       {
         q: 'get',
         a: {
-          id: this._rpc.id,
+          id: this.#rpc.id,
           target: keyBuf,
         },
       },
@@ -559,13 +563,13 @@ class DHT extends EventEmitter {
     infoHash = toBuffer(infoHash)
     if (!cb) cb = noop
 
-    const table = this._tables.get(infoHash.toString('hex'))
-    if (!table) return this._preannounce(infoHash, port as number, cb)
+    const table = this.#tables.get(infoHash.toString('hex'))
+    if (!table) return this.#preannounce(infoHash, port as number, cb)
 
-    if (this._host) {
+    if (this.#host) {
       const dhtPort = this.listening ? (this.address() as any).port : 0
-      this._addPeer({ host: this._host, port: (port as number) || dhtPort }, infoHash, {
-        host: this._host,
+      this.#addPeer({ host: this.#host, port: (port as number) || dhtPort }, infoHash, {
+        host: this.#host,
         port: dhtPort,
       })
     }
@@ -573,7 +577,7 @@ class DHT extends EventEmitter {
     const message = {
       q: 'announce_peer',
       a: {
-        id: this._rpc.id,
+        id: this.#rpc.id,
         token: null as Buffer | null, // queryAll sets this
         info_hash: infoHash,
         port,
@@ -581,11 +585,11 @@ class DHT extends EventEmitter {
       },
     }
 
-    this._debug('announce %s %d', infoHash, port)
-    this._rpc.queryAll(table.closest(infoHash) as any, message, null, cb)
+    this.#debug('announce %s %d', infoHash, port)
+    this.#rpc.queryAll(table.closest(infoHash) as any, message, null, cb)
   }
 
-  _preannounce(infoHash: Buffer, port: number, cb: (err?: Error | null) => void) {
+  #preannounce(infoHash: Buffer, port: number, cb: (err?: Error | null) => void) {
     const self = this
 
     this.lookup(infoHash, (err) => {
@@ -595,20 +599,25 @@ class DHT extends EventEmitter {
     })
   }
 
+  /** Drop cached get_peers routing state for this info hash (e.g. when removing a torrent). */
+  removeTorrentRoutingTable(infoHash: Buffer | Uint8Array | string): void {
+    this.#tables.delete(toBuffer(infoHash).toString('hex'))
+  }
+
   lookup(infoHash: Buffer | string, cb?: (err?: Error | null) => void): () => void {
     infoHash = toBuffer(infoHash)
     if (!cb) cb = noop
     const self = this
     let aborted = false
 
-    this._debug('lookup %s', infoHash)
+    this.#debug('lookup %s', infoHash)
     queueMicrotask(emit)
-    this._closest(
+    this.#closest(
       infoHash,
       {
         q: 'get_peers',
         a: {
-          id: this._rpc.id,
+          id: this.#rpc.id,
           info_hash: infoHash,
         },
       },
@@ -617,7 +626,7 @@ class DHT extends EventEmitter {
     )
 
     function emit(values?: Buffer[], from?: KRpcNode) {
-      if (!values) values = self._peers.get(infoHash!.toString('hex'), 100)
+      if (!values) values = self.#peers.get(infoHash!.toString('hex'), 100)
       const peers = decodePeers(values)
       for (let i = 0; i < peers.length; i++) {
         self.emit('peer', peers[i], infoHash, from || null)
@@ -636,12 +645,12 @@ class DHT extends EventEmitter {
   }
 
   address(): { port: number; address: string; family: string } {
-    return this._rpc.address()
+    return this.#rpc.address()
   }
 
   // listen([port], [address], [onlistening])
   listen(...args: any[]) {
-    this._rpc.bind(...args)
+    this.#rpc.bind(...args)
   }
 
   destroy(cb?: () => void) {
@@ -651,75 +660,75 @@ class DHT extends EventEmitter {
     }
     this.destroyed = true
     const self = this
-    clearInterval(this._interval)
+    clearInterval(this.#interval)
     this.removeBucketCheckInterval()
-    this._peers.destroy()
-    this._debug('destroying')
-    this._rpc.destroy(() => {
+    this.#peers.destroy()
+    this.#debug('destroying')
+    this.#rpc.destroy(() => {
       self.emit('close')
       if (cb) cb()
     })
   }
 
-  _onquery(query: KRpcMessage, peer: KRpcPeer) {
+  #onquery(query: KRpcMessage, peer: KRpcPeer) {
     if (query.q === undefined || query.q === null) return
 
     const q = query.q.toString()
-    this._debug('received %s query from %s:%d', q, peer.address, peer.port)
+    this.#debug('received %s query from %s:%d', q, peer.address, peer.port)
     if (!query.a) return
 
     switch (q) {
       case 'ping':
-        return this._rpc.response(peer, query, { id: this._rpc.id })
+        return this.#rpc.response(peer, query, { id: this.#rpc.id })
 
       case 'find_node':
-        return this._onfindnode(query, peer)
+        return this.#onfindnode(query, peer)
 
       case 'get_peers':
-        return this._ongetpeers(query, peer)
+        return this.#ongetpeers(query, peer)
 
       case 'announce_peer':
-        return this._onannouncepeer(query, peer)
+        return this.#onannouncepeer(query, peer)
 
       case 'get':
-        return this._onget(query, peer)
+        return this.#onget(query, peer)
 
       case 'put':
-        return this._onput(query, peer)
+        return this.#onput(query, peer)
     }
   }
 
-  _onfindnode(query: KRpcMessage, peer: KRpcPeer) {
+  #onfindnode(query: KRpcMessage, peer: KRpcPeer) {
     const target = query.a!.target
     if (!target)
-      return this._rpc.error(peer, query, [203, '`find_node` missing required `a.target` field'])
+      return this.#rpc.error(peer, query, [203, '`find_node` missing required `a.target` field'])
 
     this.emit('find_node', target)
 
-    const nodes = this._rpc.nodes.closest(target)
-    this._rpc.response(peer, query, { id: this._rpc.id }, nodes)
+    const nodes = this.#rpc.nodes.closest(target)
+    this.#rpc.response(peer, query, { id: this.#rpc.id }, nodes)
   }
 
-  _ongetpeers(query: KRpcMessage, peer: KRpcPeer) {
+  #ongetpeers(query: KRpcMessage, peer: KRpcPeer) {
     const host = peer.address || peer.host
     const infoHash = query.a!.info_hash
     if (!infoHash)
-      return this._rpc.error(peer, query, [203, '`get_peers` missing required `a.info_hash` field'])
+      return this.#rpc.error(peer, query, [203, '`get_peers` missing required `a.info_hash` field'])
 
     this.emit('get_peers', infoHash)
 
-    const r: any = { id: this._rpc.id, token: this._generateToken(host) }
-    const peers = this._peers.get(infoHash.toString('hex'))
+    const r: any = { id: this.#rpc.id, token: this.#generateToken(host) }
+    const peers = this.#peers.get(infoHash.toString('hex'))
 
     if (peers.length) {
       r.values = peers
-      this._rpc.response(peer, query, r)
+      this.#rpc.response(peer, query, r)
     } else {
-      this._rpc.response(peer, query, r, this._rpc.nodes.closest(infoHash))
+      this.#rpc.response(peer, query, r, this.#rpc.nodes.closest(infoHash))
     }
   }
 
-  _onannouncepeer(query: KRpcMessage, peer: KRpcPeer) {
+  #onannouncepeer(query: KRpcMessage, peer: KRpcPeer) {
     const host = peer.address || peer.host
     const port = query.a!.implied_port ? peer.port : query.a!.port
     if (!port || typeof port !== 'number' || port <= 0 || port > 65535) return
@@ -727,43 +736,43 @@ class DHT extends EventEmitter {
     const token = query.a!.token
     if (!infoHash || !token) return
 
-    if (!this._validateToken(host, token)) {
-      return this._rpc.error(peer, query, [203, 'cannot `announce_peer` with bad token'])
+    if (!this.#validateToken(host, token)) {
+      return this.#rpc.error(peer, query, [203, 'cannot `announce_peer` with bad token'])
     }
 
     this.emit('announce_peer', infoHash, { host, port: peer.port })
 
-    this._addPeer({ host, port }, infoHash, { host, port: peer.port })
-    this._rpc.response(peer, query, { id: this._rpc.id })
+    this.#addPeer({ host, port }, infoHash, { host, port: peer.port })
+    this.#rpc.response(peer, query, { id: this.#rpc.id })
   }
 
-  _addPeer(
+  #addPeer(
     peer: { host: string; port: number },
     infoHash: Buffer,
     from: { host: string; port: number }
   ) {
-    this._peers.add(infoHash.toString('hex'), encodePeer(peer.host, peer.port))
+    this.#peers.add(infoHash.toString('hex'), encodePeer(peer.host, peer.port))
     this.emit('announce', peer, infoHash, from)
   }
 
-  _onget(query: KRpcMessage, peer: KRpcPeer) {
+  #onget(query: KRpcMessage, peer: KRpcPeer) {
     const host = peer.address || peer.host
     const target = query.a!.target
     if (!target) return
-    const token = this._generateToken(host)
-    const value = this._values.get(target.toString('hex'))
+    const token = this.#generateToken(host)
+    const value = this.#values.get(target.toString('hex'))
 
     this.emit('get', target, value || null)
 
     if (!value) {
-      const nodes = this._rpc.nodes.closest(target)
-      this._rpc.response(peer, query, { id: this._rpc.id, token }, nodes)
+      const nodes = this.#rpc.nodes.closest(target)
+      this.#rpc.response(peer, query, { id: this.#rpc.id, token }, nodes)
     } else {
-      this._rpc.response(peer, query, createGetResponse(this._rpc.id, token, value))
+      this.#rpc.response(peer, query, createGetResponse(this.#rpc.id, token, value))
     }
   }
 
-  _onput(query: KRpcMessage, peer: KRpcPeer) {
+  #onput(query: KRpcMessage, peer: KRpcPeer) {
     const host = peer.address || peer.host
 
     const a = query.a
@@ -776,34 +785,34 @@ class DHT extends EventEmitter {
     const token = a.token
     if (!token) return
 
-    if (!this._validateToken(host, token)) {
-      return this._rpc.error(peer, query, [203, 'cannot `put` with bad token'])
+    if (!this.#validateToken(host, token)) {
+      return this.#rpc.error(peer, query, [203, 'cannot `put` with bad token'])
     }
     if (v.length > 1000) {
-      return this._rpc.error(peer, query, [205, 'data payload too large'])
+      return this.#rpc.error(peer, query, [205, 'data payload too large'])
     }
 
     const isMutable = !!(a.k || a.sig)
     if (isMutable && !a.k && !a.sig) return
 
     const key = isMutable
-      ? this._hash(a.salt ? Buffer.concat([a.k, a.salt]) : a.k)
-      : this._hash(bencode.encode(v) as Buffer)
+      ? this.#hash(a.salt ? Buffer.concat([a.k, a.salt]) : a.k)
+      : this.#hash(bencode.encode(v) as Buffer)
     const keyHex = key.toString('hex')
 
     this.emit('put', key, v)
 
     if (isMutable) {
-      if (!this._verify) return this._rpc.error(peer, query, [400, 'verification not supported'])
-      if (!this._verify(a.sig, encodeSigData(a), a.k)) return
-      const prev = this._values.get(keyHex)
+      if (!this.#verify) return this.#rpc.error(peer, query, [400, 'verification not supported'])
+      if (!this.#verify(a.sig, encodeSigData(a), a.k)) return
+      const prev = this.#values.get(keyHex)
       if (prev && typeof a.cas === 'number' && prev.seq !== a.cas) {
-        return this._rpc.error(peer, query, [301, 'CAS mismatch, re-read and try again'])
+        return this.#rpc.error(peer, query, [301, 'CAS mismatch, re-read and try again'])
       }
       if (prev && typeof prev.seq === 'number' && !(a.seq > prev.seq)) {
-        return this._rpc.error(peer, query, [302, 'sequence number less than current'])
+        return this.#rpc.error(peer, query, [302, 'sequence number less than current'])
       }
-      this._values.set(keyHex, {
+      this.#values.set(keyHex, {
         v,
         k: a.k,
         salt: a.salt,
@@ -812,23 +821,23 @@ class DHT extends EventEmitter {
         id,
       })
     } else {
-      this._values.set(keyHex, { v, id })
+      this.#values.set(keyHex, { v, id })
     }
 
-    this._rpc.response(peer, query, { id: this._rpc.id })
+    this.#rpc.response(peer, query, { id: this.#rpc.id })
   }
 
-  _bootstrap(populate: boolean) {
+  #bootstrap(populate: boolean) {
     const self = this
     if (!populate) return queueMicrotask(ready)
 
-    this._rpc.populate(
-      self._rpc.id,
+    this.#rpc.populate(
+      self.#rpc.id,
       {
         q: 'find_node',
         a: {
-          id: self._rpc.id,
-          target: self._rpc.id,
+          id: self.#rpc.id,
+          target: self.#rpc.id,
         },
       },
       ready
@@ -837,13 +846,13 @@ class DHT extends EventEmitter {
     function ready() {
       if (self.ready) return
 
-      self._debug('emit ready')
+      self.#debug('emit ready')
       self.ready = true
       self.emit('ready')
     }
   }
 
-  _closest(
+  #closest(
     target: Buffer,
     message: any,
     onmessage: ((message: KRpcMessage, node: KRpcNode) => boolean) | null,
@@ -853,15 +862,15 @@ class DHT extends EventEmitter {
 
     const table = new KBucket({
       localNodeId: target,
-      numberOfNodesPerKBucket: this._rpc.k,
+      numberOfNodesPerKBucket: this.#rpc.k,
     })
 
-    this._rpc.closest(target, message, onreply, done)
+    this.#rpc.closest(target, message, onreply, done)
 
     function done(err: Error | null, _n?: number) {
       if (err) return cb(err)
-      self._tables.set(target.toString('hex'), table)
-      self._debug('visited %d nodes', _n)
+      self.#tables.set(target.toString('hex'), table)
+      self.#debug('visited %d nodes', _n)
       cb(null, _n)
     }
 
@@ -872,9 +881,9 @@ class DHT extends EventEmitter {
         message.r.token &&
         message.r.id &&
         Buffer.isBuffer(message.r.id) &&
-        message.r.id.length === self._hashLength
+        message.r.id.length === self.#hashLength
       ) {
-        self._debug('found node %s (target: %s)', message.r.id, target)
+        self.#debug('found node %s (target: %s)', message.r.id, target)
         table.add({
           id: message.r.id,
           host: node.host || node.address!,
@@ -888,33 +897,36 @@ class DHT extends EventEmitter {
     }
   }
 
-  _debug(format: string, ...args: any[]) {
+  #debug(format: string, ...args: any[]) {
     if (!debug.enabled) return
     const newArgs: any[] = [].slice.call(args)
     newArgs.unshift(`[${this.nodeId.toString('hex').substring(0, 7)}] ${format}`)
     for (let i = 1; i < newArgs.length; i++) {
       if (Buffer.isBuffer(newArgs[i])) newArgs[i] = newArgs[i].toString('hex')
     }
-    debug(...newArgs)
+    ;(debug as (...a: unknown[]) => void)(...newArgs)
   }
 
-  _validateToken(host: string, token: Buffer): boolean {
-    const tokenA = this._generateToken(host, this._secrets![0])
-    const tokenB = this._generateToken(host, this._secrets![1])
+  #validateToken(host: string, token: Buffer): boolean {
+    const tokenA = this.#generateToken(host, this.#secrets![0])
+    const tokenB = this.#generateToken(host, this.#secrets![1])
     return token.equals(tokenA) || token.equals(tokenB)
   }
 
-  _generateToken(host: string, secret?: Buffer): Buffer {
-    if (!secret) secret = this._secrets![0]
-    return this._hash(Buffer.concat([Buffer.from(host), secret]))
+  #generateToken(host: string, secret?: Buffer): Buffer {
+    if (!secret) secret = this.#secrets![0]
+    return this.#hash(Buffer.concat([Buffer.from(host), secret]))
   }
 
-  _rotateSecrets() {
-    if (!this._secrets) {
-      this._secrets = [randomBytes(this._hashLength), randomBytes(this._hashLength)]
+  #rotateSecrets() {
+    if (!this.#secrets) {
+      this.#secrets = [
+        Buffer.from(randomBytes(this.#hashLength)),
+        Buffer.from(randomBytes(this.#hashLength)),
+      ]
     } else {
-      this._secrets[1] = this._secrets[0]
-      this._secrets[0] = randomBytes(this._hashLength)
+      this.#secrets[1] = this.#secrets[0]
+      this.#secrets[0] = Buffer.from(randomBytes(this.#hashLength))
     }
   }
 }
@@ -952,10 +964,12 @@ function decodePeers(buf: Buffer[]): Array<{ host: string; port: number }> {
 
   try {
     for (let i = 0; i < buf.length; i++) {
-      const port = buf[i].readUInt16BE(4)
+      const peerBuf = buf[i]
+      if (!peerBuf) continue
+      const port = peerBuf.readUInt16BE(4)
       if (!port) continue
       peers.push({
-        host: parseIp(buf[i], 0),
+        host: parseIp(peerBuf, 0),
         port,
       })
     }
@@ -990,8 +1004,6 @@ function toBuffer(str: Buffer | Uint8Array | string): Buffer {
   throw new Error('Pass a buffer or a string')
 }
 
-export default DHT
-
 export interface DHTNode {
   id?: Buffer | string
   host: string
@@ -999,11 +1011,11 @@ export interface DHTNode {
 }
 
 export interface DHTOptions {
-  bootstrap?: boolean | string[]
-  nodes?: string | string[]
+  bootstrap?: boolean | string | string[]
+  nodes?: string | string[] | DHTNode[]
   id?: Buffer | string
   nodeId?: Buffer | string
-  host?: string
+  host?: string | false | null
   maxTables?: number
   maxValues?: number
   maxPeers?: number

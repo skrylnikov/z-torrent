@@ -1,7 +1,7 @@
 import sha1 from 'sync-sha1/rawSha1.js'
 import ed from 'bittorrent-dht-sodium'
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 // test vectors from http://bittorrent.org/beps/bep_0044.html
@@ -47,14 +47,14 @@ test('dht store test vectors - test 1 (mutable)', () => {
         },
       }
 
-      const expectedHash = Buffer.from(sha1(opts.k))
+      const expectedHash = Buffer.from(sha1(new Uint8Array(opts.k)))
 
       dht1.put(opts, (_, hash) => {
         expect(hash!.toString('hex')).toBe(expectedHash.toString('hex'))
 
         dht2.get(hash!, (err, res) => {
           if (err) throw err
-          expect(res!.v.toString('utf8')).toBe((opts.v as string).toString('utf8'))
+          expect(res!.v.toString('utf8')).toBe(opts.v as string)
           expect(res!.seq).toBe(1)
           cleanup()
           resolve()
@@ -114,7 +114,7 @@ test('dht store test vectors - test 2 (mutable with salt)', () => {
 
         dht2.get(hash!, (err, res) => {
           if (err) throw err
-          expect(res!.v.toString('utf8')).toBe(opts.v.toString('utf8'))
+          expect(res!.v.toString('utf8')).toBe(String(opts.v))
           expect(res!.seq).toBe(1)
           cleanup()
           resolve()

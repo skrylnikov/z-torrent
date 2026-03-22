@@ -1,9 +1,9 @@
 import fs from 'fs'
 import http from 'http'
 import zlib from 'zlib'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 function assertBlocked(torrent: any, addr: string) {
   return new Promise<void>((resolve) => {

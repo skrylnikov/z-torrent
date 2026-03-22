@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
-import fixtures from 'webtorrent-fixtures'
+import { WebTorrent } from '../../dist/index.js'
+import { fixtures } from '@z-torrent/fixtures'
 
 // The image append/render tests don't work in electron, so skip them
 // logic taken from https://github.com/atom/electron/issues/2288#issuecomment-123147993

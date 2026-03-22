@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 test('explicitly set nodeId', () => {
@@ -104,15 +104,16 @@ test('`addNode` only emits events for new nodes', () => {
   })
 })
 
-test('send message while binding (listen)', () => {
+test('addNode without id while both listening (ping during listen)', () => {
   return new Promise<void>((resolve) => {
     const a = new DHT({ bootstrap: false })
     a.listen(() => {
       const port = (a.address() as any).port
       const b = new DHT({ bootstrap: false })
       b.listen()
-      b._sendPing({ host: '127.0.0.1', port }, (err) => {
-        if (err) throw err
+      b.addNode({ host: '127.0.0.1', port })
+      b.on('node', (node) => {
+        expect(node.id).toEqual(a.nodeId)
         a.destroy()
         b.destroy()
         resolve()

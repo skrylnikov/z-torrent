@@ -1,7 +1,8 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
+import { WebTorrent } from '../dist/index.js'
+import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
 test('file buffer: use chunk store iterator if done', async () => {
   const client = new WebTorrent({
@@ -29,7 +30,7 @@ test('file buffer: use chunk store iterator if done', async () => {
       async (torrent) => {
         expect(client.torrents.length).toBe(1)
         expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
         const buffer = await torrent.files[0].arrayBuffer({ start: 0, end: 99 })
         expect(buffer.byteLength === 100).toBeTruthy()
@@ -51,4 +52,4 @@ test('file buffer: use chunk store iterator if done', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })

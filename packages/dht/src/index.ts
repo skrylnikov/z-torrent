@@ -1,3 +1,9 @@
-/*! bittorrent-dht. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
-export { default as Client, default } from './client.js'
-export { default as Server } from './server.js'
+export {
+  DHT,
+  type DHTNode,
+  type DHTOptions,
+  type DHTPeer,
+  type PutOptions,
+  type GetOptions,
+  type GetValue,
+} from './client.js'

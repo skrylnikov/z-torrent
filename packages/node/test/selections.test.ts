@@ -4,10 +4,10 @@ import {
   isInsideExisting,
   isLowerIntersecting,
   isUpperIntersecting,
-} from '../src/lib/selections.js'
+} from '@z-torrent/core'
 import { test, expect } from 'bun:test'
 
-interface SelectionItem {
+interface Interval {
   from: number
   to: number
 }
@@ -77,7 +77,7 @@ const testCases = {
   },
 }
 
-function toString(param: SelectionItem | SelectionItem[]): string {
+function toString(param: Interval | Interval[]): string {
   if (!Array.isArray(param)) {
     const { from, to } = param
     return `[${from}-${to}]`
@@ -85,10 +85,13 @@ function toString(param: SelectionItem | SelectionItem[]): string {
   return `[${param.map(toString).join(', ')}]`
 }
 
-function assertArrayContentsEqual(actual: SelectionItem[], expected: SelectionItem[]) {
-  expect(actual.length).toBe(expected.length)
-  for (const item of actual) {
-    expect(expected.some((e) => e.from === item.from && e.to === item.to)).toBeTruthy()
+function assertSelectionRanges(selection: Selections, expected: Interval[]): void {
+  selection.sort()
+  expect(selection.length).toBe(expected.length)
+  for (let i = 0; i < expected.length; i++) {
+    const item = selection.get(i)!
+    expect(item.from).toBe(expected[i]!.from)
+    expect(item.to).toBe(expected[i]!.to)
   }
 }
 
@@ -100,7 +103,9 @@ for (const [functionName, { fn, cases }] of Object.entries(testCases)) {
         expect(fn(newItem, existing)).toBe(true)
         for (const otherFn of Object.keys(testCases)) {
           if (otherFn !== functionName) {
-            expect((testCases as any)[otherFn].fn(newItem, existing)).toBe(false)
+            expect((testCases as Record<string, { fn: typeof fn }>)[otherFn]!.fn(newItem, existing)).toBe(
+              false
+            )
           }
         }
       }
@@ -114,9 +119,9 @@ for (const { cases } of Object.values(testCases)) {
       `should remove the given item: ${toString(newItem)} from existing selection: ${toString(existing)} and leave: ${toString(expectedRemoveResult)}`,
       () => {
         const selection = new Selections()
-        selection.insert(existing)
+        selection.insert(existing as Parameters<Selections['insert']>[0])
         selection.remove(newItem)
-        assertArrayContentsEqual(selection._items, expectedRemoveResult)
+        assertSelectionRanges(selection, expectedRemoveResult)
       }
     )
   }
@@ -128,14 +133,14 @@ for (const { cases } of Object.values(testCases)) {
       `should truncate the existing item: ${toString(existing)} to prevent overlapping with the new selection: ${toString(newItem)}`,
       () => {
         const selection = new Selections()
-        selection.insert(existing)
-        selection.insert(newItem)
+        selection.insert(existing as Parameters<Selections['insert']>[0])
+        selection.insert(newItem as Parameters<Selections['insert']>[0])
         const expected = { from: Infinity, to: 0 }
         for (const item of [...expectedRemoveResult, newItem]) {
           expected.from = Math.min(expected.from, item.from)
           expected.to = Math.max(expected.to, item.to)
         }
-        assertArrayContentsEqual(selection._items, [expected])
+        assertSelectionRanges(selection, [expected])
       }
     )
   }
@@ -143,11 +148,11 @@ for (const { cases } of Object.values(testCases)) {
 
 test('should insert large selection and truncate or delete existing selections', () => {
   const selection = new Selections()
-  selection.insert({ from: 5, to: 10 })
-  selection.insert({ from: 11, to: 19 })
-  selection.insert({ from: 20, to: 40 })
+  selection.insert({ from: 5, to: 10 } as Parameters<Selections['insert']>[0])
+  selection.insert({ from: 11, to: 19 } as Parameters<Selections['insert']>[0])
+  selection.insert({ from: 20, to: 40 } as Parameters<Selections['insert']>[0])
 
-  selection.insert({ from: 9, to: 25 })
+  selection.insert({ from: 9, to: 25 } as Parameters<Selections['insert']>[0])
 
-  assertArrayContentsEqual(selection._items, [{ from: 5, to: 40 }])
+  assertSelectionRanges(selection, [{ from: 5, to: 40 }])
 })
