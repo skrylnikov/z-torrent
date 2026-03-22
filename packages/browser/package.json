@@ -39,6 +39,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json"
   },
   "dependencies": {
+    "@z-torrent/utils": "workspace:*",
     "@z-torrent/core": "workspace:*",
     "@thaunknown/simple-peer": "^10.1.0",
     "@z-torrent/tracker": "workspace:*",

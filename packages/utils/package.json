@@ -9,6 +9,10 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./streaming-mime": {
+      "import": "./dist/streaming-mime.js",
+      "types": "./dist/streaming-mime.d.ts"
+    },
     "./addr-ip-port": {
       "import": "./dist/addr-ip-port.js",
       "types": "./dist/addr-ip-port.d.ts"

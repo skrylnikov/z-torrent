@@ -3,6 +3,7 @@ import { defineConfig } from 'tsdown'
 export default defineConfig({
   entry: [
     'src/index.ts',
+    'src/streaming-mime.ts',
     'src/addr-ip-port.ts',
     'src/string-compact.ts',
     'src/piece.ts',

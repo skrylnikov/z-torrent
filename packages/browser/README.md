@@ -34,6 +34,8 @@ client.add(magnetUri, (torrent) => {
 
 Copy `node_modules/@z-torrent/browser/dist/sw.min.js` into your public directory (or serve it at a stable URL). The package also exposes the subpath `@z-torrent/browser/sw` → `./dist/sw.min.js` for bundlers that copy dependencies from `exports`.
 
+Playback in `<video>` needs a correct `Content-Type` on the service worker response: the server sets `X-Content-Type-Options: nosniff`, so `application/octet-stream` will not be treated as media. Built-in overrides include Matroska (e.g. `.mkv` → `video/x-matroska`); see `@z-torrent/utils/streaming-mime` for the extension list.
+
 ## TypeScript
 
 Types for the entry bundle are published as `dist/z-torrent.min.d.ts`. For full client/torrent typings, depend on `@z-torrent/core` as well.
