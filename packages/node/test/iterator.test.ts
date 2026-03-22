@@ -1,11 +1,11 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent, FileIterator } from '../dist/index.js'
+import { ZTorrent, FileIterator } from '../dist/index.js'
 import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
 test('file iterator: use chunk store iterator if done', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -55,7 +55,7 @@ test('file iterator: use chunk store iterator if done', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('file iterator: use file iterator if not done', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

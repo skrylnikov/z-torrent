@@ -1,4 +1,3 @@
-/*! bittorrent-protocol. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import bencode from 'bencode'
 import BitField from 'bitfield'
 import crypto from 'crypto'
@@ -9,7 +8,7 @@ import { hash, concat, equal, hex2arr, arr2hex, text2arr, arr2text, randomBytes 
 import throughput from 'throughput'
 import arrayRemove from 'unordered-array-remove'
 
-const debug = Debug('bittorrent-protocol')
+const debug = Debug('@z-torrent/protocol:wire')
 
 const BITFIELD_GROW = 400000
 const KEEP_ALIVE_TIMEOUT = 55000

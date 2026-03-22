@@ -17,9 +17,9 @@ Some setups alias this package as `z-torrent-browser` (see example below).
 ## Usage
 
 ```javascript
-import { WebTorrent } from '@z-torrent/browser'
+import { ZTorrent } from '@z-torrent/browser'
 
-const client = new WebTorrent()
+const client = new ZTorrent()
 
 // Register service worker for streaming
 const reg = await navigator.serviceWorker.register('/sw.min.js', { scope: '/' })

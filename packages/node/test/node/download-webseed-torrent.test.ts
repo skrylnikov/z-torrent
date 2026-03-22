@@ -6,7 +6,7 @@ import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import serveStatic from 'serve-static'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 const WEB_SEED_TIMEOUT_MS = 500
 
@@ -35,7 +35,7 @@ test('Download using webseed (via .torrent file)', { timeout: WEB_SEED_TIMEOUT_M
             `http://localhost:${(httpServer.address() as any).port}/${fixtures.leaves.parsedTorrent.name}`,
           ]
 
-          client = new WebTorrent({
+          client = new ZTorrent({
             dht: false,
             tracker: false,
             lsd: false,
@@ -116,7 +116,7 @@ test('Disable webseeds', async () => {
             `http://localhost:${(httpServer.address() as any).port}/${fixtures.leaves.parsedTorrent.name}`,
           ]
 
-          client = new WebTorrent({
+          client = new ZTorrent({
             dht: false,
             tracker: false,
             lsd: false,

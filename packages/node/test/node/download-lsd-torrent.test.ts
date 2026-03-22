@@ -1,11 +1,11 @@
 import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('Download using LSD (via .torrent file)', async () => {
-  const client1 = new WebTorrent({ dht: false, tracker: false, lsd: true })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: true })
+  const client1 = new ZTorrent({ dht: false, tracker: false, lsd: true })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: true })
 
   client1.on('error', (err) => {
     throw err

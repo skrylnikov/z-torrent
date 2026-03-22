@@ -119,7 +119,7 @@ test('http url', async () => {
 test('http url (with custom user agent)', async () => {
   expect.assertions(28)
   const server = http.createServer((req, res) => {
-    expect(req.headers['user-agent']).toBe('WebTorrent (http://webtorrent.io)')
+    expect(req.headers['user-agent']).toBe('Z-Torrent (https://github.com/skrylnikov/z-torrent)')
     fs.createReadStream(path.join(__dirname, 'list.txt')).pipe(res)
   })
   await new Promise<void>((resolve, reject) => {
@@ -128,7 +128,7 @@ test('http url (with custom user agent)', async () => {
       loadIPSet(
         url,
         {
-          headers: { 'user-agent': 'WebTorrent (http://webtorrent.io)' },
+          headers: { 'user-agent': 'Z-Torrent (https://github.com/skrylnikov/z-torrent)' },
         },
         (err, ipSet) => {
           if (err) {

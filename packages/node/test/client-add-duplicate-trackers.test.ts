@@ -1,11 +1,11 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 import { expectSameMagnet } from './common.js'
 
 test('client.add: duplicate trackers', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -49,7 +49,7 @@ test('client.add: duplicate trackers, with multiple torrents', async () => {
     announce: ['wss://example.com', 'wss://example.com', 'wss://example.com'],
   }
 
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -113,7 +113,7 @@ test('client.add: duplicate trackers (including in .torrent file), multiple torr
   const parsedTorrentAlice = Object.assign({}, fixtures.alice.parsedTorrent)
   parsedTorrentAlice.announce = ['wss://example.com', 'wss://example.com', 'wss://example.com']
 
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

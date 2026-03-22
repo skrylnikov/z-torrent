@@ -1,8 +1,3 @@
-/**
- * Platform-agnostic interfaces for z-torrent.
- * Implementations are provided by z-torrent-node, z-torrent-browser, z-torrent-bun.
- */
-
 /** Chunk storage abstraction — read/write piece data */
 export interface ChunkStore {
   get(
@@ -56,12 +51,12 @@ export interface ConnectionPool {
   destroy(cb: () => void): void
 }
 
-/** TCP/uTP pool as wired into WebTorrentCore (optional `tcpServer` for port mapping). */
+/** TCP/uTP pool as wired into ZTorrentCore (optional `tcpServer` for port mapping). */
 export interface ConnectionPoolInstance extends ConnectionPool {
   tcpServer?: { address: () => { address: string; port: number; family?: string } }
 }
 
-/** DHT client API used by WebTorrentCore (not the same as swarm `Discovery`). */
+/** DHT client API used by ZTorrentCore (not the same as swarm `Discovery`). */
 export interface DHTInstance {
   once(event: string, fn: (...args: unknown[]) => void): void
   listen(port: number): void
@@ -71,7 +66,7 @@ export interface DHTInstance {
   removeTorrentRoutingTable?(infoHash: unknown): void
 }
 
-/** UPnP/NAT-PMP helper used by WebTorrentCore. */
+/** UPnP/NAT-PMP helper used by ZTorrentCore. */
 export interface NatTraversalInstance {
   map(opts: Record<string, unknown>): Promise<void>
   destroy(): Promise<void>

@@ -1,6 +1,6 @@
 # @z-torrent/tracker
 
-BitTorrent tracker **client** and **server** for Node.js and the browser: HTTP(S), UDP ([BEP 15](https://www.bittorrent.org/beps/bep_0015.html)), and WebSocket / WebTorrent-style signaling.
+BitTorrent tracker **client** and **server** for Node.js and the browser: HTTP(S), UDP ([BEP 15](https://www.bittorrent.org/beps/bep_0015.html)), and WebSocket / WebRTC-style signaling.
 
 ## Install
 
@@ -56,7 +56,7 @@ client.stop()
 client.destroy()
 ```
 
-For **WebSocket / WebTorrent** trackers in Node, pass a WebRTC implementation (for example [`wrtc`](https://www.npmjs.com/package/wrtc)):
+For **WebSocket / WebRTC** trackers in Node, pass a WebRTC implementation (for example [`wrtc`](https://www.npmjs.com/package/wrtc)):
 
 ```js
 import wrtc from 'wrtc'

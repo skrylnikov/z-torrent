@@ -4,7 +4,7 @@ import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('Seed and download a file at the same time', async () => {
   const dhtServer = new DHT({ bootstrap: false })
@@ -30,7 +30,7 @@ test('Seed and download a file at the same time', async () => {
           let announced = false
           let loaded = false
 
-          client1 = new WebTorrent({
+          client1 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: { bootstrap: `127.0.0.1:${dhtServer.address().port}` },
@@ -67,7 +67,7 @@ test('Seed and download a file at the same time', async () => {
           let announced = false
           let loaded = false
 
-          client2 = new WebTorrent({
+          client2 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: { bootstrap: `127.0.0.1:${dhtServer.address().port}` },

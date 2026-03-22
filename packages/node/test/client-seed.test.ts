@@ -1,12 +1,12 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from './common.js'
 import type { Torrent } from '@z-torrent/core'
 
 test('client.seed: torrent file (Buffer)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -51,7 +51,7 @@ test('client.seed: torrent file (Buffer)', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: torrent file (Buffer), set name on buffer', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -94,7 +94,7 @@ test('client.seed: torrent file (Buffer), set name on buffer', async () => {
 test('client.seed: torrent file (Blob)', async () => {
   if (typeof Blob === 'undefined') return
 
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -139,7 +139,7 @@ test('client.seed: torrent file (Blob)', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: duplicate seed', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

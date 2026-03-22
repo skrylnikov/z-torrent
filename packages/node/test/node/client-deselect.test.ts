@@ -1,7 +1,7 @@
 import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { PEER_LOCAL_TIMEOUT_MS } from '../common.js'
 import type { Torrent } from '@z-torrent/core'
 
@@ -15,7 +15,7 @@ function setupClient({
   addTorrentProps?: Record<string, unknown>
 }) {
   return new Promise<void>((resolve, reject) => {
-    const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+    const client1 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
     client1.on('error', (err) => {
       throw err
     })
@@ -23,7 +23,7 @@ function setupClient({
       throw err
     })
 
-    const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+    const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
     client2.on('error', (err) => {
       throw err
     })

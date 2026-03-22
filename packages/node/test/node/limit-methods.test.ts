@@ -1,7 +1,7 @@
 import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 const DOWNLOAD_SPEED_LIMIT = 200 * 1000
 const UPLOAD_SPEED_LIMIT = 200 * 1000
@@ -15,8 +15,8 @@ function testSpeed(
   const { uploadLimit, ...restUploaderOpts } = uploaderOpts
 
   return new Promise<void>((resolve, reject) => {
-    const client1 = new WebTorrent({ dht: false, tracker: false, ...restDownloaderOpts })
-    const client2 = new WebTorrent({ dht: false, tracker: false, ...restUploaderOpts })
+    const client1 = new ZTorrent({ dht: false, tracker: false, ...restDownloaderOpts })
+    const client2 = new ZTorrent({ dht: false, tracker: false, ...restUploaderOpts })
 
     if (downloadLimit) client1.throttleDownload(downloadLimit)
     if (uploadLimit) client2.throttleUpload(uploadLimit)

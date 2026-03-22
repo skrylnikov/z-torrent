@@ -1,13 +1,13 @@
 import { test, expect } from 'bun:test'
-import { WebTorrent, FileIterator } from '../dist/z-torrent.min.js'
+import { ZTorrent, FileIterator } from '../dist/z-torrent.min.js'
 
 test('FileIterator is exported', () => {
   expect(FileIterator).toBeDefined()
   expect(typeof FileIterator).toBe('function')
 })
 
-test('WebTorrent static fields and destroy', async () => {
-  const client = new WebTorrent({
+test('ZTorrent static fields and destroy', async () => {
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -20,10 +20,10 @@ test('WebTorrent static fields and destroy', async () => {
     throw err
   })
 
-  expect(WebTorrent.UTP_SUPPORT).toBe(false)
-  expect(typeof WebTorrent.VERSION).toBe('string')
-  expect(WebTorrent.VERSION.length).toBeGreaterThan(0)
-  expect(typeof WebTorrent.WEBRTC_SUPPORT).toBe('boolean')
+  expect(ZTorrent.UTP_SUPPORT).toBe(false)
+  expect(typeof ZTorrent.VERSION).toBe('string')
+  expect(ZTorrent.VERSION.length).toBeGreaterThan(0)
+  expect(typeof ZTorrent.WEBRTC_SUPPORT).toBe('boolean')
 
   await new Promise<void>((resolve, reject) =>
     client.destroy((err?: Error) => {

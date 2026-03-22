@@ -5,11 +5,11 @@ import http from 'http'
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
 import type { Torrent } from '@z-torrent/core'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from '../common.js'
 
-test('WebTorrent.WEBRTC_SUPPORT', async () => {
-  const client = new WebTorrent({
+test('ZTorrent.WEBRTC_SUPPORT', async () => {
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -24,7 +24,7 @@ test('WebTorrent.WEBRTC_SUPPORT', async () => {
     throw err.message
   })
 
-  expect((WebTorrent as any).WEBRTC_SUPPORT).toBe(true)
+  expect((ZTorrent as any).WEBRTC_SUPPORT).toBe(true)
 
   await new Promise<void>((resolve, reject) =>
     client.destroy((err?: Error) => {
@@ -45,7 +45,7 @@ test('client.add: http url to a torrent file, string', async () => {
       const address = server.address() as { port: number }
       const port = address.port
       const url = `http://127.0.0.1:${port}`
-      const client = new WebTorrent({
+      const client = new ZTorrent({
         dht: false,
         tracker: false,
         lsd: false,
@@ -84,7 +84,7 @@ test('client.add: http url to a torrent file, string', async () => {
 })
 
 test('client.add: filesystem path to a torrent file, string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -122,7 +122,7 @@ test('client.add: filesystem path to a torrent file, string', async () => {
 })
 
 test('client.seed: filesystem path to file, string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -167,7 +167,7 @@ test('client.seed: filesystem path to file, string', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: filesystem path to folder with one file, string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -205,7 +205,7 @@ test('client.seed: filesystem path to folder with one file, string', async () =>
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: filesystem path to folder with multiple files, string', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -254,7 +254,7 @@ test('client.seed: filesystem path to folder with multiple files, string', async
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.add: invalid torrent id: invalid filesystem path', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -281,7 +281,7 @@ test('client.add: invalid torrent id: invalid filesystem path', async () => {
 })
 
 test('client.remove: opts.destroyStore', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -316,7 +316,7 @@ test('client.remove: opts.destroyStore', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('torrent.destroy: opts.destroyStore', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

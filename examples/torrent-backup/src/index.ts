@@ -10,7 +10,7 @@ try {
 import { mkdirSync } from 'fs'
 import { resolve } from 'path'
 import prettierBytes from 'prettier-bytes'
-import { WebTorrent } from '@z-torrent/node'
+import { ZTorrent } from '@z-torrent/node'
 
 const DEFAULT_WSS_TRACKERS = [
   'wss://tracker.btorrent.xyz',
@@ -48,7 +48,7 @@ function main() {
 
   if (trackers.length === 0) {
     trackers = DEFAULT_WSS_TRACKERS
-    console.log('No TORRENT_TRACKERS set, using default WSS trackers for WebTorrent:', trackers)
+    console.log('No TORRENT_TRACKERS set, using default WSS trackers for WebRTC peers:', trackers)
   }
 
   mkdirSync(downloadPath, { recursive: true })
@@ -56,7 +56,7 @@ function main() {
   console.log('Trackers:', trackers)
   console.log('Magnets:', magnets.length)
 
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     natUpnp: true,
     natPmp: true,
   })

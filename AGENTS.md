@@ -102,7 +102,7 @@ import bencode from 'bencode'
 import { Duplex } from 'streamx'
 
 // 3. Workspace packages
-import { WebTorrentCore } from 'z-torrent-core'
+import { ZTorrentCore } from 'z-torrent-core'
 
 // 4. Relative imports (note .js extension for ESM)
 import { createNodePlatformAdapter } from './platform.js'
@@ -168,15 +168,17 @@ import ConnPool from './lib/conn-pool.js'
 
 ### Debugging
 
-Use the `debug` package with descriptive prefixes:
+Use the `debug` package with namespaces **`@z-torrent/<package>:<scope>`** (match the workspace package name after `@z-torrent/`, plus a logical scope for the file or subsystem).
 
 ```typescript
 import Debug from 'debug'
-const debug = Debug('bittorrent-protocol')
+const debug = Debug('@z-torrent/protocol:wire')
 
 // In methods
 this._debug('got handshake i=%s p=%s', infoHash, peerId)
 ```
+
+In Node.js, enable with e.g. `DEBUG=@z-torrent/core:*` or `DEBUG=@z-torrent/*`. In the browser, use `localStorage.setItem('debug', '@z-torrent/*')`.
 
 ### Type Annotations
 
@@ -189,10 +191,7 @@ this._debug('got handshake i=%s p=%s', infoHash, peerId)
 
 ### Comments
 
-- Add license headers at the top of source files:
-  ```typescript
-  /*! bittorrent-protocol. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
-  ```
+- Do not add per-file MIT/license banners; full license text lives in each package’s `LICENSE` (and root `LICENSE` where applicable).
 - Use JSDoc for public APIs
 - Avoid inline comments that explain what code does; prefer self-documenting code
 

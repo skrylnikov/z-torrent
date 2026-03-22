@@ -9,7 +9,7 @@ import type { TrackerClientContext } from '../client-context.js'
 import { Tracker } from './tracker.js'
 import { compact2stringMulti } from '@z-torrent/utils'
 
-const debug = Debug('bittorrent-tracker:udp-tracker')
+const debug = Debug('@z-torrent/tracker:udp-tracker')
 
 const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
 

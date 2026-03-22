@@ -5,7 +5,7 @@ import MemoryChunkStore from 'memory-chunk-store'
 import networkAddress from 'network-address'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('Download using DHT (via magnet uri)', async () => {
   const dhtServer = new DHT({ bootstrap: false })
@@ -31,7 +31,7 @@ test('Download using DHT (via magnet uri)', async () => {
           let announced = false
           let loaded = false
 
-          client1 = new WebTorrent({
+          client1 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: {
@@ -82,7 +82,7 @@ test('Download using DHT (via magnet uri)', async () => {
           let gotBuffer = false
           let gotDone = false
 
-          client2 = new WebTorrent({
+          client2 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: {

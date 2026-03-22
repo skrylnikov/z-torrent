@@ -47,12 +47,7 @@ test('server: get empty stats', async () => {
     commonTest.createServer('http', async (server, announceUrl) => {
       const url = announceUrl.replace('/announce', '/stats')
 
-      let res
-      try {
-        res = await fetch(url)
-      } catch (err) {
-        throw err
-      }
+      const res = await fetch(url)
       const data = Buffer.from(await res.arrayBuffer())
 
       const stats = parseHtml(data.toString())
@@ -81,12 +76,7 @@ test('server: get empty stats with json header', async () => {
           accept: 'application/json',
         },
       }
-      let res
-      try {
-        res = await fetch(announceUrl.replace('/announce', '/stats'), opts)
-      } catch (err) {
-        throw err
-      }
+      const res = await fetch(announceUrl.replace('/announce', '/stats'), opts)
       const stats = (await res.json()) as StatsResult
 
       expect(res.status).toBe(200)
@@ -109,12 +99,7 @@ test('server: get empty stats with json header', async () => {
 test('server: get empty stats on stats.json', async () => {
   return new Promise((resolve, reject) => {
     commonTest.createServer('http', async (server, announceUrl) => {
-      let res
-      try {
-        res = await fetch(announceUrl.replace('/announce', '/stats.json'))
-      } catch (err) {
-        throw err
-      }
+      const res = await fetch(announceUrl.replace('/announce', '/stats.json'))
       const stats = (await res.json()) as StatsResult
 
       expect(res.status).toBe(200)
@@ -153,12 +138,7 @@ test('server: get leecher stats.json', () => {
       client.start()
 
       server.once('start', async () => {
-        let res
-        try {
-          res = await fetch(announceUrl.replace('/announce', '/stats.json'))
-        } catch (err) {
-          throw err
-        }
+        const res = await fetch(announceUrl.replace('/announce', '/stats.json'))
         const stats = (await res.json()) as any
 
         expect(res.status).toBe(200)
@@ -199,12 +179,7 @@ test('server: get leecher stats.json (unknown peerId)', () => {
       client.start()
 
       server.once('start', async () => {
-        let res
-        try {
-          res = await fetch(announceUrl.replace('/announce', '/stats.json'))
-        } catch (err) {
-          throw err
-        }
+        const res = await fetch(announceUrl.replace('/announce', '/stats.json'))
         const stats = (await res.json()) as any
 
         expect(res.status).toBe(200)

@@ -1,4 +1,3 @@
-/*! BEP 52 expected piece roots for v2-only swarms. MIT License. */
 import type { V2FileLayoutEntry } from '@z-torrent/parse'
 import { BEP52_BLOCK_SIZE, padPieceRoot } from '@z-torrent/merkle-tree'
 import { hex2arr } from 'uint8-util'

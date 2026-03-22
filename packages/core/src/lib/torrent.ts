@@ -1,8 +1,3 @@
-/**
- * Torrent class — platform-agnostic core logic.
- * Uses client.platform (PlatformAdapter) for platform-specific operations.
- */
-
 import { EventEmitter } from 'eventemitter3'
 import { addrToIPPort } from '@z-torrent/utils/addr-ip-port'
 import { Piece } from '@z-torrent/utils/piece'
@@ -10,7 +5,6 @@ import BitField from 'bitfield'
 import CacheChunkStore from 'cache-chunk-store'
 import { chunkStoreWrite } from 'chunk-store-iterator'
 import debugFactory from 'debug'
-import fetch from 'cross-fetch-ponyfill'
 import ImmediateChunkStore from 'immediate-chunk-store'
 import ltDontHave from 'lt_donthave'
 import joinIterator from 'join-async-iterator'
@@ -36,7 +30,7 @@ import type { V2FileLayoutEntry } from '@z-torrent/parse'
 import { buildV2ExpectedPieceRoots, v2IsFirstPieceOfFile } from './v2-piece-roots.js'
 import type { TorrentWire, TorrentForFile } from './types.js'
 
-const debug = debugFactory('webtorrent:torrent')
+const debug = debugFactory('@z-torrent/core:torrent')
 const MAX_BLOCK_LENGTH = 128 * 1024
 const PIECE_TIMEOUT = 30_000
 const CHOKE_TIMEOUT = 5_000
@@ -112,7 +106,7 @@ export interface ParsedTorrent {
   v2FileLayout?: V2FileLayoutEntry[]
 }
 
-export interface WebTorrentClient {
+export interface ZTorrentClient {
   platform: PlatformAdapter
   peerId: string
   torrentPort: number
@@ -141,7 +135,7 @@ export class Torrent
   implements TorrentWire, TorrentForFile, PeerSwarm
 {
   #instanceDebugId: string
-  client: WebTorrentClient
+  client: ZTorrentClient
   announce?: string[]
   urlList?: string[]
   path: string | null
@@ -149,7 +143,6 @@ export class Torrent
   rootDir: FileSystemDirectoryHandle | null
   skipVerify: boolean
   private _startupBitfield?: Uint8Array | ArrayLike<number>
-  #hasStartupBitfield: boolean = false
   private _store: any
   private _preloadedStore: any
   private _storeCacheSlots: number
@@ -214,7 +207,7 @@ export class Torrent
 
   constructor(
     torrentId: string | ArrayBufferView | ParsedTorrent | null,
-    client: WebTorrentClient,
+    client: ZTorrentClient,
     opts: TorrentOpts = {}
   ) {
     super()
@@ -1178,8 +1171,6 @@ export class Torrent
       this._startupBitfield.length === Math.ceil(this.pieces.length / 8) &&
       !this.skipVerify
 
-    this.#hasStartupBitfield = !!hasStartupBitfield
-
     this.bitfield = new BitField(
       hasStartupBitfield
         ? new Uint8Array(this._startupBitfield as ArrayLike<number>)
@@ -1430,9 +1421,12 @@ export class Torrent
     this.#drain()
   }
 
-  #debug(...args: any[]): void {
-    args[0] = `[${this.client.debugId}] [${this.#instanceDebugId}] ${args[0]}`
-    debug(...args)
+  #debug(...args: unknown[]): void {
+    if (typeof args[0] === 'string') {
+      args[0] = `[${this.client.debugId}] [${this.#instanceDebugId}] ${args[0]}`
+    }
+    const log = debug as (...a: unknown[]) => void
+    log(...args)
   }
 
   #drain(): void {

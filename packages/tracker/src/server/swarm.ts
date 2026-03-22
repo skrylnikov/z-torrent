@@ -5,7 +5,7 @@ import { LRUCache } from 'lru-cache'
 import randomIterate from 'random-iterate'
 import type { WebSocket } from 'ws'
 
-const debug = Debug('bittorrent-tracker:swarm')
+const debug = Debug('@z-torrent/tracker:swarm')
 
 interface PeerData {
   type: 'http' | 'udp' | 'ws'

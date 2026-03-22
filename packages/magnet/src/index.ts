@@ -1,4 +1,3 @@
-/*! @z-torrent/magnet. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 import thirtyTwo from '@thaunknown/thirty-two'
 import { parse, compose } from 'bep53-range'
 import { hex2arr, arr2hex } from 'uint8-util'

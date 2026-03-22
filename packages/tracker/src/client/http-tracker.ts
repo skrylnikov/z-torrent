@@ -8,7 +8,7 @@ import type { TrackerClientContext } from '../client-context.js'
 import { Tracker } from './tracker.js'
 import { compact2stringMulti, compact2stringMulti6 } from '@z-torrent/utils'
 
-const debug = Debug('bittorrent-tracker:http-tracker')
+const debug = Debug('@z-torrent/tracker:http-tracker')
 const HTTP_SCRAPE_SUPPORT = /\/(announce)[^/]*$/
 
 interface AnnounceOpts {

@@ -1,6 +1,5 @@
 import BitField from 'bitfield'
 import debugFactory from 'debug'
-import fetch from 'cross-fetch-ponyfill'
 import ltDontHave from 'lt_donthave'
 import { hash, concat } from 'uint8-util'
 import Wire from '@z-torrent/protocol'
@@ -9,10 +8,26 @@ import { once } from '@z-torrent/utils'
 import { VERSION } from '../version.js'
 import type { TorrentWire } from './types.js'
 
-const debug = debugFactory('webtorrent:webconn')
+const debug = debugFactory('@z-torrent/core:webconn')
 
 const SOCKET_TIMEOUT = 60000
 const RETRY_DELAY = 10000
+
+/**
+ * WebConn extends Wire; protocol `Wire` uses BitTorrent event names not listed in @types/streamx StreamEvents.
+ * `any[]` matches heterogeneous `wire.on` / `wire.once` payloads without fighting strict StreamEvents.
+ */
+type WebConnInit = {
+  setKeepAlive(keepAlive: boolean): void
+  use(ext: unknown): void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- protocol event argument tuples
+  once(event: string, listener: (...args: any[]) => void): void
+  handshake(infoHash: string, peerId: string): void
+  bitfield(field: unknown): void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- protocol event argument tuples
+  on(event: string, listener: (...args: any[]) => void): void
+  unchoke(): void
+}
 
 export interface FileWireForWebConn {
   path: string
@@ -47,45 +62,46 @@ export class WebConn extends Wire {
   }
 
   private _init(url: string): void {
+    const wire = this as unknown as WebConnInit
     this.setKeepAlive(true)
 
-    this.use(ltDontHave())
+    wire.use(ltDontHave())
 
-    this.once('handshake', async (infoHash: string, peerId: string) => {
+    wire.once('handshake', async (infoHash: string, _peerId: string) => {
       const hex = await hash(url, 'hex')
       if (this.destroyed) return
-      this.handshake(infoHash, hex)
+      wire.handshake(infoHash, hex)
 
       const numPieces = this._torrent.pieces.length
       const bitfield = new BitField(numPieces)
       for (let i = 0; i <= numPieces; i++) {
         bitfield.set(i, true)
       }
-      this.bitfield(bitfield)
+      wire.bitfield(bitfield)
     })
 
-    this.once('interested', () => {
+    wire.once('interested', () => {
       debug('interested')
-      this.unchoke()
+      wire.unchoke()
     })
 
-    this.on('uninterested', () => {
+    wire.on('uninterested', () => {
       debug('uninterested')
     })
-    this.on('choke', () => {
+    wire.on('choke', () => {
       debug('choke')
     })
-    this.on('unchoke', () => {
+    wire.on('unchoke', () => {
       debug('unchoke')
     })
-    this.on('bitfield', () => {
+    wire.on('bitfield', () => {
       debug('bitfield')
     })
     ;(this as any).lt_donthave.on('donthave', () => {
       debug('donthave')
     })
 
-    this.on(
+    wire.on(
       'request',
       (
         pieceIndex: number,

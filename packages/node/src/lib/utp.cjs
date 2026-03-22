@@ -6,7 +6,7 @@ module.exports = (() => {
   try {
     return require('utp-native')
   } catch (err) {
-    console.warn('WebTorrent: uTP not supported', err)
+    console.warn('Z-Torrent: uTP not supported', err)
     return {}
   }
 })()

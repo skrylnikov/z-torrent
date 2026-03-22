@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
-test('WebTorrent.WEBRTC_SUPPORT', async () => {
-  const client = new WebTorrent({
+test('ZTorrent.WEBRTC_SUPPORT', async () => {
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -17,7 +17,7 @@ test('WebTorrent.WEBRTC_SUPPORT', async () => {
     throw err.message
   })
 
-  expect((WebTorrent as any).WEBRTC_SUPPORT).toBe(true)
+  expect((ZTorrent as any).WEBRTC_SUPPORT).toBe(true)
 
   await new Promise<void>((resolve, reject) =>
     client.destroy((err?: Error) => {

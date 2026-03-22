@@ -1,10 +1,10 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 
 test('client.remove: remove by Torrent object', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

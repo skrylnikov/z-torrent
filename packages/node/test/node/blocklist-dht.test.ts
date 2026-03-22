@@ -2,7 +2,7 @@ import { DHT } from '@z-torrent/dht'
 import { fixtures } from '@z-torrent/fixtures'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { getDownloadPath, LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
 test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via DHT', async () => {
@@ -28,7 +28,7 @@ test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via DHT', async ()
           let torrentReady = false
           let announced = false
 
-          client1 = new WebTorrent({
+          client1 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: { bootstrap: `127.0.0.1:${dhtServer!.address().port}` },
@@ -71,7 +71,7 @@ test.skipIf(!LIVE_NETWORK)('blocklist blocks peers discovered via DHT', async ()
           let blockedPeer = false
           let announced = false
 
-          client2 = new WebTorrent({
+          client2 = new ZTorrent({
             tracker: false,
             lsd: false,
             dht: { bootstrap: `127.0.0.1:${dhtServer!.address().port}` },

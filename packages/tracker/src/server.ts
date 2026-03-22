@@ -16,7 +16,7 @@ import { parseHttpRequest } from './server/parse-http.js'
 import { parseUdpRequest } from './server/parse-udp.js'
 import { parseWebSocketRequest } from './server/parse-websocket.js'
 
-const debug = Debug('bittorrent-tracker:server')
+const debug = Debug('@z-torrent/tracker:server')
 const hasOwnProperty = Object.prototype.hasOwnProperty
 
 interface WebSocketWithExtra extends WebSocket {

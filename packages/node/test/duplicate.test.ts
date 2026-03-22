@@ -1,11 +1,11 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 import { SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
 test('client.seed followed by duplicate client.add (sync)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -44,7 +44,7 @@ test('client.seed followed by duplicate client.add (sync)', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed followed by duplicate client.add (async)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -83,7 +83,7 @@ test('client.seed followed by duplicate client.add (async)', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed followed by two duplicate client.add calls (sync)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -127,7 +127,7 @@ test('client.seed followed by two duplicate client.add calls (sync)', async () =
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed followed by two duplicate client.add calls (async)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -171,7 +171,7 @@ test('client.seed followed by two duplicate client.add calls (async)', async () 
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('successive sync client.add, client.remove, client.add, client.remove (sync)', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

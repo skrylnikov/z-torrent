@@ -1,10 +1,10 @@
 // @ts-expect-error - no types available
 import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../dist/index.js'
+import { ZTorrent } from '../dist/index.js'
 
 test('after client.destroy(), throw on client.add() or client.seed()', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -35,7 +35,7 @@ test('after client.destroy(), throw on client.add() or client.seed()', async () 
 })
 
 test('after client.destroy(), no "torrent" or "ready" events emitted', async () => {
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,

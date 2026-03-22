@@ -5,7 +5,7 @@ import { Peer } from '@z-torrent/core'
 
 import utp from './utp.cjs'
 
-const debug = debugFactory('webtorrent:conn-pool')
+const debug = debugFactory('@z-torrent/node:conn-pool')
 
 export class ConnPool {
   #client: any

@@ -1,6 +1,6 @@
 # Torrent Backup
 
-Node.js application for downloading torrents via magnet links, announcing to trackers, and seeding — including WebTorrent (browsers connect via WSS trackers).
+Node.js application for downloading torrents via magnet links, announcing to trackers, and seeding — including browser peers over WSS trackers.
 
 ## Environment Variables
 
@@ -11,7 +11,7 @@ Node.js application for downloading torrents via magnet links, announcing to tra
 | `TORRENT_DOWNLOAD_PATH` | Directory for downloaded files | `./downloads` |
 | `TORRENT_HTTP_PORT` | (Optional) HTTP server port for streaming (0 = disabled) | `8080` |
 
-For WebTorrent seeding, include WSS trackers in `TORRENT_TRACKERS`. If not set, default WSS trackers are used.
+For browser/WebRTC seeding, include WSS trackers in `TORRENT_TRACKERS`. If not set, default WSS trackers are used.
 
 ## Running
 

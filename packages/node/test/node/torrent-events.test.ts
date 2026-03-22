@@ -2,7 +2,7 @@ import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { randomBytes } from 'uint8-util'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS, SEED_HEAVY_TIMEOUT_MS } from '../common.js'
 
 test('client.add: emit torrent events in order', async () => {
@@ -10,14 +10,14 @@ test('client.add: emit torrent events in order', async () => {
   const leavesInfoHash = fixtures.leaves.parsedTorrent?.infoHash
   if (!leavesContent || !leavesInfoHash) throw new Error('leaves fixture incomplete')
 
-  const client1 = new WebTorrent({
+  const client1 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
     natUpnp: false,
     natPmp: false,
   })
-  const client2 = new WebTorrent({
+  const client2 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -85,7 +85,7 @@ test('client.seed: emit torrent events in order', async () => {
   const leavesContent = fixtures.leaves.content
   if (!leavesContent) throw new Error('leaves fixture incomplete')
 
-  const client = new WebTorrent({
+  const client = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
@@ -128,8 +128,8 @@ test('client.seed: emit torrent events in order', async () => {
 }, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test.skipIf(!LIVE_NETWORK)('file.select: check multiple idle events', async () => {
-  const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+  const client1 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
 
   client1.on('error', (err) => {
     throw err

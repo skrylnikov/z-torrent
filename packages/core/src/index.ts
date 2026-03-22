@@ -1,11 +1,6 @@
-/**
- * z-torrent-core — platform-agnostic interfaces and shared logic.
- * Platform adapters (browser, node, bun) implement these interfaces.
- */
-
 export * from './interfaces.js'
 export * from './selections.js'
-export { WebTorrentCore, type WebTorrentCoreOpts } from './client.js'
+export { ZTorrentCore, type ZTorrentCoreOpts } from './client.js'
 export { Torrent } from './lib/torrent.js'
 export { File } from './lib/file.js'
 export { FileIterator } from './lib/file-iterator.js'
@@ -14,7 +9,7 @@ export { RarityMap } from './lib/rarity-map.js'
 export { WebConn } from './lib/webconn.js'
 export { ServerBase } from './lib/server-base.js'
 export { VERSION, VERSION_STR } from './version.js'
-export type { TorrentOpts, ParsedTorrent, WebTorrentClient } from './lib/torrent.js'
+export type { TorrentOpts, ParsedTorrent, ZTorrentClient } from './lib/torrent.js'
 export type { FileMetadata } from './lib/file.js'
 export type { ThrottleGroups, PeerSwarm } from './lib/peer.js'
 export type { Request, Response, ServerOptions, ClientWithTorrents, TorrentWithFiles } from './lib/server-base.js'

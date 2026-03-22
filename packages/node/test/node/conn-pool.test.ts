@@ -2,11 +2,11 @@ import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import dgram from 'dgram'
 import { test, expect } from 'bun:test'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 
 test('client.conn-pool: use TCP when uTP disabled', async () => {
-  const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+  const client1 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
 
   client1.on('error', (err) => {
     throw err
@@ -64,8 +64,8 @@ test('client.conn-pool: use TCP when uTP disabled', async () => {
 })
 
 test('client.conn-pool: use uTP when uTP enabled', async () => {
-  const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: true })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: true })
+  const client1 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: true })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: true })
 
   client1.on('error', (err) => {
     throw err
@@ -123,8 +123,8 @@ test('client.conn-pool: use uTP when uTP enabled', async () => {
 })
 
 test('client.conn-pool: adding IPv6 peer when uTP enabled should fallback to TCP', async () => {
-  const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: true })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: true })
+  const client1 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: true })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: true })
 
   client1.on('error', (err) => {
     throw err
@@ -185,14 +185,14 @@ test('client.conn-pool: fallback to TCP when uTP server failed', async () => {
   const server = dgram.createSocket('udp4')
   server.bind(63000)
 
-  const client1 = new WebTorrent({
+  const client1 = new ZTorrent({
     dht: false,
     tracker: false,
     lsd: false,
     utp: true,
     torrentPort: 63000,
   })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
 
   client1.on('error', (err) => {
     expect(err.toString()).toMatch(/address already in use|Failed to listen/)
@@ -252,8 +252,8 @@ test('client.conn-pool: fallback to TCP when uTP server failed', async () => {
 })
 
 test('client.conn-pool: fallback to TCP when remote client has uTP disabled', async () => {
-  const client1 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: true })
-  const client2 = new WebTorrent({ dht: false, tracker: false, lsd: false, utp: false })
+  const client1 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: true })
+  const client2 = new ZTorrent({ dht: false, tracker: false, lsd: false, utp: false })
 
   client1.on('error', (err) => {
     throw err

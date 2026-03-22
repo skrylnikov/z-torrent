@@ -2,7 +2,7 @@ import debugFactory from 'debug'
 import { EventEmitter } from 'eventemitter3'
 import type { FileWire, TorrentWire } from './types.js'
 
-const debug = debugFactory('webtorrent:file-iterator')
+const debug = debugFactory('@z-torrent/core:file-iterator')
 
 export interface FileIteratorOptions {
   start: number

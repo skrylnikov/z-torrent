@@ -2,7 +2,7 @@ import { Readable } from 'stream'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
 import { Server as Tracker } from '@z-torrent/tracker'
-import { WebTorrent } from '../../dist/index.js'
+import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
 test.skipIf(!LIVE_NETWORK)('client.seed: stream', async () => {
@@ -30,7 +30,7 @@ test.skipIf(!LIVE_NETWORK)('client.seed: stream', async () => {
           const port = (tracker as any).http.address().port
           const announceUrl = `http://localhost:${port}/announce`
 
-          seeder = new WebTorrent({ dht: false, lsd: false })
+          seeder = new ZTorrent({ dht: false, lsd: false })
 
           seeder.on('error', (err) => {
             throw err
@@ -53,7 +53,7 @@ test.skipIf(!LIVE_NETWORK)('client.seed: stream', async () => {
         },
 
         (cb) => {
-          client = new WebTorrent({ dht: false, lsd: false })
+          client = new ZTorrent({ dht: false, lsd: false })
 
           client.on('error', (err) => {
             throw err

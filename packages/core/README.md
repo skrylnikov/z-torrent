@@ -11,9 +11,9 @@ npm install @z-torrent/core
 ## Usage
 
 ```js
-import { WebTorrentCore, FileIterator, VERSION } from '@z-torrent/core'
+import { ZTorrentCore, FileIterator, VERSION } from '@z-torrent/core'
 
-const client = new WebTorrentCore({
+const client = new ZTorrentCore({
   platform: myPlatformAdapter,
 })
 
@@ -29,16 +29,16 @@ const stream = await file.stream()
 
 | Export | Role |
 |--------|------|
-| `WebTorrentCore` | Client; requires `platform` in constructor options |
+| `ZTorrentCore` | Client; requires `platform` in constructor options |
 | `Torrent` | Single swarm / transfer |
 | `File`, `FileIterator` | File view and async byte iteration |
 | `Peer`, `WebConn`, `RarityMap` | Wire / peer helpers |
 | `ServerBase` | Shared HTTP index/file serving logic |
 | `Selections` | Piece interval selection utilities |
 | `VERSION` | Package version string |
-| Types | `PlatformAdapter`, `WebTorrentClient`, `TorrentOpts`, server types, etc. |
+| Types | `PlatformAdapter`, `ZTorrentClient`, `TorrentOpts`, server types, etc. |
 
-### Platform hooks on `WebTorrentCore`
+### Platform hooks on `ZTorrentCore`
 
 Used by the Node connection pool and similar integrations:
 
@@ -46,7 +46,7 @@ Used by the Node connection pool and similar integrations:
 - `shutdownWithError(err, cb?)` — tear down client after a fatal error
 - `getTorrentByPe3Hash(hash)` — lookup by PE3 handshake hash
 - `detachTorrent(torrent, opts?, cb?)` — remove torrent from client list and destroy it
-- `removeTorrentFromClient` — alias of `detachTorrent` for the `WebTorrentClient` interface
+- `removeTorrentFromClient` — alias of `detachTorrent` for the `ZTorrentClient` interface
 
 ### Torrent helpers
 
