@@ -1,5 +1,14 @@
 ## [11.0.19](https://github.com/webtorrent/torrent-discovery/compare/v11.0.18...v11.0.19) (2025-09-14)
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/dht@0.0.9
+  - @z-torrent/tracker@0.0.9
+  - @z-torrent/lsd@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes

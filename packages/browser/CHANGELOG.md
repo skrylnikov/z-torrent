@@ -1,5 +1,19 @@
 # @z-torrent/browser
 
+## 0.0.9
+
+### Patch Changes
+
+- [#18](https://github.com/skrylnikov/z-torrent/pull/18) [`a37dc01`](https://github.com/skrylnikov/z-torrent/commit/a37dc0188fca05a0c4ed9c9006a904cb6c166628) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Fix incorrect `Content-Type` for media in the browser (e.g. Matroska `.mkv`) when `mime/lite` omits `video/x-*` types, which previously fell through to `application/octet-stream` and broke `<video>` with `X-Content-Type-Options: nosniff`.
+  - **@z-torrent/utils:** Add `@z-torrent/utils/streaming-mime` (`resolveTorrentFileMime`, `normalizeSwResponseContentType`, `streamingMimeFromFileName`) with tests.
+  - **@z-torrent/core:** Set `File.type` via `resolveTorrentFileMime` on top of `mime/lite`.
+  - **@z-torrent/browser:** Service worker normalizes `Content-Type` from the request URL path when the header is missing, empty, or `application/octet-stream`, including for streaming responses; bundle the utils module in `sw.min.js`; README note on MIME and `<video>`.
+
+- Updated dependencies [[`a37dc01`](https://github.com/skrylnikov/z-torrent/commit/a37dc0188fca05a0c4ed9c9006a904cb6c166628)]:
+  - @z-torrent/utils@0.0.9
+  - @z-torrent/core@0.0.9
+  - @z-torrent/tracker@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes
