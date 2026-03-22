@@ -1,5 +1,7 @@
 # [2.0.0](https://github.com/webtorrent/bittorrent-lsd/compare/v1.1.1...v2.0.0) (2022-12-05)
 
+## 0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

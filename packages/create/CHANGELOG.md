@@ -1,5 +1,15 @@
 # [6.1.0](https://github.com/webtorrent/create-torrent/compare/v6.0.18...v6.1.0) (2025-01-04)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Build hybrid and v2 torrent metadata (BEP 52). Update README.
+
+- Updated dependencies [[`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b)]:
+  - @z-torrent/merkle-tree@0.0.7
+  - @z-torrent/utils@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @z-torrent/core
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Use `@z-torrent/merkle-tree` for piece subtree roots; pass truncated `infoHashV2` into discovery; pass `infoHashV2` into `ut_metadata` for hybrid torrents.
+
+- Updated dependencies [[`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b), [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b)]:
+  - @z-torrent/merkle-tree@0.0.7
+  - @z-torrent/parse@0.0.7
+  - @z-torrent/protocol@0.0.7
+  - @z-torrent/ut-metadata@0.0.7
+  - @z-torrent/ut-pex@0.0.7
+  - @z-torrent/utils@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

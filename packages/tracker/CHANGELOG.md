@@ -1,5 +1,14 @@
 ## [11.2.2](https://github.com/webtorrent/bittorrent-tracker/compare/v11.2.1...v11.2.2) (2025-09-06)
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/skrylnikov/z-torrent/pull/14) [`8f99be2`](https://github.com/skrylnikov/z-torrent/commit/8f99be201a66830089f502ef2746bbd160d6907b) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Announce to trackers with v1 and truncated v2 info hashes per BEP 52. Update README.
+
+- Updated dependencies []:
+  - @z-torrent/utils@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

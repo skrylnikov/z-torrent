@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/browser",
   "description": "Z-Torrent browser build — WebRTC, Service Worker, Web API bindings",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {

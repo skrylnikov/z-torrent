@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/merkle-tree",
   "description": "BEP 52 BitTorrent v2 merkle hash trees (SHA-256)",
-  "version": "0.0.1",
+  "version": "0.0.7",
   "type": "module",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "license": "MIT",
@@ -14,7 +14,11 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsdown",
     "test": "bun test",
@@ -28,5 +32,11 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["bittorrent", "bep52", "merkle", "v2", "z-torrent"]
+  "keywords": [
+    "bittorrent",
+    "bep52",
+    "merkle",
+    "v2",
+    "z-torrent"
+  ]
 }
