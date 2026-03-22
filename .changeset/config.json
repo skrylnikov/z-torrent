@@ -25,5 +25,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@z-torrent/fixtures", "torrent-backup", "sintel-landing"]
+  "ignore": ["torrent-backup", "sintel-landing"]
 }

@@ -9,6 +9,9 @@
   "trustedDependencies": [
     "node-datachannel"
   ],
+  "patchedDependencies": {
+    "@changesets/cli@2.30.0": "patches/@changesets+cli@2.30.0.patch"
+  },
   "scripts": {
     "build": "turbo build",
     "test": "turbo test",

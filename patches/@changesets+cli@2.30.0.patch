@@ -1,0 +1,122 @@
+diff --git a/dist/changesets-cli.cjs.js b/dist/changesets-cli.cjs.js
+index 1111111..2222222 100644
+--- a/dist/changesets-cli.cjs.js
++++ b/dist/changesets-cli.cjs.js
+@@ -714,6 +714,11 @@
+   const pm = await packageManagerDetector.detect({
+     cwd
+   });
++  if (pm?.name === "bun") {
++    return {
++      name: "bun"
++    };
++  }
+   if (!pm || pm.name !== "pnpm") return {
+     name: "npm"
+   };
+@@ -816,6 +821,16 @@
+   if (publishTool.name === "pnpm" && publishTool.shouldAddNoGitChecks) {
+     publishFlags.push("--no-git-checks");
+   }
++  const isBun = publishTool.name === "bun";
++  const isPnpm = publishTool.name === "pnpm";
++  const bunPublishArgv = flags => {
++    const resolvedCwd = path.resolve(opts.cwd);
++    const resolvedDir = path.resolve(opts.publishDir);
++    if (resolvedDir === resolvedCwd) {
++      return ["publish", ...flags];
++    }
++    return ["publish", ...flags, opts.publishDir];
++  };
+   const {
+     scope,
+     registry
+@@ -827,14 +842,25 @@
+     [scope ? `npm_config_${scope}:registry` : "npm_config_registry"]: registry
+   };
+   if (requiresDelegatedAuth(twoFactorState)) {
+-    const result = publishTool.name === "pnpm" ? child_process.spawnSync("pnpm", ["publish", ...publishFlags], {
+-      env: Object.assign({}, process.env, envOverride),
+-      cwd: opts.cwd,
+-      stdio: "inherit"
+-    }) : child_process.spawnSync(publishTool.name, ["publish", opts.publishDir, ...publishFlags], {
+-      env: Object.assign({}, process.env, envOverride),
+-      stdio: "inherit"
+-    });
++    let result;
++    if (isPnpm) {
++      result = child_process.spawnSync("pnpm", ["publish", ...publishFlags], {
++        env: Object.assign({}, process.env, envOverride),
++        cwd: opts.cwd,
++        stdio: "inherit"
++      });
++    } else if (isBun) {
++      result = child_process.spawnSync("bun", bunPublishArgv(publishFlags), {
++        env: Object.assign({}, process.env, envOverride),
++        cwd: opts.cwd,
++        stdio: "inherit"
++      });
++    } else {
++      result = child_process.spawnSync(publishTool.name, ["publish", opts.publishDir, ...publishFlags], {
++        env: Object.assign({}, process.env, envOverride),
++        stdio: "inherit"
++      });
++    }
+     if (result.status === 0) {
+       twoFactorState.allowConcurrency = true;
+       // bump for remaining packages
+@@ -850,20 +876,42 @@
+ 
+   // in the delegated mode we don't need the json output
+   // as we won't be handling the auth errors
+-  publishFlags.push("--json");
++  const flagsWithJson = [...publishFlags, "--json"];
+   if (twoFactorState.token) {
+-    publishFlags.push("--otp", twoFactorState.token);
++    flagsWithJson.push("--otp", twoFactorState.token);
++  }
++  const bunFlags = [...publishFlags];
++  if (twoFactorState.token) {
++    bunFlags.push("--otp", twoFactorState.token);
++  }
++  let code, stdout, stderr;
++  if (isPnpm) {
++    ({
++      code,
++      stdout,
++      stderr
++    } = await spawn__default["default"]("pnpm", ["publish", ...flagsWithJson], {
++      env: Object.assign({}, process.env, envOverride),
++      cwd: opts.cwd
++    }));
++  } else if (isBun) {
++    ({
++      code,
++      stdout,
++      stderr
++    } = await spawn__default["default"]("bun", bunPublishArgv(bunFlags), {
++      env: Object.assign({}, process.env, envOverride),
++      cwd: opts.cwd
++    }));
++  } else {
++    ({
++      code,
++      stdout,
++      stderr
++    } = await spawn__default["default"](publishTool.name, ["publish", opts.publishDir, ...flagsWithJson], {
++      env: Object.assign({}, process.env, envOverride)
++    }));
+   }
+-  let {
+-    code,
+-    stdout,
+-    stderr
+-  } = publishTool.name === "pnpm" ? await spawn__default["default"]("pnpm", ["publish", ...publishFlags], {
+-    env: Object.assign({}, process.env, envOverride),
+-    cwd: opts.cwd
+-  }) : await spawn__default["default"](publishTool.name, ["publish", opts.publishDir, ...publishFlags], {
+-    env: Object.assign({}, process.env, envOverride)
+-  });
+   if (code !== 0) {
+     // NPM's --json output is included alongside the `prepublish` and `postpublish` output in terminal
+     // We want to handle this as best we can but it has some struggles:
