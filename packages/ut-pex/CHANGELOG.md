@@ -1,5 +1,20 @@
 ## [4.0.4](https://github.com/webtorrent/ut_pex/compare/v4.0.3...v4.0.4) (2023-08-10)
 
+## 0.0.6
+
+### Patch Changes
+
+- [#9](https://github.com/skrylnikov/z-torrent/pull/9) [`1cd075b`](https://github.com/skrylnikov/z-torrent/commit/1cd075b90b4019113a7264ef39e7122fc7b730f7) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Refactor ut-pex package:
+  - Switch from default export to named export (`UtPex`)
+  - Use ECMAScript private fields (`#field`) instead of `private _field`
+  - Use `Uint8Array` instead of `Buffer` for cross-platform compatibility
+  - Extract types to separate `types.ts` file
+  - Export type definitions (`PEXFlags`, `DecodedPEXFlags`, `PEXMessage`, `Wire`, `PeerEntry`)
+  - Update README documentation
+
+- Updated dependencies []:
+  - @z-torrent/utils@0.0.6
+
 ## 0.0.5
 
 ### Patch Changes
