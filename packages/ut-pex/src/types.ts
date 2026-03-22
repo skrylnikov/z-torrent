@@ -14,7 +14,7 @@ export interface DecodedPEXFlags {
   supportsUtp: boolean
   supportsUtHolepunch: boolean
   isReachable: boolean
-  supportsV2: boolean
+  supportsV2?: boolean
 }
 
 export interface PEXMessage {

@@ -103,7 +103,7 @@ export interface ProtocolExtensions {
   dht: boolean
   fast: boolean
   /** BEP 52: bit 0x10 in last reserved byte (hybrid / v2 hash tree) */
-  v2: boolean
+  v2?: boolean
 }
 
 /** BEP 52 hash request / hash reject payload (binary layout after message id). */

@@ -59,7 +59,7 @@ export class UtMetadata extends EventEmitter {
   }
 
   onHandshake(infoHash: string, _peerId: string, _extensions: unknown): void {
-    this.#infoHash = infoHash
+    this.#infoHash = infoHash.toLowerCase()
   }
 
   onExtendedHandshake(handshake: ExtendedHandshake): void {
@@ -143,7 +143,12 @@ export class UtMetadata extends EventEmitter {
         return false
       }
     }
-    if (this.#infoHash) {
+    // v2-only swarms use the first 20 bytes of SHA-256(info) in the handshake, not SHA-1(info).
+    const handshakeIsV2Truncated =
+      !!this.#infoHashV2 &&
+      !!this.#infoHash &&
+      this.#infoHash === this.#infoHashV2.slice(0, 40)
+    if (this.#infoHash && !handshakeIsV2Truncated) {
       const sha1Hex = await hash(metadata, 'hex')
       if (this.#infoHash !== sha1Hex) {
         return false
