@@ -6,7 +6,7 @@ import rawSha1 from 'sync-sha1/rawSha1.js'
 import { magnet } from '@z-torrent/magnet'
 import { arr2hex, text2arr, arr2text } from 'uint8-util'
 
-import type { Instance, FileTree, FileTreeEntry } from './types.js'
+import type { Instance, FileTree, FileTreeEntry, V2FileLayoutEntry } from './types.js'
 
 class TorrentIdParser {
   readonly toMagnetURI = magnet.encode
@@ -343,9 +343,104 @@ class TorrentIdParser {
 
     if (torrentObj['piece layers']) {
       result['piece layers'] = torrentObj['piece layers'] as Record<string, Uint8Array>
+      this.#attachV2PieceLayout(result, torrentObj['piece layers'] as Record<string, Uint8Array>)
+    }
+
+    if (hasV2Structure && info['file tree']) {
+      result.v2FileLayout = this.#buildV2FileLayout(
+        info['file tree'] as FileTree,
+        result.pieceLength!
+      )
     }
 
     return result
+  }
+
+  /** Split BEP 52 `piece layers` blob into 32-byte layer hashes; index by `pieces root` hex. */
+  #attachV2PieceLayout(
+    result: Instance,
+    pieceLayers: Record<string, Uint8Array | Buffer>
+  ): void {
+    const byHex: Record<string, Uint8Array[]> = {}
+    for (const [key, buf] of Object.entries(pieceLayers)) {
+      const rootHex = this.#piecesRootKeyToHex(key)
+      const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+      const hashes: Uint8Array[] = []
+      for (let i = 0; i + 32 <= u8.length; i += 32) {
+        hashes.push(u8.subarray(i, i + 32))
+      }
+      byHex[rootHex] = hashes
+    }
+    result.pieceLayersByRootHex = byHex
+  }
+
+  /** bencode may use a 64-char hex key or a 32-byte binary string key */
+  #piecesRootKeyToHex(key: string): string {
+    if (/^[a-f0-9]{64}$/i.test(key)) {
+      return key.toLowerCase()
+    }
+    if (key.length === 32) {
+      const u = new Uint8Array(32)
+      for (let i = 0; i < 32; i++) {
+        u[i] = key.charCodeAt(i) & 0xff
+      }
+      return arr2hex(u)
+    }
+    throw new Error('Invalid piece layers dictionary key length')
+  }
+
+  #collectV2FilesFromTree(tree: FileTree, prefix: string[] = []): Omit<V2FileLayoutEntry, 'byteOffset' | 'startPiece' | 'endPiece'>[] {
+    const names = Object.keys(tree).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    const out: Omit<V2FileLayoutEntry, 'byteOffset' | 'startPiece' | 'endPiece'>[] = []
+    for (const name of names) {
+      const node = tree[name] as FileTree | FileTreeEntry
+      if (!node || typeof node !== 'object') continue
+      const emptyMeta = (node as Record<string, unknown>)[''] as Record<string, unknown> | undefined
+      if (emptyMeta && typeof emptyMeta.length === 'number') {
+        const pr = emptyMeta['pieces root'] as Uint8Array | Buffer | undefined
+        const root =
+          pr && (pr instanceof Uint8Array || ArrayBuffer.isView(pr))
+            ? new Uint8Array(pr.buffer, pr.byteOffset, pr.byteLength)
+            : undefined
+        const path = [...prefix, name]
+        out.push({
+          path,
+          displayPath: path.join('/'),
+          length: emptyMeta.length as number,
+          piecesRoot: root && root.length === 32 ? root : undefined,
+          piecesRootHex: root && root.length === 32 ? arr2hex(root) : undefined,
+        })
+      } else {
+        out.push(...this.#collectV2FilesFromTree(node as FileTree, [...prefix, name]))
+      }
+    }
+    return out
+  }
+
+  #alignUp(offset: number, align: number): number {
+    if (align <= 0) return offset
+    const m = offset % align
+    return m === 0 ? offset : offset + (align - m)
+  }
+
+  #buildV2FileLayout(fileTree: FileTree, pieceLength: number): V2FileLayoutEntry[] {
+    const raw = this.#collectV2FilesFromTree(fileTree)
+    let cursor = 0
+    const layout: V2FileLayoutEntry[] = []
+    for (const f of raw) {
+      const startPiece = (cursor / pieceLength) | 0
+      const endPiece =
+        f.length === 0 ? startPiece : ((cursor + f.length - 1) / pieceLength) | 0
+      layout.push({
+        ...f,
+        byteOffset: cursor,
+        startPiece,
+        endPiece,
+      })
+      cursor += f.length
+      cursor = this.#alignUp(cursor, pieceLength)
+    }
+    return layout
   }
 
   #flattenFileTree(tree: FileTree, currentPath: string[] = []): Array<Record<string, unknown>> {
@@ -408,4 +503,4 @@ const remote = (
 ) => parser.remote(torrentId, opts, cb)
 
 export { parse, parseTorrent, parseTorrentSync, toTorrentFile, toMagnetURI, remote, decode, encode }
-export type { Instance }
+export type { Instance, V2FileLayoutEntry }

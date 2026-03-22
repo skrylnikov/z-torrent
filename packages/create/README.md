@@ -53,9 +53,19 @@ Exported default tracker tier list (array of single-URL arrays), same as used wh
 
 `CreateTorrentOptions`, `FileItem`, and `CreateTorrentOptions`-related shapes are exported for TypeScript.
 
+### BitTorrent v2 / hybrid ([BEP 52](http://www.bittorrent.org/beps/bep_0052.html))
+
+Pass `protocolVersion` in options:
+
+- `'v1'` (default) — classic SHA1 piece layer
+- `'v2'` — metadata v2 only (SHA-256 merkle piece layer via [@z-torrent/merkle-tree](https://www.npmjs.com/package/@z-torrent/merkle-tree))
+- `'hybrid'` — v1 and v2 in one `.torrent` for compatibility
+
+`pieceLength` for `v2` / `hybrid` is normalized to BEP 52 rules (power of two, ≥ 16 KiB leaf blocks). Hybrid torrents require each file to have a path.
+
 ### Global: `WEBTORRENT_ANNOUNCE`
 
-If set on `globalThis` to a string or `string[]`, those URLs are appended to the announce list.
+If set on `globalThis` to a string or `string[]`, those URLs are appended to the announce list. (Legacy name from WebTorrent; behaviour is the same for Z-Torrent.)
 
 ## CLI
 

@@ -5,32 +5,24 @@ to get started!
 
 ## Install
 
-To start using Z-Torrent, simply include the
-[`z-torrent`](https://esm.sh/z-torrent)
-script on your page.
+**Browser (ESM CDN):**
 
 ```html
 <script type="module">
-  import WebTorrent from 'https://esm.sh/z-torrent/dist/z-torrent.min.js'
+  import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
 </script>
 ```
 
-### Browserify and Webpack
+Prefer installing locally: `npm install @z-torrent/browser` and bundle with Vite, Webpack, or esbuild. See [@z-torrent/browser](https://github.com/skrylnikov/z-torrent/tree/main/packages/browser) for the service worker (`sw.min.js`).
 
-Z-Torrent also works great with [browserify](http://browserify.org/), [webpack](https://webpack.js.org/) and other bundlers, which let
-you use [node.js](http://nodejs.org/) style `require()` to organize your browser
-code, and load packages installed by [npm](https://npmjs.org/).
+**Node.js:**
 
-For an example webpack config see [the webpack bundle config used by z-torrent](/scripts/browser.webpack.js).
-
+```bash
+npm install @z-torrent/node
 ```
-npm install z-torrent
-```
-
-Then use `WebTorrent` like this:
 
 ```js
-import WebTorrent from 'z-torrent'
+import { WebTorrent } from '@z-torrent/node'
 ```
 
 ## Quick Examples
@@ -38,13 +30,13 @@ import WebTorrent from 'z-torrent'
 ### Downloading a torrent (in the browser)
 
 ```js
-import WebTorrent from 'webtorrent'
+import { WebTorrent } from '@z-torrent/browser'
 
 const client = new WebTorrent()
 
-// Sintel, a free, Creative Commons movie
+// Sintel — magnet (no webtorrent.io fallback; seed via WebRTC-capable client or use .torrent URL below)
 const torrentId =
-  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+  'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
 
 const controller = await navigator.serviceWorker.register('./sw.min.js', {
   scope: './',
@@ -66,7 +58,7 @@ client.add(torrentId, (torrent) => {
 
 This supports video, audio, images, PDFs, HTML, right out of the box. There are additional ways to access file content directly, including as a node-style stream, ArrayBuffer, or Blob.
 
-Video and audio content can be streamed, i.e. playback will start before the full file is downloaded. Seeking works too – WebTorrent dynamically fetches
+Video and audio content can be streamed, i.e. playback will start before the full file is downloaded. Seeking works too – the client dynamically fetches
 the needed torrent pieces from the network on-demand.
 
 **Note:** Downloading a torrent automatically seeds it, making it available for download by other peers.
@@ -75,7 +67,7 @@ the needed torrent pieces from the network on-demand.
 
 ```js
 import dragDrop from 'drag-drop'
-import WebTorrent from 'webtorrent'
+import { WebTorrent } from '@z-torrent/browser'
 
 const client = new WebTorrent()
 
@@ -97,7 +89,7 @@ This exports a `DragDrop` function on `window`.
 ### Download and save a torrent (in Node.js)
 
 ```js
-import WebTorrent from 'webtorrent'
+import { WebTorrent } from '@z-torrent/node'
 
 const client = new WebTorrent()
 
@@ -112,10 +104,10 @@ client.add(magnetURI, { path: '/path/to/folder' }, (torrent) => {
 
 ### Creating a new torrent and seed it (in Node.js)
 
-**Note:** Seeding a torrent that can be downloaded by browser peers (i.e. with support for WebRTC) requires [webtorrent-hybrid](https://github.com/webtorrent/webtorrent-hybrid).
+**Note:** **`@z-torrent/node`** includes WebRTC support so browser peers can connect when you seed from Node.
 
 ```js
-import WebTorrent from 'webtorrent-hybrid'
+import { WebTorrent } from '@z-torrent/node'
 const client = new WebTorrent()
 
 client.seed('/seed-me.txt', (torrent) => {
@@ -140,15 +132,16 @@ downloaded.
 <!doctype html>
 <html>
   <body>
-    <h1>Download files using the WebTorrent protocol (BitTorrent over WebRTC).</h1>
+    <h1>Download files using Z-Torrent (BitTorrent over WebRTC in the browser).</h1>
+    <p>Serve this page over HTTP(S), copy <code>sw.min.js</code> from <code>@z-torrent/browser</code> next to it, then open the page.</p>
 
     <form>
       <label for="torrentId">Download from a magnet link: </label>
       <input
+        id="torrentId"
         name="torrentId"
-        ,
         placeholder="magnet:"
-        value="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent"
+        value="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com"
       />
       <button type="submit">Download</button>
     </form>
@@ -157,10 +150,14 @@ downloaded.
     <div class="log"></div>
 
     <script type="module">
-      // Include the latest version of WebTorrent
-      import WebTorrent from 'https://esm.sh/webtorrent/dist/webtorrent.min.js'
+      import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
 
       const client = new WebTorrent()
+      const controller = await navigator.serviceWorker.register('./sw.min.js', {
+        scope: './',
+      })
+      await navigator.serviceWorker.ready
+      client.createServer({ controller })
 
       client.on('error', (err) => {
         console.error('ERROR: ' + err.message)
@@ -234,26 +231,18 @@ downloaded.
 
 ### HTML example with status showing UI
 
-This complete HTML example mimics the UI of the
-[webtorrent.io](https://webtorrent.io) homepage. It downloads the
-[sintel.torrent](https://webtorrent.io/torrents/sintel.torrent) file, streams it in
-the browser and outputs some statistics to the user (peers, progress, remaining
-time, speed...).
+This complete HTML example streams **Sintel** in the browser and shows basic stats.
 
-You can try it right now on [CodePen](http://codepen.io/yciabaud/full/XdOeWM/) to
-see what it looks like and play around with it!
+The `.torrent` URL below points to Blender’s copy of the file ([download.blender.org](https://download.blender.org/demo/movies/)). Replace `torrentId` with another magnet or HTTPS `.torrent` URL as needed.
 
-Feel free to replace `torrentId` with other torrent files, or magnet links, but
-keep in mind that the browser can only download torrents that are seeded by
-WebRTC peers (web peers). Use [WebTorrent Desktop](https://webtorrent.io/desktop)
-or [Instant.io](https://instant.io) to seed torrents to the WebTorrent network.
+The browser can only reach peers that speak WebRTC (web peers) unless you bridge via a compatible desktop client or [Instant.io](https://instant.io).
 
 ```html
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>WebTorrent video player</title>
+    <title>Z-Torrent video player</title>
     <style>
       #output video {
         width: 100%;
@@ -323,8 +312,8 @@ or [Instant.io](https://instant.io) to seed torrents to the WebTorrent network.
         <span class="show-seed">Seeding </span>
         <code>
           <!-- Informative link to the torrent file -->
-          <a id="torrentLink" href="https://webtorrent.io/torrents/sintel.torrent"
-            >sintel.torrent</a
+          <a id="torrentLink" href="https://download.blender.org/demo/movies/Sintel.torrent"
+            >Sintel.torrent</a
           >
         </code>
         <span class="show-leech"> from </span>
@@ -342,10 +331,9 @@ or [Instant.io](https://instant.io) to seed torrents to the WebTorrent network.
     <script src="http://momentjs.com/downloads/moment.min.js"></script>
 
     <script type="module">
-      // Include the latest version of WebTorrent
-      import WebTorrent from './webtorrent.min.js'
+      import { WebTorrent } from 'https://esm.sh/@z-torrent/browser'
 
-      const torrentId = 'https://webtorrent.io/torrents/sintel.torrent'
+      const torrentId = 'https://download.blender.org/demo/movies/Sintel.torrent'
 
       const client = new WebTorrent()
 
@@ -429,6 +417,6 @@ or [Instant.io](https://instant.io) to seed torrents to the WebTorrent network.
 
 ## More Documentation
 
-Check out the [API Documentation](//webtorrent.io/docs) and [FAQ](//webtorrent.io/faq) for more details.
+Check out the [API Documentation](./api.md) and [FAQ](./faq.md) for more details.
 
 [drag-drop]: https://npmjs.com/package/drag-drop

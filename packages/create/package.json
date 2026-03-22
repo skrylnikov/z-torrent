@@ -14,6 +14,7 @@
     "is-file": false
   },
   "dependencies": {
+    "@z-torrent/merkle-tree": "workspace:*",
     "@z-torrent/utils": "workspace:*",
     "bencode": "^4.0.0",
     "block-iterator": "^1.1.1",

@@ -62,7 +62,7 @@
     },
     "packages/browser": {
       "name": "@z-torrent/browser",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "@thaunknown/simple-peer": "^10.1.0",
         "@z-torrent/core": "workspace:*",
@@ -84,8 +84,9 @@
     },
     "packages/core": {
       "name": "@z-torrent/core",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
+        "@z-torrent/merkle-tree": "workspace:*",
         "@z-torrent/parse": "workspace:*",
         "@z-torrent/protocol": "workspace:*",
         "@z-torrent/ut-metadata": "workspace:*",
@@ -119,11 +120,12 @@
     },
     "packages/create": {
       "name": "@z-torrent/create",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "bin": {
         "create-torrent": "./dist/bin/cmd.js",
       },
       "dependencies": {
+        "@z-torrent/merkle-tree": "workspace:*",
         "@z-torrent/utils": "workspace:*",
         "bencode": "^4.0.0",
         "block-iterator": "^1.1.1",
@@ -143,7 +145,7 @@
     },
     "packages/dht": {
       "name": "@z-torrent/dht",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "bencode": "^4.0.0",
         "debug": "^4.4.3",
@@ -168,7 +170,7 @@
     },
     "packages/discovery": {
       "name": "@z-torrent/discovery",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "@z-torrent/dht": "workspace:*",
         "@z-torrent/lsd": "workspace:*",
@@ -192,7 +194,7 @@
     },
     "packages/lsd": {
       "name": "@z-torrent/lsd",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "debug": "^4.4.3",
         "eventemitter3": "^5.0.4",
@@ -203,16 +205,20 @@
     },
     "packages/magnet": {
       "name": "@z-torrent/magnet",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "@thaunknown/thirty-two": "^1.0.5",
         "bep53-range": "^2.0.0",
         "uint8-util": "^2.2.6",
       },
     },
+    "packages/merkle-tree": {
+      "name": "@z-torrent/merkle-tree",
+      "version": "0.0.1",
+    },
     "packages/node": {
       "name": "@z-torrent/node",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "@silentbot1/nat-api": "^0.4.9",
         "@thaunknown/simple-peer": "^10.0.11",
@@ -243,7 +249,7 @@
     },
     "packages/parse": {
       "name": "@z-torrent/parse",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "bin": {
         "parse-torrent": "./dist/bin/cmd.js",
       },
@@ -259,7 +265,7 @@
     },
     "packages/protocol": {
       "name": "@z-torrent/protocol",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "bencode": "^4.0.0",
         "bitfield": "^4.2.0",
@@ -273,7 +279,7 @@
     },
     "packages/tracker": {
       "name": "@z-torrent/tracker",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "bin": {
         "bittorrent-tracker": "./dist/bin/cmd.js",
       },
@@ -316,7 +322,7 @@
     },
     "packages/ut-metadata": {
       "name": "@z-torrent/ut-metadata",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "bencode": "^4.0.0",
         "bitfield": "^5.0.0",
@@ -333,7 +339,7 @@
     },
     "packages/ut-pex": {
       "name": "@z-torrent/ut-pex",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "@z-torrent/utils": "workspace:*",
         "bencode": "^4.0.0",
@@ -346,7 +352,7 @@
     },
     "packages/utils": {
       "name": "@z-torrent/utils",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "dependencies": {
         "ipaddr.js": "2.3.0",
         "uint8-util": "^2.2.6",
@@ -764,6 +770,8 @@
     "@z-torrent/lsd": ["@z-torrent/lsd@workspace:packages/lsd"],
 
     "@z-torrent/magnet": ["@z-torrent/magnet@workspace:packages/magnet"],
+
+    "@z-torrent/merkle-tree": ["@z-torrent/merkle-tree@workspace:packages/merkle-tree"],
 
     "@z-torrent/node": ["@z-torrent/node@workspace:packages/node"],
 

@@ -200,22 +200,23 @@ this._debug('got handshake i=%s p=%s', infoHash, peerId)
 
 ```
 packages/
-├── webtorrent/           # Main torrent client
-├── webtorrent-browser/   # Browser-specific build
-├── z-torrent-core/       # Core platform-agnostic logic
-├── bittorrent-protocol/  # Wire protocol implementation
-├── bittorrent-dht/       # DHT implementation
-├── bittorrent-tracker/   # Tracker client/server
-├── bittorrent-lsd/       # Local peer discovery
-├── parse-torrent/        # Torrent file parsing
-├── create-torrent/       # Torrent file creation
-├── magnet-uri/           # Magnet URI handling
-├── torrent-discovery/    # Peer discovery
-├── torrent-piece/        # Piece management
-├── ut_metadata/          # Metadata extension
-├── ut_pex/               # Peer exchange extension
-├── webtorrent-fixtures/  # Test fixtures
-└── ...                   # Other utility packages
+├── node/                 # Node.js client (@z-torrent/node)
+├── browser/              # Browser bundle (@z-torrent/browser)
+├── core/                 # Platform-agnostic core (@z-torrent/core)
+├── protocol/             # Wire protocol (@z-torrent/protocol)
+├── dht/                  # DHT (@z-torrent/dht)
+├── tracker/              # Tracker client/server (@z-torrent/tracker)
+├── lsd/                  # Local peer discovery (@z-torrent/lsd)
+├── discovery/            # Peer discovery (@z-torrent/discovery)
+├── parse/                # Parse torrent / magnet (@z-torrent/parse)
+├── create/               # Create torrent files (@z-torrent/create)
+├── magnet/               # Magnet URI (@z-torrent/magnet)
+├── merkle-tree/          # BEP 52 v2 merkle trees (@z-torrent/merkle-tree)
+├── ut-metadata/          # Metadata extension (@z-torrent/ut-metadata)
+├── ut-pex/               # Peer exchange (@z-torrent/ut-pex)
+├── utils/                # Shared utilities (@z-torrent/utils)
+├── fixtures/             # Test fixtures (@z-torrent/fixtures)
+└── ...                   # Other packages / examples
 ```
 
 ## Testing

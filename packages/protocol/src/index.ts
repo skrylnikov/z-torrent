@@ -102,6 +102,17 @@ export interface ProtocolExtensions {
   extended: boolean
   dht: boolean
   fast: boolean
+  /** BEP 52: bit 0x10 in last reserved byte (hybrid / v2 hash tree) */
+  v2: boolean
+}
+
+/** BEP 52 hash request / hash reject payload (binary layout after message id). */
+export interface HashWirePayload {
+  piecesRoot: Uint8Array
+  baseLayer: number
+  index: number
+  length: number
+  proofLayers: number
 }
 
 export interface ProtocolExtendedHandshake {
@@ -214,8 +225,8 @@ class Wire extends Duplex {
     // possible torrents but prevent malicious peers from growing bitfield to fill memory.
     this.peerPieces = new BitField(0, { grow: BITFIELD_GROW })
 
-    this.extensions = { extended: false, dht: false, fast: false }
-    this.peerExtensions = { extended: false, dht: false, fast: false }
+    this.extensions = { extended: false, dht: false, fast: false, v2: false }
+    this.peerExtensions = { extended: false, dht: false, fast: false, v2: false }
 
     this.requests = [] // outgoing
     this.peerRequests = [] // incoming
@@ -422,7 +433,7 @@ class Wire extends Duplex {
   handshake(
     infoHash: Uint8Array | string,
     peerId: Uint8Array | string,
-    extensions?: { dht?: boolean; fast?: boolean }
+    extensions?: { dht?: boolean; fast?: boolean; v2?: boolean }
   ): void {
     let infoHashBuffer: Uint8Array
     let peerIdBuffer: Uint8Array
@@ -457,11 +468,13 @@ class Wire extends Duplex {
       extended: true,
       dht: !!(extensions && extensions.dht),
       fast: !!(extensions && extensions.fast),
+      v2: !!(extensions && extensions.v2),
     }
 
     reserved[5] |= 0x10 // enable extended message
     if (this.extensions.dht) reserved[7] |= 0x01
     if (this.extensions.fast) reserved[7] |= 0x04
+    if (this.extensions.v2) reserved[7] |= 0x10 // BEP 52
 
     // BEP6 Fast Extension: The extension is enabled only if both ends of the connection set this bit.
     if (this.extensions.fast && this.peerExtensions.fast) {
@@ -629,6 +642,55 @@ class Wire extends Duplex {
     this._message(0x11, [index], null)
   }
 
+  /**
+   * BEP 52 hash request (message id 21).
+   * `piecesRoot` must be 32 bytes (SHA-256 subtree root).
+   */
+  hashRequest(
+    piecesRoot: Uint8Array,
+    baseLayer: number,
+    index: number,
+    length: number,
+    proofLayers: number
+  ): void {
+    if (piecesRoot.length !== 32) {
+      throw new Error('hashRequest: piecesRoot must be 32 bytes')
+    }
+    this._debug('hashRequest baseLayer=%d index=%d len=%d', baseLayer, index, length)
+    this._pushHashWire(21, piecesRoot, baseLayer, index, length, proofLayers, null)
+  }
+
+  /** BEP 52 hashes reply (message id 22). */
+  hashes(
+    piecesRoot: Uint8Array,
+    baseLayer: number,
+    index: number,
+    length: number,
+    proofLayers: number,
+    hashPayload: Uint8Array
+  ): void {
+    if (piecesRoot.length !== 32) {
+      throw new Error('hashes: piecesRoot must be 32 bytes')
+    }
+    this._debug('hashes baseLayer=%d index=%d', baseLayer, index)
+    this._pushHashWire(22, piecesRoot, baseLayer, index, length, proofLayers, hashPayload)
+  }
+
+  /** BEP 52 hash reject (message id 23). */
+  hashReject(
+    piecesRoot: Uint8Array,
+    baseLayer: number,
+    index: number,
+    length: number,
+    proofLayers: number
+  ): void {
+    if (piecesRoot.length !== 32) {
+      throw new Error('hashReject: piecesRoot must be 32 bytes')
+    }
+    this._debug('hashReject')
+    this._pushHashWire(23, piecesRoot, baseLayer, index, length, proofLayers, null)
+  }
+
   extended(ext: number | string, obj: Uint8Array | Record<string, unknown>): void {
     this._debug('extended ext=%s', ext)
     if (typeof ext === 'string' && this.peerExtendedMapping[ext]) {
@@ -682,6 +744,73 @@ class Wire extends Duplex {
 
     this._push(buffer)
     if (data) this._push(data)
+  }
+
+  /** BEP 52 hash messages: id + 32-byte root + four big-endian uint32 + optional tail. */
+  _pushHashWire(
+    id: number,
+    piecesRoot: Uint8Array,
+    baseLayer: number,
+    index: number,
+    length: number,
+    proofLayers: number,
+    trailing: Uint8Array | null
+  ): void {
+    const trailLen = trailing ? trailing.length : 0
+    const bodyAfterLen = 1 + 32 + 16 + trailLen
+    const buf = new Uint8Array(4 + bodyAfterLen)
+    setUint32(buf, 0, bodyAfterLen)
+    buf[4] = id & 0xff
+    buf.set(piecesRoot, 5)
+    setUint32(buf, 37, baseLayer)
+    setUint32(buf, 41, index)
+    setUint32(buf, 45, length)
+    setUint32(buf, 49, proofLayers)
+    if (trailing) buf.set(trailing, 53)
+    this._push(buf)
+  }
+
+  _parseHashWirePayload(buffer: Uint8Array): HashWirePayload | null {
+    if (buffer.length < 49) return null
+    return {
+      piecesRoot: buffer.subarray(1, 33),
+      baseLayer: getUint32(buffer, 33),
+      index: getUint32(buffer, 37),
+      length: getUint32(buffer, 41),
+      proofLayers: getUint32(buffer, 45),
+    }
+  }
+
+  _onHashRequest(buffer: Uint8Array): void {
+    const p = this._parseHashWirePayload(buffer)
+    if (!p) {
+      this._debug('short hash_request')
+      return
+    }
+    this._debug('got hash_request')
+    this.emit('hash_request', p)
+  }
+
+  _onHashes(buffer: Uint8Array): void {
+    const p = this._parseHashWirePayload(buffer)
+    /** 1 byte id + 32 root + 16 bytes (four uint32) = 49; tail is merkle hash data */
+    if (!p || buffer.length < 49) {
+      this._debug('short hashes')
+      return
+    }
+    const hashes = buffer.subarray(49)
+    this._debug('got hashes payload=%d', hashes.length)
+    this.emit('hashes', p, hashes)
+  }
+
+  _onHashReject(buffer: Uint8Array): void {
+    const p = this._parseHashWirePayload(buffer)
+    if (!p) {
+      this._debug('short hash_reject')
+      return
+    }
+    this._debug('got hash_reject')
+    this.emit('hash_reject', p)
   }
 
   _push(data: Uint8Array): boolean | void {
@@ -1108,6 +1237,12 @@ class Wire extends Duplex {
         return this._onReject(getUint32(buffer, 1), getUint32(buffer, 5), getUint32(buffer, 9))
       case 0x11:
         return this._onAllowedFast(getUint32(buffer, 1))
+      case 21:
+        return this._onHashRequest(buffer)
+      case 22:
+        return this._onHashes(buffer)
+      case 23:
+        return this._onHashReject(buffer)
       case 20:
         return this._onExtended(buffer[1], buffer.subarray(2))
       default:
@@ -1226,6 +1361,7 @@ class Wire extends Duplex {
       dht: !!(handshake[7] & 0x01), // see bep_0005
       fast: !!(handshake[7] & 0x04), // see bep_0006
       extended: !!(handshake[5] & 0x10), // see bep_0010
+      v2: !!(handshake[7] & 0x10), // see bep_0052
     })
     this._parse(4, this._onMessageLength)
   }

@@ -33,6 +33,8 @@ export class UtMetadata extends EventEmitter {
 
   #wire: Wire
   #infoHash?: string
+  /** Full v2 info-hash (64 hex), when known (e.g. magnet `urn:btmh`). */
+  #infoHashV2?: string
   #fetching = false
   #metadataComplete = false
   #metadataSize: number | null = null
@@ -40,10 +42,11 @@ export class UtMetadata extends EventEmitter {
   #remainingRejects: number | null = null
   #bitfield: BitField
 
-  constructor(wire: Wire, metadata?: Uint8Array) {
+  constructor(wire: Wire, metadata?: Uint8Array, infoHashV2?: string) {
     super()
 
     this.#wire = wire
+    this.#infoHashV2 = infoHashV2?.toLowerCase()
     this.#bitfield = new BitField(0, { grow: BITFIELD_GROW })
 
     if (metadata) {
@@ -134,7 +137,12 @@ export class UtMetadata extends EventEmitter {
       }
     } catch {}
 
-    if (this.#infoHash && this.#infoHash !== (await hash(metadata, 'hex'))) {
+    const sha1Hex = await hash(metadata, 'hex')
+    const sha256Hex = await hash(metadata, 'hex', 'sha256')
+    if (this.#infoHashV2 && this.#infoHashV2 !== sha256Hex) {
+      return false
+    }
+    if (this.#infoHash && this.#infoHash !== sha1Hex) {
       return false
     }
 
@@ -250,10 +258,13 @@ export class UtMetadata extends EventEmitter {
   }
 }
 
-export function createUtMetadata(metadata?: Uint8Array): typeof UtMetadata {
+export function createUtMetadata(
+  metadata?: Uint8Array,
+  opts?: { infoHashV2?: string }
+): typeof UtMetadata {
   class UtMetadataWithMetadata extends UtMetadata {
     constructor(wire: Wire) {
-      super(wire, metadata)
+      super(wire, metadata, opts?.infoHashV2)
     }
   }
   return UtMetadataWithMetadata

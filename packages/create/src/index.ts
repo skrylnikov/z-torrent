@@ -14,6 +14,11 @@ import type { ReadStream } from 'node:fs'
 import type { Readable } from 'node:stream'
 
 import { getFiles } from './get-files.js'
+import {
+  addFileToV2Torrent,
+  buildHybridV1Layout,
+  toBep52PieceLength,
+} from './bep52-build.js'
 
 export const announceList = [
   ['udp://tracker.leechers-paradise.org:6969'],
@@ -54,6 +59,8 @@ export interface CreateTorrentOptions {
   filterJunkFiles?: boolean
   sslCert?: string
   singleFileTorrent?: boolean
+  /** BEP 52: `v2` (metadata v2 only), `hybrid` (v1 + v2), default `v1` */
+  protocolVersion?: 'v1' | 'v2' | 'hybrid'
 }
 
 type InputItem = string | File | Blob | Uint8Array | Readable | FileItem
@@ -88,6 +95,22 @@ class CreateTorrentImpl {
       file.length += chunk.length
       yield chunk
     }
+  }
+
+  static async #readFileBuffer(file: FileItem): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = []
+    let n = 0
+    for await (const c of CreateTorrentImpl.#streamSource(file.getStream!)) {
+      chunks.push(c)
+      n += c.length
+    }
+    const out = new Uint8Array(n)
+    let o = 0
+    for (const c of chunks) {
+      out.set(c, o)
+      o += c.length
+    }
+    return out
   }
 
   static async *#streamSource(
@@ -146,6 +169,88 @@ class CreateTorrentImpl {
       }
       if (remainingHashes === 0) return cb(null, hex2arr(pieces.join('')), length)
       ended = true
+    } catch (err) {
+      cb(err as Error)
+    }
+  }
+
+  static async #hashV1BufferToPieces(
+    buf: Uint8Array,
+    pieceLength: number,
+    estimatedTorrentLength: number,
+    opts: CreateTorrentOptions
+  ): Promise<Uint8Array> {
+    const nPieces = Math.max(1, Math.ceil(buf.length / pieceLength))
+    const pieces: string[] = new Array(nPieces)
+    let hashedLength = 0
+    const onProgress = opts.onProgress
+    for (let i = 0; i < nPieces; i++) {
+      const start = i * pieceLength
+      const chunk = buf.subarray(start, Math.min(start + pieceLength, buf.length))
+      pieces[i] = await hash(chunk, 'hex')
+      hashedLength += chunk.length
+      if (onProgress) onProgress(hashedLength, estimatedTorrentLength)
+    }
+    return hex2arr(pieces.join(''))
+  }
+
+  static async #buildTorrentBep52(
+    files: FileItem[],
+    pieceLength: number,
+    estimatedTorrentLength: number,
+    opts: CreateTorrentOptions,
+    torrent: Record<string, unknown>,
+    proto: 'v2' | 'hybrid',
+    cb: (err: Error | null, torrent?: Uint8Array) => void
+  ): Promise<void> {
+    try {
+      const pl = toBep52PieceLength(pieceLength)
+      const buffers = await Promise.all(files.map((f) => CreateTorrentImpl.#readFileBuffer(f)))
+      const fileTree: Record<string, unknown> = {}
+      const pieceLayers: Record<string, Uint8Array> = {}
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]!
+        const data = buffers[i]!
+        const path =
+          file.path && file.path.length > 0 ? file.path : [opts.name || 'Unnamed Torrent']
+        addFileToV2Torrent(fileTree, pieceLayers, path, data, pl)
+      }
+
+      const info = torrent.info as Record<string, unknown>
+      info['piece length'] = pl
+      info['meta version'] = 2
+      info['file tree'] = fileTree
+
+      if (proto === 'hybrid') {
+        if (files.length > 1) {
+          const { v1Buffer, infoFiles } = buildHybridV1Layout(files, buffers, pl)
+          info.pieces = await CreateTorrentImpl.#hashV1BufferToPieces(
+            v1Buffer,
+            pl,
+            estimatedTorrentLength,
+            opts
+          )
+          info.files = infoFiles
+        } else {
+          const buf = buffers[0]!
+          info.pieces = await CreateTorrentImpl.#hashV1BufferToPieces(
+            buf,
+            pl,
+            estimatedTorrentLength,
+            opts
+          )
+          info.length = buf.length
+        }
+      }
+
+      torrent['piece layers'] = pieceLayers
+
+      files.forEach((file) => {
+        delete file.getStream
+      })
+
+      cb(null, bencode.encode(torrent))
     } catch (err) {
       cb(err as Error)
     }
@@ -212,9 +317,27 @@ class CreateTorrentImpl {
     if (opts.urlList !== undefined) torrent['url-list'] = opts.urlList
 
     const estimatedTorrentLength = files.reduce(CreateTorrentImpl.#sumLength, 0)
-    const pieceLength =
+    let pieceLength =
       opts.pieceLength || Math.min(calcPieceLength(estimatedTorrentLength), opts.maxPieceLength!)
+    const proto = opts.protocolVersion ?? 'v1'
+
+    if (proto !== 'v1') {
+      pieceLength = toBep52PieceLength(pieceLength)
+    }
     ;(torrent.info as Record<string, unknown>)['piece length'] = pieceLength
+
+    if (proto === 'v2' || proto === 'hybrid') {
+      void CreateTorrentImpl.#buildTorrentBep52(
+        files,
+        pieceLength,
+        estimatedTorrentLength,
+        opts,
+        torrent,
+        proto,
+        cb
+      )
+      return
+    }
 
     void CreateTorrentImpl.#getPieceList(
       files,

@@ -37,6 +37,8 @@ export interface Discovery {
 /** Options for createDiscovery */
 export interface DiscoveryOptions {
   infoHash: string
+  /** BEP 52 hybrid: second swarm id (40 hex, truncated SHA-256 of info) */
+  infoHashV2Truncated?: string
   peerId: string
   port: number
   announce?: string[]

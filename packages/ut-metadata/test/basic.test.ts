@@ -20,7 +20,7 @@ test('wire.use(createUtMetadata())', () => {
   expect(utMetadata.metadata).toBeFalsy()
 })
 
-test('wire.use(createUtMetadata(metadata))', () => {
+test('wire.use(createUtMetadata(metadata))', async () => {
   const wire = new Protocol()
   // @ts-expect-error pipe returns unknown in Duplex type
   wire.pipe(wire)
@@ -31,6 +31,8 @@ test('wire.use(createUtMetadata(metadata))', () => {
   expect(utMetadata).toBeTruthy()
   expect(utMetadata.fetch).toBeTruthy()
   expect(utMetadata.cancel).toBeTruthy()
+
+  await new Promise<void>((r) => queueMicrotask(r))
 
   const info = bencode.decode(leavesMetadata.torrent!) as { info: unknown }
   const encodedInfo = Uint8Array.from(bencode.encode(info.info))
