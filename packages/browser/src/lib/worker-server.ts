@@ -7,15 +7,15 @@ interface ServeData {
   body: string | ReadableStream<Uint8Array>
 }
 
-const _self = self as unknown as ServiceWorkerGlobalScope
+const sw = self as unknown as ServiceWorkerGlobalScope
 
-const listener = (event: FetchEvent): Response | Promise<Response> | null => {
+export function handleFetch(event: FetchEvent): Response | Promise<Response> | null {
   const { url } = event.request
-  if (!url.includes(_self.registration.scope + 'z-torrent/')) return null
-  if (url.includes(_self.registration.scope + 'z-torrent/keepalive/')) {
+  if (!url.includes(sw.registration.scope + 'z-torrent/')) return null
+  if (url.includes(sw.registration.scope + 'z-torrent/keepalive/')) {
     return new Response()
   }
-  if (url.includes(_self.registration.scope + 'z-torrent/cancel/')) {
+  if (url.includes(sw.registration.scope + 'z-torrent/cancel/')) {
     return new Response(
       new ReadableStream({
         cancel() {
@@ -27,12 +27,10 @@ const listener = (event: FetchEvent): Response | Promise<Response> | null => {
   return serve(event).catch(() => new Response('Service unavailable', { status: 503 }))
 }
 
-export default listener
-
 async function serve(event: FetchEvent): Promise<Response> {
   const { request } = event
-  const { url, method, headers, destination } = request
-  const clientlist = await _self.clients.matchAll({
+  const { url, method, destination } = request
+  const clientlist = await sw.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
   })
@@ -41,21 +39,26 @@ async function serve(event: FetchEvent): Promise<Response> {
     return new Response('No clients', { status: 503 })
   }
 
+  const headerRecord: Record<string, string> = {}
+  request.headers.forEach((value, key) => {
+    headerRecord[key] = value
+  })
+
   const [data, port] = await new Promise<[ServeData, MessagePort]>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Client response timeout')), 15000)
     for (const client of clientlist) {
       const messageChannel = new MessageChannel()
       const { port1, port2 } = messageChannel
-      port1.onmessage = ({ data }) => {
+      port1.onmessage = ({ data: msgData }) => {
         clearTimeout(timeout)
-        resolve([data, port1])
+        resolve([msgData as ServeData, port1])
       }
       client.postMessage(
         {
           url,
           method,
-          headers: Object.fromEntries(headers.entries()),
-          scope: _self.registration.scope,
+          headers: headerRecord,
+          scope: sw.registration.scope,
           destination,
           type: 'z-torrent',
         },
@@ -73,16 +76,19 @@ async function serve(event: FetchEvent): Promise<Response> {
 
   if (data.body !== 'STREAM') {
     cleanup()
-    return new Response(data.body as BodyInit, data)
+    return new Response(data.body as string | ReadableStream<Uint8Array>, {
+      status: data.status,
+      headers: data.headers,
+    })
   }
 
   return new Response(
     new ReadableStream({
       pull(controller) {
         return new Promise<void>((resolve) => {
-          port.onmessage = ({ data }) => {
-            if (data) {
-              controller.enqueue(data as Uint8Array)
+          port.onmessage = ({ data: chunk }) => {
+            if (chunk) {
+              controller.enqueue(chunk as Uint8Array)
             } else {
               cleanup()
               controller.close()

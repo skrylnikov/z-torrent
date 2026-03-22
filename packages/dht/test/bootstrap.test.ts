@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 // https://github.com/webtorrent/bittorrent-dht/pull/36

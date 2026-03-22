@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -10,6 +11,16 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
   vite: {
+    plugins: [
+      nodePolyfills({
+        protocolImports: true,
+        globals: {
+          Buffer: true,
+          global: true,
+          process: true,
+        },
+      }),
+    ],
     define: {
       global: 'globalThis',
       'process.env': '{}',
@@ -17,12 +28,12 @@ export default defineConfig({
     },
     resolve: {
       alias: {
-        'z-torrent-browser': resolve(__dirname, '../../packages/browser/dist/z-torrent.min.js'),
+        '@z-torrent/browser': resolve(__dirname, '../../packages/browser/dist/z-torrent.min.js'),
       },
     },
     optimizeDeps: {
       include: ['webrtc-polyfill', '@thaunknown/simple-peer'],
-      exclude: ['z-torrent-browser'],
+      exclude: ['@z-torrent/browser'],
     },
   },
 })

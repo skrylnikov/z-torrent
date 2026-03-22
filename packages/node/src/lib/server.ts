@@ -2,7 +2,7 @@ import http from 'http'
 import pump from 'pump'
 import { Readable } from 'streamx'
 import { ServerBase, type Request, type Response } from '@z-torrent/core'
-import type File from '@z-torrent/core'
+import type { File } from '@z-torrent/core'
 
 export interface NodeServerOptions {
   origin?: string | false
@@ -12,23 +12,22 @@ export interface NodeServerOptions {
 
 export class NodeServer extends ServerBase {
   server: http.Server
-  _listen: typeof http.Server.prototype.listen
-  _close: typeof http.Server.prototype.close
+  #listenImpl: typeof http.Server.prototype.listen
+  #closeImpl: typeof http.Server.prototype.close
   sockets: Set<any>
-  pathname: string
 
   constructor(client: any, opts: NodeServerOptions = {}) {
     super(client, opts)
 
     this.server = http.createServer()
-    this._listen = this.server.listen.bind(this.server)
+    this.#listenImpl = this.server.listen.bind(this.server)
     this.server.listen = this.listen.bind(this) as any
-    this._close = this.server.close.bind(this.server)
+    this.#closeImpl = this.server.close.bind(this.server)
     this.server.close = this.close.bind(this) as any
 
     this.sockets = new Set()
     this.closed = false
-    this.pathname = opts?.pathname || '/z-torrent'
+    this.pathname = opts?.pathname ?? '/z-torrent'
   }
 
   createFileBody(file: File, req: Request, range: { start: number; end: number } | null): unknown {
@@ -42,11 +41,13 @@ export class NodeServer extends ServerBase {
       this.opts.hostname &&
       req.headers.host !== `${this.opts.hostname}:${(this.server.address() as any).port}`
     ) {
-      return req.destroy()
+      req.destroy()
+      return
     }
 
     if (!new URL(req.url || '', 'http://example.com').pathname.startsWith(this.pathname)) {
-      return req.destroy()
+      req.destroy()
+      return
     }
 
     this.onRequest(req as any, ({ status, headers, body }) => {
@@ -76,21 +77,21 @@ export class NodeServer extends ServerBase {
     this.closed = false
     this.server.on('connection', this.onConnection.bind(this))
     this.server.on('request', this.wrapRequest.bind(this))
-    return this._listen.apply(this.server, args as any)
+    return this.#listenImpl.apply(this.server, args as any)
   }
 
-  close(cb: () => void = () => {}): void {
+  override close(cb: () => void = () => {}): void {
     this.server.removeAllListeners('connection')
     this.server.removeAllListeners('request')
     this.server.removeAllListeners('listening')
     super.close()
-    this._close.call(this.server, cb)
+    this.#closeImpl.call(this.server, cb)
   }
 
-  destroy(cb?: () => void): void {
+  override destroy(cb: () => void = () => {}): void {
     this.sockets.forEach((socket) => {
       socket.destroy()
     })
-    super.destroy(cb || (() => {}))
+    super.destroy(cb)
   }
 }

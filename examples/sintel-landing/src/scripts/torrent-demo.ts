@@ -69,7 +69,7 @@ async function runDemo(): Promise<void> {
   const graph = createP2PGraph('.torrent-graph')
   graph.add({ id: 'You', name: 'You', me: true })
 
-  const { default: WebTorrent } = await import('z-torrent-browser')
+  const { WebTorrent } = await import('@z-torrent/browser')
   // webSeeds: false — скачивать только через P2P (wss трекеры + WebRTC), не с webtorrent.io
   const client = new WebTorrent({
     // webSeeds: false,

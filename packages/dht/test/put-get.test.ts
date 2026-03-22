@@ -1,7 +1,7 @@
 import bencode from 'bencode'
 import ed from 'bittorrent-dht-sodium'
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 test('dht store with salt', () => {

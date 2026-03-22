@@ -4,8 +4,9 @@ import dgram, { Socket } from 'dgram'
 import Socks from 'socks'
 import { concat, hex2arr, randomBytes } from 'uint8-util'
 
-import common from '../common.js'
-import Tracker from './tracker.js'
+import * as common from '../common.js'
+import type { TrackerClientContext } from '../client-context.js'
+import { Tracker } from './tracker.js'
 import { compact2stringMulti } from '@z-torrent/utils'
 
 const debug = Debug('bittorrent-tracker:udp-tracker')
@@ -22,21 +23,12 @@ interface AnnounceOpts {
   _scrape?: boolean
 }
 
-interface ClientLike {
-  _infoHashBuffer: Uint8Array
-  _peerIdBuffer: Uint8Array
-  _port: number
-  infoHash: string
-  _proxyOpts?: any
-  emit(event: string, ...args: any[]): void
-}
-
-class UDPTracker extends Tracker {
+export class UDPTracker extends Tracker {
   cleanupFns: Array<() => void>
   maybeDestroyCleanup: (() => void) | null
   DEFAULT_ANNOUNCE_INTERVAL = 30 * 60 * 1000
 
-  constructor(client: ClientLike, announceUrl: string) {
+  constructor(client: TrackerClientContext, announceUrl: string) {
     super(client, announceUrl)
     debug('new udp tracker %s', announceUrl)
 
@@ -99,9 +91,10 @@ class UDPTracker extends Tracker {
 
     let transactionId = genTransactionId()
 
-    const proxyOpts =
-      (this.client as ClientLike)._proxyOpts &&
-      clone((this.client as ClientLike)._proxyOpts.socksProxy)
+    let proxyOpts: Record<string, any> | undefined
+    if (this.client.proxyOpts?.socksProxy) {
+      proxyOpts = clone(this.client.proxyOpts.socksProxy) as Record<string, any>
+    }
     if (proxyOpts) {
       if (!proxyOpts.proxy) proxyOpts.proxy = {}
       proxyOpts.proxy.command = 'associate'
@@ -113,7 +106,7 @@ class UDPTracker extends Tracker {
       }
 
       if (proxyOpts.proxy.type === 5) {
-        Socks.SocksClient.createConnection(proxyOpts, onGotConnection as any)
+        Socks.SocksClient.createConnection(proxyOpts as Parameters<typeof Socks.SocksClient.createConnection>[0], onGotConnection as any)
       } else {
         debug('Ignoring Socks proxy for UDP request because type 5 is required')
         onGotConnection(null, null, null)
@@ -178,7 +171,7 @@ class UDPTracker extends Tracker {
       try {
         ;(err as any).message += ` (${self.announceUrl})`
       } catch (ignoredErr) {}
-      ;(self.client as ClientLike).emit('warning', err)
+      self.client.emit('warning', err)
     }
 
     function onSocketMessage(msg: Buffer) {
@@ -208,7 +201,7 @@ class UDPTracker extends Tracker {
           const interval = msg.readUInt32BE(8)
           if (interval) {
             self.setInterval(interval * 1000)
-            ;(self.client as ClientLike).emit('update', {
+            self.client.emit('update', {
               announce: self.announceUrl,
               complete: msg.readUInt32BE(16),
               incomplete: msg.readUInt32BE(12),
@@ -219,10 +212,10 @@ class UDPTracker extends Tracker {
           try {
             addrs = compact2stringMulti(msg.slice(20))
           } catch (err: any) {
-            return (self.client as ClientLike).emit('warning', err)
+            return self.client.emit('warning', err)
           }
           addrs.forEach((addr) => {
-            ;(self.client as ClientLike).emit('peer', addr)
+            self.client.emit('peer', addr)
           })
 
           break
@@ -239,11 +232,11 @@ class UDPTracker extends Tracker {
               ? opts!.infoHash.map((infoHash) => (infoHash as any).toString('hex'))
               : [
                   (opts!.infoHash && (opts!.infoHash as any).toString('hex')) ||
-                    (self.client as ClientLike).infoHash,
+                    self.client.infoHash,
                 ]
 
           for (let i = 0, len = (msg.length - 8) / 12; i < len; i += 1) {
-            ;(self.client as ClientLike).emit('scrape', {
+            self.client.emit('scrape', {
               announce: self.announceUrl,
               infoHash: infoHashes[i],
               complete: msg.readUInt32BE(8 + i * 12),
@@ -260,7 +253,7 @@ class UDPTracker extends Tracker {
 
           if (msg.length < 8) {
             onError(new Error('invalid error message'))
-            return (self.client as ClientLike).emit('warning', new Error(msg.slice(8).toString()))
+            return self.client.emit('warning', new Error(msg.slice(8).toString()))
           }
 
           break
@@ -288,8 +281,8 @@ class UDPTracker extends Tracker {
           connectionId,
           common.toUInt32(common.ACTIONS.ANNOUNCE),
           transactionId,
-          (self.client as ClientLike)._infoHashBuffer,
-          (self.client as ClientLike)._peerIdBuffer,
+          self.client.infoHashBuffer,
+          self.client.peerIdBuffer,
           toUInt64(opts.downloaded || 0),
           opts.left != null ? toUInt64(opts.left as any) : hex2arr('ffffffffffffffff'),
           toUInt64(opts.uploaded || 0),
@@ -297,7 +290,7 @@ class UDPTracker extends Tracker {
           common.toUInt32(0),
           common.toUInt32(0),
           common.toUInt32(opts.numwant || 0),
-          toUInt16((self.client as ClientLike)._port),
+          toUInt16(self.client.port),
         ]),
         relay
       )
@@ -311,7 +304,7 @@ class UDPTracker extends Tracker {
           ? concat((opts!.infoHash as any[]).map((h) => (typeof h === 'string' ? hex2arr(h) : h)))
           : ((opts!.infoHash && typeof opts!.infoHash === 'string'
               ? hex2arr(opts!.infoHash as string)
-              : opts!.infoHash) as Uint8Array) || (self.client as ClientLike)._infoHashBuffer
+              : opts!.infoHash) as Uint8Array) || self.client.infoHashBuffer
 
       send(
         concat([connectionId, common.toUInt32(common.ACTIONS.SCRAPE), transactionId, infoHash]),
@@ -349,4 +342,3 @@ function toUInt64(n: number | string): Uint8Array {
 
 function noop() {}
 
-export default UDPTracker

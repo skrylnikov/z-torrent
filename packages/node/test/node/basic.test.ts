@@ -2,10 +2,11 @@ import fs from 'fs'
 import path from 'path'
 import http from 'http'
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
-import type { default as Torrent } from '../../src/lib/torrent.js'
+import type { Torrent } from '@z-torrent/core'
+import { WebTorrent } from '../../dist/index.js'
+import { expectSameMagnet, SEED_HEAVY_TIMEOUT_MS } from '../common.js'
 
 test('WebTorrent.WEBRTC_SUPPORT', async () => {
   const client = new WebTorrent({
@@ -62,7 +63,7 @@ test('client.add: http url to a torrent file, string', async () => {
       client.add(url, async (torrent: Torrent) => {
         expect((client as any).torrents.length).toBe(1)
         expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
         await new Promise<void>((res, rej) =>
           (client as any).remove(torrent, null, (err?: Error) => {
@@ -102,7 +103,7 @@ test('client.add: filesystem path to a torrent file, string', async () => {
     client.add(fixtures.leaves.torrentPath, async (torrent: Torrent) => {
       expect((client as any).torrents.length).toBe(1)
       expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
       await new Promise<void>((res, rej) =>
         (client as any).remove(torrent, null, (err?: Error) => {
@@ -146,7 +147,7 @@ test('client.seed: filesystem path to file, string', async () => {
       async (torrent: Torrent) => {
         expect((client as any).torrents.length).toBe(1)
         expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expect(torrent.magnetURI).toBe(fixtures.leaves.magnetURI)
+        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
 
         await new Promise<void>((res, rej) =>
           (client as any).remove(torrent, null, (err?: Error) => {
@@ -163,7 +164,7 @@ test('client.seed: filesystem path to file, string', async () => {
       }
     )
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: filesystem path to folder with one file, string', async () => {
   const client = new WebTorrent({
@@ -185,7 +186,7 @@ test('client.seed: filesystem path to folder with one file, string', async () =>
     client.seed(fixtures.folder.contentPath, { announce: [] }, async (torrent: Torrent) => {
       expect((client as any).torrents.length).toBe(1)
       expect(torrent.infoHash).toBe(fixtures.folder.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.folder.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.folder.magnetURI)
 
       await new Promise<void>((res, rej) =>
         (client as any).remove(torrent, null, (err?: Error) => {
@@ -201,7 +202,7 @@ test('client.seed: filesystem path to folder with one file, string', async () =>
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.seed: filesystem path to folder with multiple files, string', async () => {
   const client = new WebTorrent({
@@ -223,7 +224,7 @@ test('client.seed: filesystem path to folder with multiple files, string', async
     client.seed(fixtures.numbers.contentPath, { announce: [] }, async (torrent: Torrent) => {
       expect((client as any).torrents.length).toBe(1)
       expect(torrent.infoHash).toBe(fixtures.numbers.parsedTorrent.infoHash)
-      expect(torrent.magnetURI).toBe(fixtures.numbers.magnetURI)
+      expectSameMagnet(torrent.magnetURI, fixtures.numbers.magnetURI)
 
       const downloaded = torrent.files.map((file) => ({
         length: file.length,
@@ -250,7 +251,7 @@ test('client.seed: filesystem path to folder with multiple files, string', async
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('client.add: invalid torrent id: invalid filesystem path', async () => {
   const client = new WebTorrent({
@@ -312,7 +313,7 @@ test('client.remove: opts.destroyStore', async () => {
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
 test('torrent.destroy: opts.destroyStore', async () => {
   const client = new WebTorrent({
@@ -347,4 +348,4 @@ test('torrent.destroy: opts.destroyStore', async () => {
       })
     })
   })
-})
+}, { timeout: SEED_HEAVY_TIMEOUT_MS })

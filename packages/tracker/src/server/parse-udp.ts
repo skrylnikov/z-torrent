@@ -1,6 +1,6 @@
 import ipLib from 'ip'
 import { RemoteInfo } from 'dgram'
-import common from '../common.js'
+import * as common from '../common.js'
 import { equal } from 'uint8-util'
 
 interface ParsedParams {
@@ -22,7 +22,7 @@ interface ParsedParams {
   compact?: number
 }
 
-export default function parseUdpRequest(msg: Uint8Array | Buffer, rinfo: RemoteInfo): ParsedParams {
+export function parseUdpRequest(msg: Uint8Array | Buffer, rinfo: RemoteInfo): ParsedParams {
   if (msg.length < 16) throw new Error('received packet is too short')
 
   const bufferMsg = Buffer.isBuffer(msg) ? msg : Buffer.from(msg)

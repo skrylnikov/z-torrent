@@ -1,43 +1,39 @@
 {
   "name": "@z-torrent/dht",
-  "description": "Simple, robust, BitTorrent DHT implementation",
+  "description": "BitTorrent DHT implementation (BEP 5, BEP 44)",
   "type": "module",
   "version": "0.0.5",
-  "author": {
-    "name": "WebTorrent LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
-    "url": "https://github.com/webtorrent/bittorrent-dht/issues"
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "dependencies": {
     "bencode": "^4.0.0",
-    "eventemitter3": "^5.0.4",
     "debug": "^4.4.3",
+    "eventemitter3": "^5.0.4",
     "k-bucket": "^5.1.0",
     "k-rpc": "^5.1.0",
     "last-one-wins": "^1.0.4",
-    "lru": "^3.1.0",
+    "lru-cache": "^11.2.4",
     "record-cache": "^1.2.0",
     "sync-sha1": "^1.0.1",
-    "uint8-util": "^2.2.5"
+    "uint8-util": "^2.2.6"
   },
   "devDependencies": {
     "@types/bencode": "^2.0.4",
-    "@types/debug": "^4.1.0",
+    "@types/debug": "^4.1.12",
     "@types/ip": "^1.1.3",
-    "@types/node": "^20.0.0",
-    "@types/run-parallel": "^1.1.2",
+    "@types/node": "^22.19.3",
     "bittorrent-dht-sodium": "1.2.0",
     "ip": "1.1.9",
-    "@z-torrent/utils": "workspace:*",
-    "run-parallel": "1.2.0"
+    "@z-torrent/utils": "workspace:*"
   },
   "keywords": [
     "torrent",
     "bittorrent",
     "dht",
+    "webtorrent",
+    "z-torrent",
     "distributed hash table",
     "protocol",
     "peer",
@@ -45,17 +41,13 @@
     "peer-to-peer"
   ],
   "engines": {
-    "node": ">=12.20.0"
+    "node": ">=18.0.0"
   },
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
@@ -78,6 +70,7 @@
     "update-authors": "./tools/update-authors.sh",
     "test": "bun test test/*.test.ts",
     "test-live": "bun test test/live/",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "size": "size-limit"
   },

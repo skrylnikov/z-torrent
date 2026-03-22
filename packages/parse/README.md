@@ -1,178 +1,101 @@
-# parse-torrent [![ci][ci-image]][ci-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# @z-torrent/parse
 
-[ci-image]: https://img.shields.io/github/actions/workflow/status/webtorrent/parse-torrent/ci.yml
-[ci-url]: https://github.com/webtorrent/parse-torrent/actions
-[npm-image]: https://img.shields.io/npm/v/parse-torrent.svg
-[npm-url]: https://npmjs.org/package/parse-torrent
-[downloads-image]: https://img.shields.io/npm/dm/parse-torrent.svg
-[downloads-url]: https://npmjs.org/package/parse-torrent
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+Parse torrent identifiers: magnet URIs, `.torrent` buffers, v1/v2 info hashes, and related helpers. Used by [Z-Torrent](https://github.com/skrylnikov/z-torrent).
 
-### Parse a torrent identifier (magnet uri, .torrent file, info hash)
+## Install
 
-Works in node and the browser (with [browserify](http://browserify.org/)). This module is used by [WebTorrent](http://webtorrent.io)!
-
-## install
-
-```
-npm install parse-torrent
+```bash
+npm install @z-torrent/parse
 ```
 
-## usage
+## API
 
-### parse
+### `parse.decode(torrentId)`
 
-The return value of `parseTorrent` will contain as much info as possible about the
-torrent. The only property that is guaranteed to be present is `infoHash`.
+Resolves a torrent id to a structured object. `torrentId` may be:
+
+- A **40-character hex** v1 info hash or **32-character base32** hash
+- A **64-character hex** v2 info hash
+- A **magnet** or **stream-magnet** URI
+- A **Uint8Array** / Buffer of a `.torrent` file or of a 20- or 32-byte raw hash
+- An **object** already shaped like a parsed torrent (must include `infoHash` and/or `infoHashV2`)
+
+Returns a `Promise<Instance>`. For **BitTorrent v2** ([BEP 52](https://www.bittorrent.org/beps/bep_0052.html)) files, the result includes `version`: `'v1' | 'v2' | 'hybrid'`, and may include root `piece layers`. Pure v2 torrents expose `infoHashV2` and usually no v1 `pieces` array; hybrid torrents include both.
 
 ```js
-import parseTorrent from 'parse-torrent'
-import fs from 'fs'
+import { parse } from '@z-torrent/parse'
 
-// info hash (as a hex string)
-parseTorrent('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36')
-// { infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36' }
-
-// info hash (as a Buffer)
-parseTorrent(new Buffer('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36', 'hex'))
-// { infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36' }
-
-// magnet uri (as a utf8 string)
-parseTorrent('magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36')
-// { xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-//   infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36' }
-
-// magnet uri with torrent name
-parseTorrent(
-  'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36&dn=Leaves%20of%20Grass%20by%20Walt%20Whitman.epub'
+const fromHash = await parse.decode('d2474e86c95b19b8bcfdb92bc12c9d44667cfa36')
+const fromMagnet = await parse.decode(
+  'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36'
 )
-// { xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-//   dn: 'Leaves of Grass by Walt Whitman.epub',
-//   infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-//   name: 'Leaves of Grass by Walt Whitman.epub' }
-
-// magnet uri with trackers
-parseTorrent(
-  'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36&tr=http%3A%2F%2Ftracker.example.com%2Fannounce'
-)
-// { xt: 'urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-//   tr: 'http://tracker.example.com/announce',
-//   infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-//   announce: [ 'http://tracker.example.com/announce' ] }
-
-// .torrent file (as a Buffer)
-parseTorrent(fs.readFileSync(__dirname + '/torrents/leaves.torrent'))
-// { info:
-//    { length: 362017,
-//      name: <Buffer 4c 65 61 76 65 73 20 6f 66 20 47 72 61 73 73 20 62 79 20 57 61 6c 74 20 57 68 69 74 6d 61 6e 2e 65 70 75 62>,
-//      'piece length': 16384,
-//      pieces: <Buffer 1f 9c 3f 59 be ec 07 97 15 ec 53 32 4b de 85 69 e4 a0 b4 eb ec 42 30 7d 4c e5 55 7b 5d 39 64 c5 ef 55 d3 54 cf 4a 6e cc 7b f1 bc af 79 d1 1f a5 e0 be 06 ...> },
-//   infoBuffer: <Buffer 64 36 3a 6c 65 6e 67 74 68 69 33 36 32 30 31 37 65 34 3a 6e 61 6d 65 33 36 3a 4c 65 61 76 65 73 20 6f 66 20 47 72 61 73 73 20 62 79 20 57 61 6c 74 20 57 ...>,
-//   infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-//   name: 'Leaves of Grass by Walt Whitman.epub',
-//   private: false,
-//   created: Thu Aug 01 2013 06:27:46 GMT-0700 (PDT),
-//   comment: 'Downloaded from http://TheTorrent.org',
-//   announce:
-//    [ 'http://tracker.example.com/announce' ],
-//   urlList: [],
-//   files:
-//    [ { path: 'Leaves of Grass by Walt Whitman.epub',
-//        name: 'Leaves of Grass by Walt Whitman.epub',
-//        length: 362017,
-//        offset: 0 } ],
-//   length: 362017,
-//   pieceLength: 16384,
-//   lastPieceLength: 1569,
-//   pieces:
-//    [ '1f9c3f59beec079715ec53324bde8569e4a0b4eb',
-//      'ec42307d4ce5557b5d3964c5ef55d354cf4a6ecc',
-//      '7bf1bcaf79d11fa5e0be06593c8faafc0c2ba2cf',
-//      '76d71c5b01526b23007f9e9929beafc5151e6511',
-//      '0931a1b44c21bf1e68b9138f90495e690dbc55f5',
-//      '72e4c2944cbacf26e6b3ae8a7229d88aafa05f61',
-//      'eaae6abf3f07cb6db9677cc6aded4dd3985e4586',
-//      '27567fa7639f065f71b18954304aca6366729e0b',
-//      '4773d77ae80caa96a524804dfe4b9bd3deaef999',
-//      'c9dd51027467519d5eb2561ae2cc01467de5f643',
-//      '0a60bcba24797692efa8770d23df0a830d91cb35',
-//      'b3407a88baa0590dc8c9aa6a120f274367dcd867',
-//      'e88e8338c572a06e3c801b29f519df532b3e76f6',
-//      '70cf6aee53107f3d39378483f69cf80fa568b1ea',
-//      'c53b506159e988d8bc16922d125d77d803d652c3',
-//      'ca3070c16eed9172ab506d20e522ea3f1ab674b3',
-//      'f923d76fe8f44ff32e372c3b376564c6fb5f0dbe',
-//      '52164f03629fd1322636babb2c014b7dae582da4',
-//      '1363965261e6ce12b43701f0a8c9ed1520a70eba',
-//      '004400a267765f6d3dd5c7beb5bd3c75f3df2a54',
-//      '560a61801147fa4ec7cf568e703acb04e5610a4d',
-//      '56dcc242d03293e9446cf5e457d8eb3d9588fd90',
-//      'c698de9b0dad92980906c026d8c1408fa08fe4ec' ] }
 ```
 
-### encode
+### `parseTorrentSync(torrentId)` (Node)
 
-The reverse works too. To convert an object of keys/value to a magnet uri or .torrent file
-buffer, use `toMagnetURI` and `toTorrentFile`.
+Synchronous decode with the same inputs as `parse.decode`. Uses `crypto.createHash` for v2 info hashes.
 
 ```js
-import { toMagnetURI, toTorrentFile } from 'parse-torrent'
+import { parseTorrentSync } from '@z-torrent/parse'
 
-const uri = toMagnetURI({
-  infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
-})
-console.log(uri) // 'magnet:?xt=urn:btih:d2474e86c95b19b8bcfdb92bc12c9d44667cfa36'
-
-const buf = toTorrentFile({
-  info: {
-    /* ... */
-  },
-})
-console.log(buf)
+const parsed = parseTorrentSync(torrentFileBuffer)
 ```
 
-### remote torrents
+### `parse.encode(parsed)`
 
-To support remote torrent identifiers (i.e. http/https links to .torrent files, or
-filesystem paths), as well as Blobs use the `parseTorrent.remote` function. It takes
-a callback since these torrent types require async operations:
+Builds a `.torrent` buffer from a parsed `Instance` (round-trip with `parse.decode` where supported).
+
+### `parse.toMagnetURI` / `toMagnetURI`
+
+Encode a minimal object (e.g. `{ infoHash }`) to a magnet URI (from `@z-torrent/magnet`).
+
+### `toTorrentFile`
+
+Alias for `parse.encode`.
+
+### `remote(torrentId, [opts], callback)`
+
+Callback-style API for ids that need async I/O: **Blob**, `http(s):` URL, or **filesystem path** (Node). The first decode attempt is synchronous for strings/buffers that already parse as magnets or hashes.
 
 ```js
-import { remote } from 'parse-torrent'
-remote(torrentId, (err, parsedTorrent) => {
+import { remote } from '@z-torrent/parse'
+
+remote('/path/to/file.torrent', (err, parsed) => {
   if (err) throw err
-  console.log(parsedTorrent)
+  console.log(parsed.infoHash)
 })
 ```
 
-If the `torrentId` is an http/https link to the .torrent file, then the request to the file
-can be modified by passing `simple-get` params. For example:
+For HTTP(S), optional `fetch`-style options can be passed as the second argument (when the third is the callback).
 
-```js
-import { remote } from 'parse-torrent'
-remote(torrentId, { timeout: 60 * 1000 }, (err, parsedTorrent) => {
-  if (err) throw err
-  console.log(parsedTorrent)
-})
+### Deprecated aliases
+
+- `parseTorrent` — same as `decode`
+- `decode` / `encode` — same as `parse.decode` / `parse.encode`
+
+## CLI
+
+The package exposes the `parse-torrent` binary:
+
+```text
+parse-torrent /path/to/file.torrent
+parse-torrent "magnet:?xt=urn:btih:..."
+parse-torrent --stdin
+parse-torrent --raw /path/to/file.torrent
 ```
 
-### command line program
+Install globally or run via `npx` / `bunx` from the package that depends on `@z-torrent/parse`.
 
-This package also includes a command line program.
+## Types
 
-```
-Usage: parse-torrent /path/to/torrent
-       parse-torrent magnet_uri
-       parse-torrent --stdin
+```ts
+import type { Instance } from '@z-torrent/parse'
 ```
 
-To install it, run:
+## Requirements
 
-```
-npm install parse-torrent -g
-```
+Node.js **24+** (aligned with other Z-Torrent packages).
 
-## license
+## License
 
-MIT. Copyright (c) [Feross Aboukhadijeh](https://feross.org) and [WebTorrent, LLC](https://webtorrent.io).
+MIT. Portions derive from [parse-torrent](https://github.com/webtorrent/parse-torrent) / WebTorrent LLC.

@@ -1,12 +1,12 @@
 /* global Blob */
 
 import { expect, test } from 'bun:test'
-import fixtures from '@z-torrent/fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import fs from 'fs'
-import parseTorrent from '@z-torrent/parse'
+import { parseTorrent } from '@z-torrent/parse'
 import path from 'path'
 import { hash } from 'uint8-util'
-import { createTorrentPromise } from '../helpers.js'
+import { createTorrentPromise, torrentFilesOf } from '../helpers.js'
 
 interface BlobWithPath extends Blob {
   fullPath?: string
@@ -14,7 +14,8 @@ interface BlobWithPath extends Blob {
 }
 
 function makeFileShim(buf: Buffer | string, name: string): BlobWithPath {
-  const file = new Blob([buf]) as BlobWithPath
+  const part = typeof buf === 'string' ? buf : new Uint8Array(buf)
+  const file = new Blob([part]) as BlobWithPath
   file.fullPath = `/${name}`
   file.name = name
   return file
@@ -38,13 +39,14 @@ test('create single file torrent', async () => {
   const startTime = Date.now()
   const torrent = await createTorrentPromise(leaves)
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('Leaves of Grass by Walt Whitman.epub')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  expect(parsedTorrent.files[0].path).toBe('Leaves of Grass by Walt Whitman.epub')
-  expect(parsedTorrent.files[0].length).toBe(362017)
+  expect(files[0]!.path).toBe('Leaves of Grass by Walt Whitman.epub')
+  expect(files[0]!.length).toBe(362017)
   expect(parsedTorrent.length).toBe(362017)
   expect(parsedTorrent.pieceLength).toBe(16384)
   expect(parsedTorrent.pieces).toEqual([
@@ -72,7 +74,7 @@ test('create single file torrent', async () => {
     '56dcc242d03293e9446cf5e457d8eb3d9588fd90',
     'c698de9b0dad92980906c026d8c1408fa08fe4ec',
   ])
-  expect(await hash(parsedTorrent.infoBuffer, 'hex')).toBe(
+  expect(await hash(parsedTorrent.infoBuffer!, 'hex')).toBe(
     'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36'
   )
 })
@@ -85,22 +87,23 @@ test('create multi file torrent', async () => {
     name: 'numbers',
   })
   const parsedTorrent = await parseTorrent(torrent)
+  const files = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('numbers')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  expect(parsedTorrent.files[0].path).toBe('numbers/1.txt')
-  expect(parsedTorrent.files[0].length).toBe(1)
-  expect(parsedTorrent.files[1].path).toBe('numbers/2.txt')
-  expect(parsedTorrent.files[1].length).toBe(2)
-  expect(parsedTorrent.files[2].path).toBe('numbers/3.txt')
-  expect(parsedTorrent.files[2].length).toBe(3)
+  expect(files[0]!.path).toBe('numbers/1.txt')
+  expect(files[0]!.length).toBe(1)
+  expect(files[1]!.path).toBe('numbers/2.txt')
+  expect(files[1]!.length).toBe(2)
+  expect(files[2]!.path).toBe('numbers/3.txt')
+  expect(files[2]!.length).toBe(3)
   expect(parsedTorrent.length).toBe(6)
-  expect(parsedTorrent.info.pieces.length).toBe(20)
+  expect(parsedTorrent.info!.pieces!.length).toBe(20)
   expect(parsedTorrent.pieceLength).toBe(32768)
   expect(parsedTorrent.pieces).toEqual(['1f74648e50a6a6708ec54ab327a163d5536b7ced'])
-  expect(await hash(parsedTorrent.infoBuffer, 'hex')).toBe(
+  expect(await hash(parsedTorrent.infoBuffer!, 'hex')).toBe(
     '80562f38656b385ea78959010e51a2cc9db41ea0'
   )
 })

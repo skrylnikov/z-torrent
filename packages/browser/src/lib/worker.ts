@@ -1,16 +1,16 @@
-import fileResponse from './worker-server.js'
+import { handleFetch } from './worker-server.js'
 
-const _self = self as unknown as ServiceWorkerGlobalScope
+const sw = self as unknown as ServiceWorkerGlobalScope
 
-_self.addEventListener('install', () => {
-  _self.skipWaiting()
+sw.addEventListener('install', () => {
+  sw.skipWaiting()
 })
 
-_self.addEventListener('fetch', (event: FetchEvent) => {
-  const res = fileResponse(event)
+sw.addEventListener('fetch', (event: FetchEvent) => {
+  const res = handleFetch(event)
   if (res) event.respondWith(res)
 })
 
-_self.addEventListener('activate', () => {
-  void _self.clients.claim()
+sw.addEventListener('activate', () => {
+  void sw.clients.claim()
 })

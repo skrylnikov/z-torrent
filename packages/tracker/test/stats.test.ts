@@ -1,8 +1,6 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
 import commonTest from './common.js'
-import fixtures from 'webtorrent-fixtures'
-import fetch from 'cross-fetch-ponyfill'
-import type { default as ClientType } from '../client.js'
+import { fixtures } from '@z-torrent/fixtures'
 
 const peerId = Buffer.from('-WW0091-4ea5886ce160')
 const unknownPeerId = Buffer.from('01234567890123456789')
@@ -139,7 +137,7 @@ test('server: get empty stats on stats.json', async () => {
 test('server: get leecher stats.json', () => {
   return new Promise((resolve, reject) => {
     commonTest.createServer('http', (server, announceUrl) => {
-      const client: ClientType = new Client({
+      const client: InstanceType<typeof Client> = new Client({
         infoHash: fixtures.leaves.parsedTorrent.infoHash,
         announce: announceUrl,
         peerId,
@@ -185,7 +183,7 @@ test('server: get leecher stats.json', () => {
 test('server: get leecher stats.json (unknown peerId)', () => {
   return new Promise((resolve, reject) => {
     commonTest.createServer('http', (server, announceUrl) => {
-      const client: ClientType = new Client({
+      const client: InstanceType<typeof Client> = new Client({
         infoHash: fixtures.leaves.parsedTorrent.infoHash,
         announce: announceUrl,
         peerId: unknownPeerId,

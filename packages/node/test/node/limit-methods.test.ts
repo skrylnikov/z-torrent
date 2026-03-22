@@ -1,7 +1,7 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 const DOWNLOAD_SPEED_LIMIT = 200 * 1000
 const UPLOAD_SPEED_LIMIT = 200 * 1000

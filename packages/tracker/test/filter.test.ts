@@ -1,7 +1,9 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
+import type { Server } from '../src/server.js'
 import common from './common.js'
-import fixtures from 'webtorrent-fixtures'
-import type Server from '../server.js'
+import { fixtures } from '@z-torrent/fixtures'
+
+import { testWrtc } from './helpers.js'
 
 const peerId = Buffer.from('01234567890123456789')
 
@@ -27,13 +29,12 @@ function testFilterOption(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         announce: announceUrl,
         peerId,
         port: 6881,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
       client1.on('error', (err) => {
         throw err
       })
-      if (serverType === 'ws') common.mockWebsocketTracker(client1)
 
       client1.once('warning', (err) => {
         expect(err.message.includes('disallowed info_hash (Alice)')).toBeTruthy()
@@ -44,9 +45,8 @@ function testFilterOption(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
             announce: announceUrl,
             peerId,
             port: 6881,
-            wrtc: {},
+            wrtc: testWrtc,
           })
-          if (serverType === 'ws') common.mockWebsocketTracker(client2)
 
           client2.on('error', (err) => {
             throw err
@@ -108,13 +108,12 @@ function testFilterCustomError(serverType: 'http' | 'udp' | 'ws'): Promise<void>
         announce: announceUrl,
         peerId,
         port: 6881,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
       client1.on('error', (err) => {
         throw err
       })
-      if (serverType === 'ws') common.mockWebsocketTracker(client1)
 
       client1.once('warning', (err) => {
         expect(/alice blocked/.test(err.message)).toBeTruthy()
@@ -125,9 +124,8 @@ function testFilterCustomError(serverType: 'http' | 'udp' | 'ws'): Promise<void>
             announce: announceUrl,
             peerId,
             port: 6881,
-            wrtc: {},
+            wrtc: testWrtc,
           })
-          if (serverType === 'ws') common.mockWebsocketTracker(client2)
 
           client2.on('error', (err) => {
             throw err

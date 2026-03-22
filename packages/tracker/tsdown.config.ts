@@ -1,6 +1,7 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
+  clean: true,
   entry: {
     index: './src/index.ts',
     client: './src/client.ts',
@@ -18,15 +19,13 @@ export default defineConfig({
     '@thaunknown/simple-websocket',
     'bencode',
     'bittorrent-peerid',
-    'cross-fetch-ponyfill',
+    '@z-torrent/utils',
     'debug',
     'dgram',
     'http',
     'ip',
     'lru',
     'minimist',
-    'once',
-
     'random-iterate',
     'run-parallel',
     'run-series',

@@ -3,18 +3,20 @@
  */
 
 import MemoryChunkStore from 'memory-chunk-store'
-import { BrowserServer } from './lib/server.js'
-import BrowserDiscovery from './lib/browser-discovery.js'
+import { BrowserServer, type BrowserServerOptions } from './lib/server.js'
+import { BrowserDiscovery } from './lib/browser-discovery.js'
 import type {
   PlatformAdapter,
-  ServerOptions,
   ChunkStoreConstructor,
   DiscoveryOptions,
-} from '../../core/src/index.js'
+  ClientWithTorrents,
+} from '@z-torrent/core'
 
 const IDLE_CALLBACK =
-  typeof (globalThis as any).requestIdleCallback === 'function'
-    ? (globalThis as any).requestIdleCallback
+  typeof (globalThis as typeof globalThis & { requestIdleCallback?: typeof requestIdleCallback })
+    .requestIdleCallback === 'function'
+    ? (globalThis as typeof globalThis & { requestIdleCallback: typeof requestIdleCallback })
+        .requestIdleCallback
     : null
 
 export function createBrowserPlatformAdapter(): PlatformAdapter {
@@ -27,7 +29,7 @@ export function createBrowserPlatformAdapter(): PlatformAdapter {
 
     createConnPool: undefined,
     createServer(client, opts) {
-      return new BrowserServer(client, opts)
+      return new BrowserServer(client as ClientWithTorrents, opts as BrowserServerOptions)
     },
     createDHT: undefined,
     loadIPSet: undefined,

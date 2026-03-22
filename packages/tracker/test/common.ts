@@ -1,32 +1,37 @@
-import { Server } from '../index.js'
+import { Server } from '../src/index.js'
 
-interface ServerOptions {
+export interface TestCreateServerOpts {
   serverType: 'http' | 'udp' | 'ws'
+  serverFamily?: 'inet' | 'inet6'
+  filter?: (infoHash: string, params: unknown, cb: (err?: Error | null) => void) => void
+  peersCacheLength?: number
+  peersCacheTtl?: number
   http?: boolean
   udp?: boolean
   ws?: boolean
 }
 
-interface MockWebsocketTrackerClient {
-  _trackers: Array<{
-    _generateOffers: (numwant: number, cb: (offers: Array<{ fake_offer: string }>) => void) => void
-  }>
-}
-
 export const createServer = (
-  opts: ServerOptions | string,
+  opts: TestCreateServerOpts | string,
   cb: (server: Server, announceUrl: string) => void
 ): void => {
-  let serverOpts: ServerOptions
-  if (typeof opts === 'string') {
-    serverOpts = { serverType: opts as 'http' | 'udp' | 'ws' }
-  } else {
-    serverOpts = opts
-  }
+  const serverType = typeof opts === 'string' ? opts : opts.serverType
 
-  serverOpts.http = serverOpts.serverType === 'http'
-  serverOpts.udp = serverOpts.serverType === 'udp'
-  serverOpts.ws = serverOpts.serverType === 'ws'
+  const base =
+    typeof opts === 'string'
+      ? {}
+      : {
+          filter: opts.filter,
+          peersCacheLength: opts.peersCacheLength,
+          peersCacheTtl: opts.peersCacheTtl,
+        }
+
+  const serverOpts = {
+    ...base,
+    http: serverType === 'http',
+    udp: serverType === 'udp',
+    ws: serverType === 'ws',
+  }
 
   const server = new Server(serverOpts)
 
@@ -37,12 +42,17 @@ export const createServer = (
     throw err
   })
 
-  server.listen(0, () => {
-    const port = server[serverOpts.serverType]!.address().port
+  const listenHostname =
+    typeof opts === 'object' && opts.serverFamily === 'inet6'
+      ? { http: '::1', udp: '::1', udp4: '0.0.0.0', udp6: '::1' }
+      : undefined
+
+  server.listen(0, listenHostname as never, () => {
+    const port = server[serverType]!.address().port
     let announceUrl: string
-    if (serverOpts.serverType === 'http') {
+    if (serverType === 'http') {
       announceUrl = `http://127.0.0.1:${port}/announce`
-    } else if (serverOpts.serverType === 'udp') {
+    } else if (serverType === 'udp') {
       announceUrl = `udp://127.0.0.1:${port}`
     } else {
       announceUrl = `ws://127.0.0.1:${port}`
@@ -52,16 +62,4 @@ export const createServer = (
   })
 }
 
-export const mockWebsocketTracker = (client: MockWebsocketTrackerClient): void => {
-  client._trackers[0]._generateOffers = (numwant, cb) => {
-    const offers: Array<{ fake_offer: string }> = []
-    for (let i = 0; i < numwant; i++) {
-      offers.push({ fake_offer: `fake_offer_${i}` })
-    }
-    queueMicrotask(() => {
-      cb(offers)
-    })
-  }
-}
-
-export default { mockWebsocketTracker, createServer }
+export default { createServer }

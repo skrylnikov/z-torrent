@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import parseTorrent from '@z-torrent/parse'
+import { parseTorrent } from '@z-torrent/parse'
 import { createTorrentPromise } from './helpers.js'
 
 test('create ssl cert torrent', async () => {
@@ -10,5 +10,5 @@ test('create ssl cert torrent', async () => {
     sslCert,
   })
   const parsedTorrent = await parseTorrent(torrent)
-  expect(parsedTorrent.info['ssl-cert']).toEqual(sslCert)
+  expect((parsedTorrent.info as Record<string, unknown>)['ssl-cert']).toEqual(sslCert)
 })

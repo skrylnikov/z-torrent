@@ -3,26 +3,8 @@
  * No DHT, LSD, HTTP or UDP trackers (Node.js-only).
  */
 
-import Tracker from '@z-torrent/tracker/client'
-import type { Discovery, DiscoveryOptions } from '../../../core/src/interfaces.js'
-
-/** Minimal EventEmitter (no eventemitter3 dep) */
-class DiscoveryEmitter implements Discovery {
-  private _listeners: Record<string, Array<(...args: unknown[]) => void>> = {}
-  on(event: string, fn: (...args: unknown[]) => void): void {
-    ;(this._listeners[event] ??= []).push(fn)
-  }
-  removeListener(event: string, fn: (...args: unknown[]) => void): void {
-    const arr = this._listeners[event]
-    if (arr) {
-      const i = arr.indexOf(fn)
-      if (i >= 0) arr.splice(i, 1)
-    }
-  }
-  emit(event: string, ...args: unknown[]): void {
-    for (const fn of this._listeners[event] ?? []) fn(...args)
-  }
-}
+import { Client } from '@z-torrent/tracker/client'
+import type { Discovery, DiscoveryOptions } from '@z-torrent/core'
 
 function isWebSocketUrl(url: string): boolean {
   try {
@@ -33,13 +15,12 @@ function isWebSocketUrl(url: string): boolean {
   }
 }
 
-class BrowserDiscovery extends DiscoveryEmitter implements Discovery {
-  private _tracker: Tracker | null = null
-  private _announce: string[] = []
+export class BrowserDiscovery implements Discovery {
+  #listeners: Record<string, Array<(...args: unknown[]) => void>> = {}
+  #tracker: InstanceType<typeof Client> | null = null
   destroyed = false
 
   constructor(opts: DiscoveryOptions) {
-    super()
     const wsAnnounce = (opts.announce || []).filter(isWebSocketUrl)
     if (wsAnnounce.length === 0) {
       console.warn(
@@ -49,7 +30,7 @@ class BrowserDiscovery extends DiscoveryEmitter implements Discovery {
       return
     }
     const trackerOpts = (opts.tracker || {}) as Record<string, unknown>
-    this._tracker = new Tracker({
+    this.#tracker = new Client({
       infoHash: opts.infoHash,
       peerId: opts.peerId,
       port: opts.port,
@@ -57,28 +38,42 @@ class BrowserDiscovery extends DiscoveryEmitter implements Discovery {
       getAnnounceOpts: trackerOpts.getAnnounceOpts as (() => Record<string, unknown>) | undefined,
       userAgent: opts.userAgent,
     })
-    this._tracker.on('warning', (err: Error) => this.emit('warning', err))
-    this._tracker.on('error', (err: Error) => this.emit('error', err))
-    this._tracker.on('peer', (peer: string) => this.emit('peer', peer as unknown, 'tracker'))
-    this._tracker.on('update', () => this.emit('trackerAnnounce'))
-    this._tracker.setInterval(opts.intervalMs ?? 15 * 60 * 1000)
-    this._tracker.start()
+    this.#tracker.on('warning', (err: Error) => this.#emit('warning', err))
+    this.#tracker.on('error', (err: Error) => this.#emit('error', err))
+    this.#tracker.on('peer', (peer: string) => this.#emit('peer', peer as unknown, 'tracker'))
+    this.#tracker.on('update', () => this.#emit('trackerAnnounce'))
+    this.#tracker.setInterval(opts.intervalMs ?? 15 * 60 * 1000)
+    this.#tracker.start()
+  }
+
+  on(event: string, fn: (...args: unknown[]) => void): void {
+    ;(this.#listeners[event] ??= []).push(fn)
+  }
+
+  removeListener(event: string, fn: (...args: unknown[]) => void): void {
+    const arr = this.#listeners[event]
+    if (arr) {
+      const i = arr.indexOf(fn)
+      if (i >= 0) arr.splice(i, 1)
+    }
+  }
+
+  #emit(event: string, ...args: unknown[]): void {
+    for (const fn of this.#listeners[event] ?? []) fn(...args)
   }
 
   complete(opts?: object): void {
-    if (this._tracker && !this.destroyed) {
-      this._tracker.complete(opts)
+    if (this.#tracker && !this.destroyed) {
+      this.#tracker.complete(opts)
     }
   }
 
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
-    if (this._tracker) {
-      this._tracker.destroy()
-      this._tracker = null
+    if (this.#tracker) {
+      this.#tracker.destroy()
+      this.#tracker = null
     }
   }
 }
-
-export default BrowserDiscovery

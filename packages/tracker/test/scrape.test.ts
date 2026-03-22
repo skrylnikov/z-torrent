@@ -1,26 +1,24 @@
 import bencode from 'bencode'
-import Client from '../index.js'
+import { Client } from '../src/index.js'
 import common from './common.js'
-import commonLib from '../src/common.js'
-import fixtures from 'webtorrent-fixtures'
-import fetch from 'cross-fetch-ponyfill'
-import type { default as ClientType } from '../client.js'
+import * as commonLib from '../src/common.js'
+import { fixtures } from '@z-torrent/fixtures'
 import { hex2bin } from 'uint8-util'
+
+import { testWrtc } from './helpers.js'
 
 const peerId = Buffer.from('01234567890123456789')
 
 function testSingle(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
   return new Promise((resolve, reject) => {
     common.createServer(serverType, (server, announceUrl) => {
-      const client: ClientType = new Client({
+      const client: InstanceType<typeof Client> = new Client({
         infoHash: fixtures.leaves.parsedTorrent.infoHash,
         announce: announceUrl,
         peerId,
         port: 6881,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -56,7 +54,7 @@ function clientScrapeStatic(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         {
           announce: announceUrl,
           infoHash: fixtures.leaves.parsedTorrent.infoHash,
-          wrtc: {},
+          wrtc: testWrtc,
         },
         (err, data) => {
           if (err) throw err
@@ -70,7 +68,6 @@ function clientScrapeStatic(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
           })
         }
       )
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
     })
   })
 }
@@ -88,14 +85,13 @@ function clientScrapeStaticInvalid(serverType: 'http' | 'udp' | 'ws'): Promise<v
       {
         announce: announceUrl,
         infoHash: fixtures.leaves.parsedTorrent.infoHash,
-        wrtc: {},
+        wrtc: testWrtc,
       },
       (err) => {
         expect(err instanceof Error).toBeTruthy()
         resolve()
       }
     )
-    if (serverType === 'ws' && client._trackers?.[0]) common.mockWebsocketTracker(client)
   })
 }
 
@@ -116,6 +112,7 @@ function clientScrapeMulti(serverType: 'http' | 'udp'): Promise<void> {
         {
           infoHash: [infoHash1, infoHash2],
           announce: announceUrl,
+          wrtc: testWrtc,
         },
         (err, results) => {
           if (err) throw err
@@ -193,7 +190,7 @@ test('server: all info_hash scrape (manual http request)', () => {
     common.createServer('http', (server, announceUrl) => {
       const scrapeUrl = announceUrl.replace('/announce', '/scrape')
 
-      const client: ClientType = new Client({
+      const client: InstanceType<typeof Client> = new Client({
         infoHash: fixtures.leaves.parsedTorrent.infoHash,
         announce: announceUrl,
         peerId,

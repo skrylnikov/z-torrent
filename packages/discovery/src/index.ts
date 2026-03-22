@@ -1,16 +1,29 @@
-/*! torrent-discovery. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
+/*! @z-torrent/discovery. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
+
 import Debug from 'debug'
-import DHT from '@z-torrent/dht'
 import { EventEmitter } from 'eventemitter3'
 import parallel from 'run-parallel'
-import Tracker from '@z-torrent/tracker/client'
-import LSD from '@z-torrent/lsd'
+import { arr2hex } from 'uint8-util'
+
+import { DHT } from '@z-torrent/dht'
+import { LSD } from '@z-torrent/lsd'
+import { Client } from '@z-torrent/tracker'
 
 const debug = Debug('torrent-discovery')
 
+function isBrowserRuntime(): boolean {
+  if (typeof process === 'undefined') return false
+  return Boolean((process as { browser?: boolean }).browser)
+}
+
+function normalizeHexId(value: string | Uint8Array): string {
+  if (typeof value === 'string') return value.toLowerCase()
+  return arr2hex(value).toLowerCase()
+}
+
 export interface DiscoveryOptions {
-  peerId: string | Buffer
-  infoHash: string | Buffer
+  peerId: string | Uint8Array
+  infoHash: string | Uint8Array
   port: number
   announce?: string[]
   intervalMs?: number
@@ -26,90 +39,86 @@ export interface DHTPeer {
   port: number | string
 }
 
-class Discovery extends EventEmitter {
+export class Discovery extends EventEmitter {
   peerId: string
   infoHash: string
   destroyed: boolean
   dht: DHT | null
-  tracker: Tracker | null
+  tracker: InstanceType<typeof Client> | null
   lsd: LSD | null
 
-  private _port: number
-  private _userAgent?: string
-  private _announce: string[] | null
-  private _intervalMs: number
-  private _trackerOpts: object | null
-  private _dhtAnnouncing: boolean
-  private _dhtTimeout: NodeJS.Timeout | false
-  private _internalDHT: boolean
+  #port: number
+  #userAgent?: string
+  #announce: string[] | null
+  #intervalMs: number
+  #trackerOpts: object | null
+  #dhtAnnouncing: boolean
+  #dhtTimeout: ReturnType<typeof setTimeout> | false
+  #internalDHT: boolean
 
-  private _onWarning: (err: Error) => void
-  private _onError: (err: Error) => void
-  private _onDHTPeer: (peer: DHTPeer, infoHash: Buffer) => void
-  private _onTrackerPeer: (peer: string) => void
-  private _onTrackerAnnounce: () => void
-  private _onLSDPeer: (peer: string, infoHash: Buffer) => void
+  #onWarning = (err: Error) => {
+    this.emit('warning', err)
+  }
+
+  #onError = (err: Error) => {
+    this.emit('error', err)
+  }
+
+  #onDHTPeer = (peer: DHTPeer, infoHash: Uint8Array) => {
+    if (normalizeHexId(infoHash) !== this.infoHash) return
+    this.emit('peer', `${peer.host}:${peer.port}`, 'dht')
+  }
+
+  #onTrackerPeer = (peer: string) => {
+    this.emit('peer', peer, 'tracker')
+  }
+
+  #onTrackerAnnounce = () => {
+    this.emit('trackerAnnounce')
+  }
+
+  #onLSDPeer = (peer: string, infoHash: Uint8Array) => {
+    if (normalizeHexId(infoHash) !== this.infoHash) return
+    this.emit('peer', peer, 'lsd')
+  }
 
   constructor(opts: DiscoveryOptions) {
     super()
 
     if (!opts.peerId) throw new Error('Option `peerId` is required')
     if (!opts.infoHash) throw new Error('Option `infoHash` is required')
-    if (!(process as any).browser && !opts.port) throw new Error('Option `port` is required')
+    if (!isBrowserRuntime() && !opts.port) throw new Error('Option `port` is required')
 
-    this.peerId = typeof opts.peerId === 'string' ? opts.peerId : opts.peerId.toString('hex')
-    this.infoHash =
-      typeof opts.infoHash === 'string'
-        ? opts.infoHash.toLowerCase()
-        : opts.infoHash.toString('hex')
-    this._port = opts.port
-    this._userAgent = opts.userAgent
+    this.peerId = normalizeHexId(opts.peerId)
+    this.infoHash = normalizeHexId(opts.infoHash)
+    this.#port = opts.port
+    this.#userAgent = opts.userAgent
 
     this.destroyed = false
 
-    this._announce = opts.announce || []
-    this._intervalMs = opts.intervalMs || 15 * 60 * 1000
-    this._trackerOpts = null
-    this._dhtAnnouncing = false
-    this._dhtTimeout = false
-    this._internalDHT = false
-
-    this._onWarning = (err) => {
-      this.emit('warning', err)
-    }
-    this._onError = (err) => {
-      this.emit('error', err)
-    }
-    this._onDHTPeer = (peer, infoHash) => {
-      if (infoHash.toString('hex') !== this.infoHash) return
-      this.emit('peer', `${peer.host}:${peer.port}`, 'dht')
-    }
-    this._onTrackerPeer = (peer) => {
-      this.emit('peer', peer, 'tracker')
-    }
-    this._onTrackerAnnounce = () => {
-      this.emit('trackerAnnounce')
-    }
-    this._onLSDPeer = (peer) => {
-      this.emit('peer', peer, 'lsd')
-    }
+    this.#announce = opts.announce || []
+    this.#intervalMs = opts.intervalMs || 15 * 60 * 1000
+    this.#trackerOpts = null
+    this.#dhtAnnouncing = false
+    this.#dhtTimeout = false
+    this.#internalDHT = false
 
     const createDHT = (port?: number, dhtOpts?: object): DHT => {
       const dht = new DHT(dhtOpts)
-      dht.on('warning', this._onWarning)
-      dht.on('error', this._onError)
+      dht.on('warning', this.#onWarning)
+      dht.on('error', this.#onError)
       dht.listen(port)
-      this._internalDHT = true
+      this.#internalDHT = true
       return dht
     }
 
     if (opts.tracker === false) {
       this.tracker = null
     } else if (opts.tracker && typeof opts.tracker === 'object') {
-      this._trackerOpts = Object.assign({}, opts.tracker)
-      this.tracker = this._createTracker()
+      this.#trackerOpts = Object.assign({}, opts.tracker)
+      this.tracker = this.#createTracker()
     } else {
-      this.tracker = this._createTracker()
+      this.tracker = this.#createTracker()
     }
 
     if (opts.dht === false || typeof DHT !== 'function') {
@@ -123,27 +132,27 @@ class Discovery extends EventEmitter {
     }
 
     if (this.dht) {
-      this.dht.on('peer', this._onDHTPeer)
-      this._dhtAnnounce()
+      this.dht.on('peer', this.#onDHTPeer)
+      this.#dhtAnnounce()
     }
 
     if (opts.lsd === false || typeof LSD !== 'function') {
       this.lsd = null
     } else {
-      this.lsd = this._createLSD()
+      this.lsd = this.#createLSD()
     }
   }
 
   updatePort(port: number): void {
-    if (port === this._port) return
-    this._port = port
+    if (port === this.#port) return
+    this.#port = port
 
-    if (this.dht) this._dhtAnnounce()
+    if (this.dht) this.#dhtAnnounce()
 
     if (this.tracker) {
       this.tracker.stop()
       this.tracker.destroy(() => {
-        this.tracker = this._createTracker()
+        this.tracker = this.#createTracker()
       })
     }
   }
@@ -158,112 +167,116 @@ class Discovery extends EventEmitter {
     if (this.destroyed) return
     this.destroyed = true
 
-    clearTimeout(this._dhtTimeout as NodeJS.Timeout)
+    if (this.#dhtTimeout !== false) {
+      clearTimeout(this.#dhtTimeout)
+      this.#dhtTimeout = false
+    }
 
-    const tasks: ((cb: () => void) => void)[] = []
+    const tasks: ((taskCb: (err: Error | null) => void) => void)[] = []
 
     if (this.tracker) {
       this.tracker.stop()
-      this.tracker.removeListener('warning', this._onWarning)
-      this.tracker.removeListener('error', this._onError)
-      this.tracker.removeListener('peer', this._onTrackerPeer)
-      this.tracker.removeListener('update', this._onTrackerAnnounce)
-      tasks.push((cb) => {
-        this.tracker!.destroy(cb)
+      this.tracker.removeListener('warning', this.#onWarning)
+      this.tracker.removeListener('error', this.#onError)
+      this.tracker.removeListener('peer', this.#onTrackerPeer)
+      this.tracker.removeListener('update', this.#onTrackerAnnounce)
+      tasks.push((taskCb) => {
+        this.tracker!.destroy(() => taskCb(null))
       })
     }
 
     if (this.dht) {
-      this.dht.removeListener('peer', this._onDHTPeer)
+      this.dht.removeListener('peer', this.#onDHTPeer)
     }
 
-    if (this._internalDHT) {
-      this.dht!.removeListener('warning', this._onWarning)
-      this.dht!.removeListener('error', this._onError)
-      tasks.push((cb) => {
-        this.dht!.destroy(cb)
+    if (this.#internalDHT) {
+      this.dht!.removeListener('warning', this.#onWarning)
+      this.dht!.removeListener('error', this.#onError)
+      tasks.push((taskCb) => {
+        this.dht!.destroy(() => taskCb(null))
       })
     }
 
     if (this.lsd) {
-      this.lsd.removeListener('warning', this._onWarning)
-      this.lsd.removeListener('error', this._onError)
-      this.lsd.removeListener('peer', this._onLSDPeer)
-      tasks.push((cb) => {
-        this.lsd!.destroy(cb)
+      this.lsd.removeListener('warning', this.#onWarning)
+      this.lsd.removeListener('error', this.#onError)
+      this.lsd.removeListener('peer', this.#onLSDPeer)
+      tasks.push((taskCb) => {
+        this.lsd!.destroy(() => taskCb(null))
       })
     }
 
-    parallel(tasks, cb || (() => {}))
+    parallel(tasks, () => {
+      ;(cb || (() => {}))()
+    })
 
     this.dht = null
     this.tracker = null
     this.lsd = null
-    this._announce = null
+    this.#announce = null
   }
 
-  private _createTracker(): Tracker {
-    const opts = Object.assign({}, this._trackerOpts, {
+  #createTracker(): InstanceType<typeof Client> {
+    const opts = Object.assign({}, this.#trackerOpts, {
       infoHash: this.infoHash,
-      announce: this._announce,
+      announce: this.#announce ?? [],
       peerId: this.peerId,
-      port: this._port,
-      userAgent: this._userAgent,
+      port: this.#port,
+      userAgent: this.#userAgent,
     })
 
-    const tracker = new Tracker(opts)
-    tracker.on('warning', this._onWarning)
-    tracker.on('error', this._onError)
-    tracker.on('peer', this._onTrackerPeer)
-    tracker.on('update', this._onTrackerAnnounce)
-    tracker.setInterval(this._intervalMs)
+    const tracker = new Client(opts)
+    tracker.on('warning', this.#onWarning)
+    tracker.on('error', this.#onError)
+    tracker.on('peer', this.#onTrackerPeer)
+    tracker.on('update', this.#onTrackerAnnounce)
+    tracker.setInterval(this.#intervalMs)
     tracker.start()
     return tracker
   }
 
-  private _dhtAnnounce(): void {
-    if (this._dhtAnnouncing) return
+  #dhtAnnounce(): void {
+    if (this.#dhtAnnouncing) return
     debug('dht announce')
 
-    this._dhtAnnouncing = true
-    clearTimeout(this._dhtTimeout as NodeJS.Timeout)
+    this.#dhtAnnouncing = true
+    if (this.#dhtTimeout !== false) {
+      clearTimeout(this.#dhtTimeout)
+      this.#dhtTimeout = false
+    }
 
-    this.dht!.announce(this.infoHash, this._port, (err?: Error) => {
-      this._dhtAnnouncing = false
+    this.dht!.announce(this.infoHash, this.#port, (err?: Error | null) => {
+      this.#dhtAnnouncing = false
       debug('dht announce complete')
 
       if (err) this.emit('warning', err)
       this.emit('dhtAnnounce')
 
       if (!this.destroyed) {
-        this._dhtTimeout = setTimeout(
-          () => {
-            this._dhtAnnounce()
-          },
-          this._intervalMs + Math.floor((Math.random() * this._intervalMs) / 5)
-        )
-        if (this._dhtTimeout.unref) this._dhtTimeout.unref()
+        const timer = setTimeout(() => {
+          this.#dhtAnnounce()
+        }, this.#intervalMs + Math.floor((Math.random() * this.#intervalMs) / 5))
+        this.#dhtTimeout = timer
+        if (typeof timer.unref === 'function') timer.unref()
       }
     })
   }
 
-  private _createLSD(): LSD {
+  #createLSD(): LSD {
     const opts = Object.assign(
       {},
       {
         infoHash: this.infoHash,
         peerId: this.peerId,
-        port: this._port,
+        port: this.#port,
       }
     )
 
     const lsd = new LSD(opts)
-    lsd.on('warning', this._onWarning)
-    lsd.on('error', this._onError)
-    lsd.on('peer', this._onLSDPeer)
+    lsd.on('warning', this.#onWarning)
+    lsd.on('error', this.#onError)
+    lsd.on('peer', this.#onLSDPeer)
     lsd.start()
     return lsd
   }
 }
-
-export default Discovery

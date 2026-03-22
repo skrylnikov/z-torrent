@@ -1,7 +1,7 @@
 import sha1 from 'sync-sha1/rawSha1.js'
 import ed from 'bittorrent-dht-sodium'
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 test('local mutable put/get', () => {
@@ -455,18 +455,19 @@ test('mutable update mesh', () => {
     function addEdges() {
       let pending = edges.length
       for (let i = 0; i < edges.length; i++) {
-        ;((e: number[]) => {
-          dht[e[1]].addNode({ host: '127.0.0.1', port: (dht[e[0]].address() as any).port })
-          dht[e[1]].once('node', () => {
-            if (--pending === 0) ready()
-          })
-        })(edges[i])
+        const e = edges[i]!
+        const from = e[0]!
+        const to = e[1]!
+        dht[to]!.addNode({ host: '127.0.0.1', port: (dht[from]!.address() as any).port })
+        dht[to]!.once('node', () => {
+          if (--pending === 0) ready()
+        })
       }
     }
 
     const cleanup = () => {
       for (let i = 0; i < dht.length; i++) {
-        dht[i].destroy()
+        dht[i]!.destroy()
       }
     }
 
@@ -490,8 +491,8 @@ test('mutable update mesh', () => {
       value: Buffer,
       done: () => void
     ) {
-      const src = dht[srci]
-      const dst = dht[dsti]
+      const src = dht[srci]!
+      const dst = dht[dsti]!
       const keypair = ed.keygen()
       const opts = {
         k: keypair.pk,
@@ -500,7 +501,7 @@ test('mutable update mesh', () => {
         v: value,
       }
 
-      const xhash = Buffer.from(sha1(opts.k))
+      const xhash = Buffer.from(sha1(new Uint8Array(opts.k)))
       src.put(opts, (err, hash) => {
         if (err) throw err
         expect(hash!.toString('hex')).toBe(xhash.toString('hex'))

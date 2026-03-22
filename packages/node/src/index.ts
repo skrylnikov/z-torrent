@@ -1,25 +1,33 @@
 /*! z-torrent. MIT License. Fork of WebTorrent by Feross Aboukhadijeh and WebTorrent LLC */
 
 import path from 'path'
-import createTorrent, { parseInput } from '@z-torrent/create'
+import { createTorrent, parseInput } from '@z-torrent/create'
 import parallel from 'run-parallel'
 import { concat } from 'uint8-util'
-import Peer from '@thaunknown/simple-peer/lite.js'
+import SimplePeerLite from '@thaunknown/simple-peer/lite.js'
 
-import { WebTorrentCore } from '@z-torrent/core'
-import { Torrent, FileIterator } from '@z-torrent/core'
+import {
+  WebTorrentCore,
+  VERSION_STR,
+  Torrent,
+  FileIterator,
+  Peer,
+  RarityMap,
+  WebConn,
+  ServerBase,
+} from '@z-torrent/core'
 import { createNodePlatformAdapter } from './platform.js'
-import ConnPool from './lib/conn-pool.js'
+import { ConnPool } from './lib/conn-pool.js'
 
 import VERSION from '../version.cjs'
 
-export { FileIterator }
+export { FileIterator, Torrent, Peer, RarityMap, WebConn, ServerBase, File } from '@z-torrent/core'
 
-const VERSION_STR = VERSION.replace(/\d*./g, (v: string) =>
-  `0${parseInt(v, 10) % 100}`.slice(-2)
-).slice(0, 4)
+export class WebTorrent extends WebTorrentCore {
+  static readonly WEBRTC_SUPPORT: boolean = SimplePeerLite.WEBRTC_SUPPORT
+  static readonly UTP_SUPPORT: boolean = ConnPool.UTP_SUPPORT
+  static readonly VERSION: string = VERSION
 
-export default class WebTorrent extends WebTorrentCore {
   constructor(opts: Record<string, unknown> = {}) {
     const platform = createNodePlatformAdapter()
     super({
@@ -41,24 +49,24 @@ export default class WebTorrent extends WebTorrentCore {
 
     const isFilePath = typeof input === 'string'
 
-    if (isFilePath) opts.path = path.dirname(input)
+    if (isFilePath) opts.path = path.dirname(input as string)
     if (!opts.createdBy) opts.createdBy = `Z-Torrent/${VERSION_STR}`
 
     const onTorrent = (torrent: Torrent) => {
-      const tasks = [
-        (cb: (err?: Error) => void) => {
+      const tasks: Array<(cb: (err?: Error | null) => void) => void> = [
+        (cb) => {
           if (isFilePath || opts.preloadedStore) return cb()
-          torrent.load((opts as any).streams, cb)
+          torrent.load((opts as { streams?: unknown }).streams, cb)
         },
       ]
       if (this.dht) {
-        tasks.push((cb: () => void) => {
-          torrent.once('dhtAnnounce', cb)
+        tasks.push((cb) => {
+          torrent.once('dhtAnnounce', () => cb())
         })
       }
       parallel(tasks, (err) => {
         if (this.destroyed) return
-        if (err) return (torrent as any)._destroy(err)
+        if (err) return torrent.destroyWithError(err)
         if (typeof onseed === 'function') onseed(torrent)
         torrent.emit('seed')
         this.emit('seed', torrent)
@@ -66,52 +74,65 @@ export default class WebTorrent extends WebTorrentCore {
     }
 
     const torrent = this.add(null, opts, onTorrent)
-    let streams: any
 
-    if (isFileList(input)) input = Array.from(input)
-    else if (!Array.isArray(input)) input = [input]
+    let items: Array<string | File | Buffer>
+    if (isFileList(input)) {
+      items = Array.from(input as FileList)
+    } else if (Array.isArray(input)) {
+      items = input
+    } else {
+      items = [input as string | File | Buffer]
+    }
 
     parallel(
-      (input as any[]).map((item) => async (cb: (err?: Error, result?: any) => void) => {
-        if (!opts.preloadedStore && isReadable(item)) {
-          const chunks = []
-          try {
-            for await (const chunk of item) {
-              chunks.push(chunk)
+      items.map(
+        (item) => async (cb: (err?: Error | null, result?: unknown) => void) => {
+          if (!opts.preloadedStore && isReadable(item)) {
+            const chunks: Uint8Array[] = []
+            try {
+              for await (const chunk of item as unknown as AsyncIterable<Uint8Array>) {
+                chunks.push(chunk)
+              }
+            } catch (err) {
+              return cb(err as Error)
             }
-          } catch (err) {
-            return cb(err as Error)
+            const buf = concat(chunks)
+            ;(buf as { name?: string }).name = (item as { name?: string }).name
+            cb(undefined, buf)
+          } else {
+            cb(undefined, item)
           }
-          const buf = concat(chunks)
-          ;(buf as any).name = (item as any).name
-          cb(null, buf)
-        } else {
-          cb(null, item)
         }
-      }),
+      ),
       (err, inputResult) => {
         if (this.destroyed) return
-        if (err) return (torrent as any)._destroy(err)
+        if (err) return torrent.destroyWithError(err)
 
-        parseInput(inputResult, opts, (parseErr, files) => {
+        parseInput(inputResult as never, opts, (parseErr, files) => {
           if (this.destroyed) return
-          if (parseErr) return (torrent as any)._destroy(parseErr)
+          if (parseErr) return torrent.destroyWithError(parseErr)
+          if (!files) return torrent.destroyWithError(new Error('parseInput returned no files'))
 
-          streams = files.map((f: any) => f.getStream)
-          ;(opts as any).streams = streams
+          const streams = files.map((f) => f.getStream)
+          ;(opts as { streams?: unknown }).streams = streams
 
-          createTorrent(inputResult, opts, async (createErr, torrentBuf) => {
+          createTorrent(inputResult as never, opts, async (createErr, torrentBuf) => {
             if (this.destroyed) return
-            if (createErr) return (torrent as any)._destroy(createErr)
+            if (createErr) return torrent.destroyWithError(createErr)
+            if (!torrentBuf) return torrent.destroyWithError(new Error('createTorrent returned no buffer'))
 
             const existingTorrent = await this.get(torrentBuf)
             if (existingTorrent) {
               console.warn('A torrent with the same id is already being seeded')
-              this._remove(torrent, null, () => {
-                if (typeof onseed === 'function') onseed(existingTorrent)
-              })
+              if (this.torrents.includes(torrent)) {
+                this.detachTorrent(torrent, null, () => {
+                  if (typeof onseed === 'function') onseed(existingTorrent)
+                })
+              } else if (typeof onseed === 'function') {
+                onseed(existingTorrent)
+              }
             } else {
-              ;(torrent as any)._onTorrentId(torrentBuf)
+              void torrent.applyTorrentInput(torrentBuf)
             }
           })
         })
@@ -120,28 +141,10 @@ export default class WebTorrent extends WebTorrentCore {
 
     return torrent
   }
-
-  throttleDownload(rate: number): boolean {
-    rate = Number(rate)
-    if (isNaN(rate) || !isFinite(rate) || (rate < 0 && rate !== -1)) return false
-    ;(this.throttleGroups.down as any).setRate?.(Math.round(rate))
-    return true
-  }
-
-  throttleUpload(rate: number): boolean {
-    rate = Number(rate)
-    if (isNaN(rate) || !isFinite(rate) || (rate < 0 && rate !== -1)) return false
-    ;(this.throttleGroups.up as any).setRate?.(Math.round(rate))
-    return true
-  }
 }
 
-WebTorrent.WEBRTC_SUPPORT = Peer.WEBRTC_SUPPORT
-WebTorrent.UTP_SUPPORT = ConnPool.UTP_SUPPORT
-WebTorrent.VERSION = VERSION
-
 function isReadable(obj: unknown): boolean {
-  return typeof obj === 'object' && obj != null && typeof (obj as any).pipe === 'function'
+  return typeof obj === 'object' && obj != null && typeof (obj as { pipe?: unknown }).pipe === 'function'
 }
 
 function isFileList(obj: unknown): boolean {

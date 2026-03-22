@@ -1,115 +1,79 @@
-# torrent-discovery [![ci][ci-image]][ci-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# @z-torrent/discovery
 
-[ci-image]: https://github.com/webtorrent/torrent-discovery/actions/workflows/ci.yml/badge.svg
-[ci-url]: https://github.com/webtorrent/torrent-discovery/actions/workflows/ci.yml
-[npm-image]: https://img.shields.io/npm/v/torrent-discovery.svg
-[npm-url]: https://npmjs.org/package/torrent-discovery
-[downloads-image]: https://img.shields.io/npm/dm/torrent-discovery.svg
-[downloads-url]: https://npmjs.org/package/torrent-discovery
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+Combines DHT, tracker, and LSD (Local Service Discovery) clients behind one API for finding BitTorrent / WebTorrent peers. Used by [Z-Torrent](https://z-torrent.xyz).
 
-### Discover BitTorrent and WebTorrent peers
+## Install
 
-This module bundles [bittorrent-tracker](https://www.npmjs.com/package/bittorrent-tracker), [bittorrent-dht](https://www.npmjs.com/package/bittorrent-dht), and [bittorrent-lsd](https://www.npmjs.com/package/bittorrent-lsd) clients and exposes a single API for discovering BitTorrent peers.
-
-## features
-
-- simple API
-- find peers from trackers, DHT, and LSD
-- automatically announces, so other peers can discover us
-- can start finding peers with just an info hash, before full metadata is available
-
-This module also **works in the browser** with [browserify](http://browserify.org). In
-that context, it discovers [WebTorrent](http://webtorrent.io) (WebRTC) peers.
-
-## install
-
-```
-npm install torrent-discovery
+```bash
+npm install @z-torrent/discovery
 ```
 
-## api
-
-### `discovery = new Discovery(opts)`
-
-Create a new peer discovery instance. Required options are:
+## Usage
 
 ```js
-{
-  infoHash: '', // as hex string or Buffer
-  peerId: '',   // as hex string or Buffer
-  port: 0       // torrent client port (only required in node)
-}
+import { Discovery } from '@z-torrent/discovery'
+import { randomBytes } from 'uint8-util'
+
+const discovery = new Discovery({
+  infoHash: randomBytes(20), // or 40-char hex string
+  peerId: randomBytes(20),
+  port: 6881,
+  announce: ['udp://tracker.example.com:80'],
+})
+
+discovery.on('peer', (peer, source) => {
+  // source is 'tracker', 'dht', or 'lsd'
+})
+
+discovery.on('dhtAnnounce', () => {
+  // DHT announce round finished
+})
+
+await new Promise((resolve) => discovery.destroy(resolve))
 ```
 
-Optional options are:
+## Constructor options
 
-```js
-{
-  announce: [],  // force list of announce urls to use (from magnet uri)
-  dht: true,     // use dht? optionally, this can be an `opts` object, or a DHT instance to use (can be reused for multiple torrents)
-  dhtPort: 0,    // custom listen port for the DHT instance (not used if DHT instance is given via `opts.dht`)
-  userAgent: '', // User-Agent header for http requests
-  tracker: true, // use trackers? optionally, this can be an `opts` object
-  lsd: true      // use lsd?
-}
-```
+Required:
 
-See the documentation for [bittorrent-tracker](https://www.npmjs.com/package/bittorrent-tracker), [bittorrent-dht](https://www.npmjs.com/package/bittorrent-dht), and [bittorrant-lsd](https://www.npmjs.com/package/bittorrent-lsd) for information on what options are available via the `opts` object.
+- `infoHash` — hex string or `Uint8Array` (20 bytes)
+- `peerId` — hex string or `Uint8Array` (20 bytes)
+- `port` — client listening port (required in Node.js; omitted when `process.browser` is set)
 
-**This module automatically handles announcing on intervals, for maximum peer discovery.**
+Optional:
 
-### `discovery.updatePort(port)`
+- `announce` — tracker URLs (as in a magnet link)
+- `intervalMs` — announce interval (default 15 minutes)
+- `tracker` — `false`, `true`, or tracker client options object
+- `dht` — `false`, `true`, DHT options object, or an existing `DHT` instance
+- `dhtPort` — listen port for a DHT instance created by this module
+- `lsd` — `false` or `true` (default on when the LSD package is available)
+- `userAgent` — HTTP user-agent for tracker requests
 
-When the port that the torrent client is listening on changes, call this method to
-reannounce to the tracker and DHT with the new port.
+The module schedules periodic announces to the DHT and trackers automatically.
 
-### `discovery.complete([opts])`
+## Methods
 
-Announce that download has completed (and the client is now a seeder). This is only
-used by trackers, for statistical purposes. If trackers are not in use, then
-this method is a no-op.
+### `updatePort(port)`
 
-Optional `opts` object with the following options:
+When the client port changes, re-announce to the DHT and recreate the tracker client.
 
-```
-{number=} opts.uploaded
-{number=} opts.downloaded
-{number=} opts.numwant
-{number=} opts.left (if not set, calculated automatically)
-```
+### `complete(opts?)`
 
-### `discovery.destroy()`
+Tell trackers the download completed (seeding). No-op when trackers are disabled.
 
-Destroy and cleanup the tracker, DHT, and LSD instances.
+### `destroy(cb?)`
 
-### events
+Stop tracker, DHT (if owned), LSD, and clear timers.
 
-### `discovery.on('peer', (peer, source) => {})`
+## Events
 
-Emitted whenever a new peer is discovered. Source is either `'tracker'`, `'dht'`, or `'lsd'` based on peer source.
+- `peer` — `(peer, source)`; `source` is `'tracker'`, `'dht'`, or `'lsd'`. In Node, `peer` is usually a `host:port` string.
+- `dhtAnnounce` — a DHT announce round completed.
+- `trackerAnnounce` — tracker scrape/announce update.
+- `warning` — non-fatal tracker, DHT, or LSD issue.
+- `error` — fatal subsystem error.
 
-**In node**, `peer` is a string in the form `ip:port`, e.g. `12.34.56.78:4000`.
+## License
 
-**In the browser**, `peer` is an instance of
-[`simple-peer`](https://www.npmjs.com/package/simple-peer), a small wrapper around a WebRTC
-peer connection.
-
-### `discovery.on('dhtAnnounce', () => {})`
-
-Emitted whenever an `announce` message has been sent to the DHT.
-
-### `discovery.on('warning', err => {})`
-
-Emitted when there is a **non-fatal** tracker, DHT, or LSD error. For example, an
-inaccessible tracker server would be considered a warning. Useful for logging.
-
-### `discovery.on('error', err => {})`
-
-Emitted when there is a fatal tracker, DHT, or LSD error. This is unrecoverable
-and the `discovery` object will be destroyed if this event is emitted.
-
-## license
-
-MIT. Copyright (c) [Feross Aboukhadijeh](https://feross.org) and [WebTorrent, LLC](https://webtorrent.io).
+MIT

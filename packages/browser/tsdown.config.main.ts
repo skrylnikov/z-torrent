@@ -1,13 +1,14 @@
 import { defineConfig } from 'tsdown'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { createRequire } from 'node:module'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+
 const dgramPath = resolve(__dirname, 'src/polyfills/empty-dgram.js')
-const streamPath = resolve(
-  __dirname,
-  '../../node_modules/.bun/stream-browserify@2.0.2/node_modules/stream-browserify/index.js'
-)
+const streamPath = require.resolve('stream-browserify')
+const trackerClientBrowser = resolve(__dirname, '../tracker/dist/client.browser.js')
 
 function aliasPlugin() {
   return {
@@ -28,7 +29,7 @@ export default defineConfig({
   format: 'esm',
   sourcemap: true,
   minify: true,
-  dts: false,
+  dts: true,
   outDir: 'dist',
   hash: false,
   clean: true,
@@ -40,7 +41,7 @@ export default defineConfig({
     alias: {
       dgram: dgramPath,
       stream: streamPath,
-      '@z-torrent/tracker/client': resolve(__dirname, '../../packages/tracker/dist/client.js'),
+      '@z-torrent/tracker/client': trackerClientBrowser,
     },
   },
   deps: {

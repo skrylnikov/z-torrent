@@ -1,10 +1,10 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import crypto from 'crypto'
+import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import Wire from 'bittorrent-protocol'
-import Torrent from '../src/lib/torrent.js'
-import RarityMap from '../src/lib/rarity-map.js'
+import Wire from '@z-torrent/protocol'
+import { Torrent, RarityMap } from '@z-torrent/core'
 
 test('Rarity map usage', async () => {
   const numPieces = 4
@@ -18,12 +18,25 @@ test('Rarity map usage', async () => {
     dht: false,
     tracker: false,
     lsd: false,
-    _remove() {},
-  }
+    removeTorrentFromClient() {},
+    platform: {
+      tmpDir: '/tmp',
+      defaultStore: MemoryChunkStore as any,
+      fsConcurrency: 2,
+      utpSupport: false,
+      idleCallback: null,
+      createServer: () => ({ destroy: (cb: () => void) => cb?.() }),
+      createDiscovery: () => ({
+        on() {},
+        destroy() {},
+      }),
+    },
+  } as any
   const opts = {}
   const torrent = new Torrent(torrentId, client, opts)
 
   await new Promise<void>((resolve, reject) => {
+    torrent.on('error', reject)
     torrent.on('metadata', () => {
       const wire1 = new Wire()
       const wire2 = new Wire()

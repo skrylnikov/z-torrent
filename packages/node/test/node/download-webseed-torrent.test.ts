@@ -1,12 +1,12 @@
 import http from 'http'
 import path from 'path'
 import finalhandler from 'finalhandler'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import serveStatic from 'serve-static'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 const WEB_SEED_TIMEOUT_MS = 500
 

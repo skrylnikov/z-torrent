@@ -1,7 +1,7 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('Download using LSD (via magnet uri)', async () => {
   const client1 = new WebTorrent({ dht: false, tracker: false, lsd: true })

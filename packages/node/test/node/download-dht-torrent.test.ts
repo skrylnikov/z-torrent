@@ -1,12 +1,15 @@
 import fs from 'fs'
-import { Server as DHT } from 'bittorrent-dht'
-import fixtures from 'webtorrent-fixtures'
+import { DHT } from '@z-torrent/dht'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
+import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test('Download using DHT (via .torrent file)', { timeout: 15000 }, async () => {
+test.skipIf(!LIVE_NETWORK)(
+  'Download using DHT (via .torrent file)',
+  async () => {
   const dhtServer = new DHT({ bootstrap: false })
 
   dhtServer.on('error', (err) => {
@@ -137,4 +140,4 @@ test('Download using DHT (via .torrent file)', { timeout: 15000 }, async () => {
       }
     )
   })
-})
+}, { timeout: LIVE_TEST_TIMEOUT_MS })

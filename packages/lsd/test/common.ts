@@ -1,13 +1,13 @@
 import crypto from 'crypto'
 
-export const randomPort = () => {
+export function randomPort(): number {
   return crypto.randomBytes(2).readUInt16LE(0)
 }
 
-export const randomId = () => {
+export function randomId(): Buffer {
   return crypto.randomBytes(20)
 }
 
-export const randomHash = () => {
+export function randomHash(): Buffer {
   return crypto.randomBytes(20)
 }

@@ -1,6 +1,7 @@
-import fixtures from './fixtures/index.ts'
-import parseTorrent from '../dist/index.js'
+import { parse } from '@z-torrent/parse'
 import { expect, test } from 'bun:test'
+
+import { torrentFixtures } from './fixtures/index.ts'
 
 const leavesMagnetParsed = {
   infoHash: 'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36',
@@ -61,8 +62,9 @@ const leavesMagnetParsed = {
       'base64'
     )
   ),
+  version: 'v1' as const,
 }
 
 test('parse "torrent" from magnet metadata protocol', async () => {
-  expect(await parseTorrent(fixtures.leavesMetadata.torrent)).toEqual(leavesMagnetParsed)
+  expect(await parse.decode(torrentFixtures.leavesMetadata.torrent)).toEqual(leavesMagnetParsed)
 })

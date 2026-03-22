@@ -1,9 +1,10 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
 import common from './common.js'
+import { fixtures } from '@z-torrent/fixtures'
 import http from 'http'
-import fixtures from 'webtorrent-fixtures'
 import net from 'net'
-import undici from 'undici'
+
+import { testWrtc } from './helpers.js'
 
 const peerId1 = Buffer.from('01234567890123456789')
 const peerId2 = Buffer.from('12345678901234567890')
@@ -18,10 +19,8 @@ function testClientStart(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -60,10 +59,8 @@ function testClientStop(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -102,10 +99,8 @@ function testClientStopDestroy(serverType: 'http' | 'udp' | 'ws'): Promise<void>
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -147,10 +142,8 @@ function testClientUpdate(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -194,10 +187,8 @@ function testClientScrape(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -233,14 +224,13 @@ function testClientAnnounceWithParams(serverType: 'http' | 'udp' | 'ws'): Promis
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
       server.on('start', (_peer, params) => {
         expect(params.testParam).toBe('this is a test')
       })
 
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -285,14 +275,13 @@ function testClientGetAnnounceOpts(serverType: 'http' | 'udp' | 'ws'): Promise<v
             testParam: 'this is a test',
           }
         },
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
       server.on('start', (_peer, params) => {
         expect(params.testParam).toBe('this is a test')
       })
 
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -330,10 +319,9 @@ function testClientAnnounceWithNumWant(serverType: 'http' | 'udp' | 'ws'): Promi
         announce: [announceUrl],
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
-      if (serverType === 'ws') common.mockWebsocketTracker(client1)
       client1.on('error', (err) => {
         throw err
       })
@@ -348,10 +336,9 @@ function testClientAnnounceWithNumWant(serverType: 'http' | 'udp' | 'ws'): Promi
           announce: announceUrl,
           peerId: peerId2,
           port: port + 1,
-          wrtc: {},
+          wrtc: testWrtc,
         })
 
-        if (serverType === 'ws') common.mockWebsocketTracker(client2)
         client2.on('error', (err) => {
           throw err
         })
@@ -366,10 +353,9 @@ function testClientAnnounceWithNumWant(serverType: 'http' | 'udp' | 'ws'): Promi
             announce: announceUrl,
             peerId: peerId3,
             port: port + 2,
-            wrtc: {},
+            wrtc: testWrtc,
           })
 
-          if (serverType === 'ws') common.mockWebsocketTracker(client3)
           client3.on('error', (err) => {
             throw err
           })
@@ -424,7 +410,7 @@ test('http: userAgent', () => {
         peerId: peerId1,
         port,
         userAgent: 'WebTorrent/0.98.0 (https://webtorrent.io)',
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
       client.on('error', (err) => {
@@ -455,10 +441,8 @@ function testSupportedTracker(serverType: 'http' | 'udp' | 'ws'): Promise<void> 
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
       })
-
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -488,7 +472,7 @@ function testUnsupportedTracker(announceUrl: string): Promise<void> {
       announce: announceUrl,
       peerId: peerId1,
       port,
-      wrtc: {},
+          wrtc: testWrtc,
     })
 
     client.on('error', (err) => {
@@ -521,41 +505,23 @@ test('ws: invalid tracker url with slash', () => testUnsupportedTracker('ws://')
 function testClientStartHttpAgent(serverType: 'http' | 'ws'): Promise<void> {
   return new Promise((resolve, reject) => {
     common.createServer(serverType, function (server, announceUrl) {
-      let agent: http.Agent | undici.Agent
+      const agent = new http.Agent()
       let agentUsed = false
-      if (typeof global.fetch === 'function' && serverType !== 'ws') {
-        const connector = undici.buildConnector({ rejectUnauthorized: false })
-        agent = new undici.Agent({
-          connect(opts, cb) {
-            agentUsed = true
-            connector(opts, (err, socket) => {
-              if (err) {
-                cb(err, null)
-              } else {
-                cb(null, socket)
-              }
-            })
-          },
-        })
-      } else {
-        agent = new http.Agent()
-        agent.createConnection = function (opts, fn) {
-          agentUsed = true
-          return net.createConnection(opts as net.TcpSocketConnectOpts, fn as () => void)
-        }
+      agent.createConnection = function (opts, fn) {
+        agentUsed = true
+        return net.createConnection(opts as net.TcpSocketConnectOpts, fn as () => void)
       }
       const client = new Client({
         infoHash: fixtures.leaves.parsedTorrent.infoHash,
         announce: announceUrl,
         peerId: peerId1,
         port,
-        wrtc: {},
+        wrtc: testWrtc,
         proxyOpts: {
           httpAgent: agent,
         },
       })
 
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', function (err) {
         throw err
       })

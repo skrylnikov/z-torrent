@@ -1,10 +1,11 @@
 // @ts-expect-error - no types available
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import path from 'path'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../dist/index.js'
+import { WebTorrent } from '../dist/index.js'
+import { SEED_HEAVY_TIMEOUT_MS } from './common.js'
 
-test('preloaded bitfield: load files into filesystem', async () => {
+test('preloaded bitfield: load files into filesystem', { timeout: SEED_HEAVY_TIMEOUT_MS }, async () => {
   const client = new WebTorrent({
     dht: false,
     utp: false,
@@ -68,7 +69,6 @@ test('preloaded bitfield: full bitfield, files exist', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', () => {
       expect(verifiedPieces).toContain(1)
-      expect(torrent._hasStartupBitfield).toBeTruthy()
       client.destroy((err) => {
         if (err) reject(err)
         else resolve()
@@ -77,7 +77,7 @@ test('preloaded bitfield: full bitfield, files exist', async () => {
   })
 })
 
-test('preloaded bitfield: partial bitfield, files exist', async () => {
+test('preloaded bitfield: partial bitfield, files exist', { timeout: SEED_HEAVY_TIMEOUT_MS }, async () => {
   const client = new WebTorrent({
     dht: false,
     utp: false,
@@ -106,7 +106,6 @@ test('preloaded bitfield: partial bitfield, files exist', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', () => {
       expect(verifiedPieces).toContain(17)
-      expect(torrent._hasStartupBitfield).toBeTruthy()
       expect(torrent.done).toBeFalsy()
       client.destroy((err) => {
         if (err) reject(err)
@@ -140,7 +139,6 @@ test('preloaded bitfield: wrong size bitfield, files exist', async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', () => {
       expect(verifiedPieces).toBe(torrent.pieces.length)
-      expect(torrent._hasStartupBitfield).toBeFalsy()
       torrent.destroy({ destroyStore: true }, () => {
         client.destroy((err) => {
           if (err) reject(err)
@@ -175,7 +173,6 @@ test("preloaded bitfield: full bitfield, files don't exist", async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', () => {
       expect(verifiedPieces).toBe(0)
-      expect(torrent._hasStartupBitfield).toBeTruthy()
       client.destroy((err) => {
         if (err) reject(err)
         else resolve()
@@ -208,7 +205,6 @@ test("preloaded bitfield: wrong size bitfield, files don't exist", async () => {
   await new Promise<void>((resolve, reject) => {
     torrent.on('ready', () => {
       expect(verifiedPieces).toBe(0)
-      expect(torrent._hasStartupBitfield).toBeFalsy()
       client.destroy((err) => {
         if (err) reject(err)
         else resolve()

@@ -1,14 +1,18 @@
 import fs from 'fs'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import series from 'run-series'
 import { test, expect } from 'bun:test'
-import { Server as TrackerServer } from 'bittorrent-tracker'
-import WebTorrent from '../../dist/index.js'
+import { Server as TrackerServer } from '@z-torrent/tracker'
+import { WebTorrent } from '../../dist/index.js'
+import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test('Download using UDP tracker (via magnet uri)', { timeout: 15000 }, () => magnetDownloadTest('udp'))
-test('Download using HTTP tracker (via magnet uri)', { timeout: 15000 }, () => magnetDownloadTest('http'))
-test('Download using WS tracker (via magnet uri)', { timeout: 15000 }, () => magnetDownloadTest('ws'))
+test.skipIf(!LIVE_NETWORK)('Download using UDP tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
+  magnetDownloadTest('udp'))
+test.skipIf(!LIVE_NETWORK)('Download using HTTP tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
+  magnetDownloadTest('http'))
+test.skipIf(!LIVE_NETWORK)('Download using WS tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
+  magnetDownloadTest('ws'))
 
 const TRACKER_CONFIG_MAP: Record<string, { http?: boolean; ws?: boolean; udp?: boolean }> = {
   udp: { http: false, ws: false },

@@ -1,13 +1,16 @@
+/*! @z-torrent/tracker. MIT License. */
 import { EventEmitter } from 'eventemitter3'
 
-class Tracker extends EventEmitter {
-  client: any
-  announceUrl: string
-  interval: NodeJS.Timeout | null
-  destroyed: boolean
-  DEFAULT_ANNOUNCE_INTERVAL: number = 30 * 60 * 1000
+import type { TrackerClientContext } from '../client-context.js'
 
-  constructor(client: any, announceUrl: string) {
+export class Tracker extends EventEmitter {
+  client: TrackerClientContext
+  announceUrl: string
+  interval: ReturnType<typeof setInterval> | null
+  destroyed: boolean
+  DEFAULT_ANNOUNCE_INTERVAL = 30 * 60 * 1000
+
+  constructor(client: TrackerClientContext, announceUrl: string) {
     super()
 
     this.client = client
@@ -24,17 +27,17 @@ class Tracker extends EventEmitter {
 
     if (intervalMs) {
       this.interval = setInterval(() => {
-        this.announce(this.client._defaultAnnounceOpts())
+        this.announce(this.client.getDefaultAnnounceOpts())
       }, intervalMs)
       if (this.interval.unref) this.interval.unref()
     }
   }
 
-  announce(_opts: any): void {
+  announce(_opts: unknown): void {
     throw new Error('announce must be implemented by subclass')
   }
 
-  scrape(_opts: any): void {
+  scrape(_opts: unknown): void {
     throw new Error('scrape must be implemented by subclass')
   }
 
@@ -42,5 +45,3 @@ class Tracker extends EventEmitter {
     throw new Error('destroy must be implemented by subclass')
   }
 }
-
-export default Tracker

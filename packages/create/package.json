@@ -2,38 +2,33 @@
   "name": "@z-torrent/create",
   "description": "Create .torrent files",
   "version": "0.0.5",
-  "author": {
-    "name": "WebTorrent LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "type": "module",
   "bin": {
     "create-torrent": "./dist/bin/cmd.js"
   },
   "bugs": {
-    "url": "https://github.com/webtorrent/create-torrent/issues"
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "browser": {
-    "./dist/get-files.js": false,
     "is-file": false
   },
   "dependencies": {
     "@z-torrent/utils": "workspace:*",
     "bencode": "^4.0.0",
     "block-iterator": "^1.1.1",
-    "fast-readable-async-iterator": "^2.0.0",
     "is-file": "^1.0.0",
     "join-async-iterator": "^1.1.1",
     "junk": "^4.0.1",
     "minimist": "^1.2.8",
     "piece-length": "^2.0.1",
     "run-parallel": "^1.2.0",
-    "uint8-util": "^2.2.5"
+    "uint8-util": "^2.2.6"
   },
   "devDependencies": {
-    "@z-torrent/parse": "workspace:*",
-    "@z-torrent/fixtures": "workspace:*"
+    "@types/node": "^25.3.5",
+    "@z-torrent/fixtures": "workspace:*",
+    "@z-torrent/parse": "workspace:*"
   },
   "engines": {
     "node": ">=18"
@@ -61,7 +56,8 @@
     "torrent",
     "torrent file",
     "torrent files",
-    "webtorrent"
+    "webtorrent",
+    "z-torrent"
   ],
   "license": "MIT",
   "repository": {
@@ -76,6 +72,7 @@
     "build": "tsdown",
     "test": "bun test",
     "test:browser": "bun test test/browser/",
+    "typecheck": "tsc --noEmit",
     "size": "size-limit"
   },
   "size-limit": [

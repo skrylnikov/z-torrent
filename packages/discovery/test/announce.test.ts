@@ -1,29 +1,37 @@
-import DHT from 'bittorrent-dht'
-import Discovery from '../dist/index.js'
+import { DHT } from '@z-torrent/dht'
+import { test } from 'bun:test'
 import { randomBytes } from 'uint8-util'
-import { expect, test } from 'bun:test'
 
-test('initialize with dht', () => {
-  return new Promise<void>((resolve) => {
+import { Discovery } from '../src/index.js'
+
+test('periodic dht announce emits dhtAnnounce', () => {
+  return new Promise<void>((resolve, reject) => {
     const dht = new DHT({ bootstrap: false })
     const discovery = new Discovery({
       infoHash: randomBytes(20),
       peerId: randomBytes(20),
       port: 6000,
       dht,
-      intervalMs: 1000,
+      intervalMs: 80,
     })
 
-    const _dhtAnnounce = discovery._dhtAnnounce
-    let num = 0
-    ;(discovery as any)._dhtAnnounce = () => {
-      num += 1
-      _dhtAnnounce.call(discovery)
-      if (num === 4) {
+    let count = 0
+    const failTimer = setTimeout(() => {
+      discovery.destroy(() => {
+        dht.destroy(() =>
+          reject(new Error(`expected at least 4 dhtAnnounce events, got ${count}`))
+        )
+      })
+    }, 12_000)
+
+    discovery.on('dhtAnnounce', () => {
+      count += 1
+      if (count >= 4) {
+        clearTimeout(failTimer)
         discovery.destroy(() => {
           dht.destroy(() => resolve())
         })
       }
-    }
+    })
   })
 })

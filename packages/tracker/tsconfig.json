@@ -1,11 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "./dist",
-    "tsBuildInfoFile": ".tsbuildinfo",
-    "types": ["node"]
+    "lib": ["ES2022", "DOM"],
+    "rootDir": ".",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "typeRoots": ["../../node_modules/@types"]
   },
-  "include": ["src/**/*", "../../types/**/*"],
-  "exclude": ["node_modules", "dist", "test"]
+  "include": ["src/**/*", "../../types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

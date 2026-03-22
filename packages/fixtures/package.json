@@ -1,15 +1,11 @@
 {
   "name": "@z-torrent/fixtures",
-  "description": "Sample torrent files for the WebTorrent test suite",
+  "description": "Sample torrent and content files for the Z-Torrent test suite",
   "version": "0.0.1",
   "private": true,
-  "author": {
-    "name": "WebTorrent, LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
-    "url": "https://github.com/webtorrent/webtorrent-fixtures/issues"
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "type": "module",
   "dependencies": {
@@ -21,8 +17,8 @@
     "test fixtures",
     "torrent",
     "torrent files",
-    "webtorrent",
-    "webtorrent test"
+    "z-torrent",
+    "webtorrent"
   ],
   "license": "MIT",
   "engines": {
@@ -48,6 +44,7 @@
   },
   "scripts": {
     "build": "tsdown",
+    "typecheck": "tsc --noEmit",
     "size": "size-limit"
   },
   "size-limit": [

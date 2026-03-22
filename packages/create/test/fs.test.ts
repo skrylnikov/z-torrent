@@ -1,23 +1,24 @@
 import { expect, test } from 'bun:test'
-import fixtures from '@z-torrent/fixtures'
-import parseTorrent from '@z-torrent/parse'
+import { fixtures } from '@z-torrent/fixtures'
+import { parseTorrent } from '@z-torrent/parse'
 import path from 'path'
 import { hash } from 'uint8-util'
-import { createTorrentPromise } from './helpers.js'
+import { createTorrentPromise, torrentFilesOf } from './helpers.js'
 
 test('create single file torrent', async () => {
   const startTime = Date.now()
-  const torrent = await createTorrentPromise(fixtures.leaves.contentPath)
+  const torrent = await createTorrentPromise(fixtures.leaves.contentPath!)
   const parsedTorrent = await parseTorrent(torrent)
+  const tfiles = torrentFilesOf(parsedTorrent)
 
   expect(parsedTorrent.name).toBe('Leaves of Grass by Walt Whitman.epub')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  expect(path.normalize(parsedTorrent.files[0].path)).toBe(
+  expect(path.normalize(tfiles[0]!.path)).toBe(
     path.normalize('Leaves of Grass by Walt Whitman.epub')
   )
-  expect(parsedTorrent.files[0].length).toBe(362017)
+  expect(tfiles[0]!.length).toBe(362017)
   expect(parsedTorrent.length).toBe(362017)
   expect(parsedTorrent.pieceLength).toBe(16384)
   expect(parsedTorrent.pieces).toEqual([
@@ -45,7 +46,7 @@ test('create single file torrent', async () => {
     '56dcc242d03293e9446cf5e457d8eb3d9588fd90',
     'c698de9b0dad92980906c026d8c1408fa08fe4ec',
   ])
-  expect(await hash(parsedTorrent.infoBuffer, 'hex')).toBe(
+  expect(await hash(parsedTorrent.infoBuffer!, 'hex')).toBe(
     'd2474e86c95b19b8bcfdb92bc12c9d44667cfa36'
   )
 })
@@ -57,7 +58,7 @@ test('create single file torrent from buffer', async () => {
 
 test('create multi file torrent', async () => {
   const startTime = Date.now()
-  const torrent = await createTorrentPromise(fixtures.numbers.contentPath, {
+  const torrent = await createTorrentPromise(fixtures.numbers.contentPath!, {
     pieceLength: 32768,
     private: false,
   })
@@ -65,26 +66,26 @@ test('create multi file torrent', async () => {
 
   expect(parsedTorrent.name).toBe('numbers')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  const files = parsedTorrent.files.sort((a, b) => a.path.localeCompare(b.path))
-  expect(path.normalize(files[0].path)).toBe(path.normalize('numbers/1.txt'))
-  expect(files[0].length).toBe(1)
-  expect(path.normalize(files[1].path)).toBe(path.normalize('numbers/2.txt'))
-  expect(files[1].length).toBe(2)
-  expect(path.normalize(files[2].path)).toBe(path.normalize('numbers/3.txt'))
-  expect(files[2].length).toBe(3)
+  const files = torrentFilesOf(parsedTorrent).sort((a, b) => a.path.localeCompare(b.path))
+  expect(path.normalize(files[0]!.path)).toBe(path.normalize('numbers/1.txt'))
+  expect(files[0]!.length).toBe(1)
+  expect(path.normalize(files[1]!.path)).toBe(path.normalize('numbers/2.txt'))
+  expect(files[1]!.length).toBe(2)
+  expect(path.normalize(files[2]!.path)).toBe(path.normalize('numbers/3.txt'))
+  expect(files[2]!.length).toBe(3)
   expect(parsedTorrent.length).toBe(6)
-  expect(parsedTorrent.info.pieces.length).toBe(20)
+  expect(parsedTorrent.info!.pieces!.length).toBe(20)
   expect(parsedTorrent.pieceLength).toBe(32768)
   expect(parsedTorrent.pieces).toHaveLength(1)
-  expect(parsedTorrent.pieces[0]).toMatch(/^[a-f0-9]{40}$/)
+  expect(parsedTorrent.pieces![0]).toMatch(/^[a-f0-9]{40}$/)
   expect(parsedTorrent.infoHash).toMatch(/^[a-f0-9]{40}$/)
 })
 
 test('create multi file torrent with nested directories', async () => {
   const startTime = Date.now()
-  const torrent = await createTorrentPromise(fixtures.lotsOfNumbers.contentPath, {
+  const torrent = await createTorrentPromise(fixtures.lotsOfNumbers.contentPath!, {
     pieceLength: 32768,
     private: false,
   })
@@ -92,32 +93,32 @@ test('create multi file torrent with nested directories', async () => {
 
   expect(parsedTorrent.name).toBe('lots-of-numbers')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  const files = parsedTorrent.files.sort((a, b) => a.path.localeCompare(b.path))
-  expect(path.normalize(files[0].path)).toBe(path.normalize('lots-of-numbers/big numbers/10.txt'))
-  expect(files[0].length).toBe(2)
-  expect(path.normalize(files[1].path)).toBe(path.normalize('lots-of-numbers/big numbers/11.txt'))
-  expect(files[1].length).toBe(2)
-  expect(path.normalize(files[2].path)).toBe(path.normalize('lots-of-numbers/big numbers/12.txt'))
-  expect(files[2].length).toBe(2)
-  expect(path.normalize(files[3].path)).toBe(path.normalize('lots-of-numbers/small numbers/1.txt'))
-  expect(files[3].length).toBe(1)
-  expect(path.normalize(files[4].path)).toBe(path.normalize('lots-of-numbers/small numbers/2.txt'))
-  expect(files[4].length).toBe(2)
-  expect(path.normalize(files[5].path)).toBe(path.normalize('lots-of-numbers/small numbers/3.txt'))
-  expect(files[5].length).toBe(3)
+  const files = torrentFilesOf(parsedTorrent).sort((a, b) => a.path.localeCompare(b.path))
+  expect(path.normalize(files[0]!.path)).toBe(path.normalize('lots-of-numbers/big numbers/10.txt'))
+  expect(files[0]!.length).toBe(2)
+  expect(path.normalize(files[1]!.path)).toBe(path.normalize('lots-of-numbers/big numbers/11.txt'))
+  expect(files[1]!.length).toBe(2)
+  expect(path.normalize(files[2]!.path)).toBe(path.normalize('lots-of-numbers/big numbers/12.txt'))
+  expect(files[2]!.length).toBe(2)
+  expect(path.normalize(files[3]!.path)).toBe(path.normalize('lots-of-numbers/small numbers/1.txt'))
+  expect(files[3]!.length).toBe(1)
+  expect(path.normalize(files[4]!.path)).toBe(path.normalize('lots-of-numbers/small numbers/2.txt'))
+  expect(files[4]!.length).toBe(2)
+  expect(path.normalize(files[5]!.path)).toBe(path.normalize('lots-of-numbers/small numbers/3.txt'))
+  expect(files[5]!.length).toBe(3)
   expect(parsedTorrent.length).toBe(12)
   expect(parsedTorrent.pieceLength).toBe(32768)
   expect(parsedTorrent.pieces).toHaveLength(1)
-  expect(parsedTorrent.pieces[0]).toMatch(/^[a-f0-9]{40}$/)
+  expect(parsedTorrent.pieces![0]).toMatch(/^[a-f0-9]{40}$/)
   expect(parsedTorrent.infoHash).toMatch(/^[a-f0-9]{40}$/)
 })
 
 test('create multi file torrent with array of paths', async () => {
-  const number10Path = path.join(fixtures.lotsOfNumbers.contentPath, 'big numbers', '10.txt')
-  const number11Path = path.join(fixtures.lotsOfNumbers.contentPath, 'big numbers', '11.txt')
-  const numbersPath = fixtures.numbers.contentPath
+  const number10Path = path.join(fixtures.lotsOfNumbers.contentPath!, 'big numbers', '10.txt')
+  const number11Path = path.join(fixtures.lotsOfNumbers.contentPath!, 'big numbers', '11.txt')
+  const numbersPath = fixtures.numbers.contentPath!
   const input = [number10Path, number11Path, numbersPath]
 
   const startTime = Date.now()
@@ -130,23 +131,23 @@ test('create multi file torrent with array of paths', async () => {
 
   expect(parsedTorrent.name).toBe('multi')
   expect(parsedTorrent.private).toBeFalsy()
-  expect(parsedTorrent.created.getTime()).toBeGreaterThanOrEqual(startTime)
+  expect(parsedTorrent.created!.getTime()).toBeGreaterThanOrEqual(startTime)
   expect(Array.isArray(parsedTorrent.announce)).toBe(true)
-  const files = parsedTorrent.files.sort((a, b) => a.path.localeCompare(b.path))
-  expect(path.normalize(files[0].path)).toBe(path.normalize('multi/10.txt'))
-  expect(files[0].length).toBe(2)
-  expect(path.normalize(files[1].path)).toBe(path.normalize('multi/11.txt'))
-  expect(files[1].length).toBe(2)
-  expect(path.normalize(files[2].path)).toBe(path.normalize('multi/numbers/1.txt'))
-  expect(files[2].length).toBe(1)
-  expect(path.normalize(files[3].path)).toBe(path.normalize('multi/numbers/2.txt'))
-  expect(files[3].length).toBe(2)
-  expect(path.normalize(files[4].path)).toBe(path.normalize('multi/numbers/3.txt'))
-  expect(files[4].length).toBe(3)
+  const files = torrentFilesOf(parsedTorrent).sort((a, b) => a.path.localeCompare(b.path))
+  expect(path.normalize(files[0]!.path)).toBe(path.normalize('multi/10.txt'))
+  expect(files[0]!.length).toBe(2)
+  expect(path.normalize(files[1]!.path)).toBe(path.normalize('multi/11.txt'))
+  expect(files[1]!.length).toBe(2)
+  expect(path.normalize(files[2]!.path)).toBe(path.normalize('multi/numbers/1.txt'))
+  expect(files[2]!.length).toBe(1)
+  expect(path.normalize(files[3]!.path)).toBe(path.normalize('multi/numbers/2.txt'))
+  expect(files[3]!.length).toBe(2)
+  expect(path.normalize(files[4]!.path)).toBe(path.normalize('multi/numbers/3.txt'))
+  expect(files[4]!.length).toBe(3)
   expect(parsedTorrent.length).toBe(10)
-  expect(parsedTorrent.info.pieces.length).toBe(20)
+  expect(parsedTorrent.info!.pieces!.length).toBe(20)
   expect(parsedTorrent.pieceLength).toBe(32768)
   expect(parsedTorrent.pieces).toHaveLength(1)
-  expect(parsedTorrent.pieces[0]).toMatch(/^[a-f0-9]{40}$/)
+  expect(parsedTorrent.pieces![0]).toMatch(/^[a-f0-9]{40}$/)
   expect(parsedTorrent.infoHash).toMatch(/^[a-f0-9]{40}$/)
 })

@@ -1,7 +1,7 @@
 import escapeHtml from 'escape-html'
 import rangeParser from 'range-parser'
 
-import type File from './file.js'
+import type { File } from './file.js'
 
 const keepAliveTime = 20000
 
@@ -9,7 +9,6 @@ export interface ServerOptions {
   origin?: string | false
   hostname?: string
   pathname?: string
-  controller?: unknown
 }
 
 export interface Request {
@@ -244,8 +243,9 @@ export abstract class ServerBase {
         )
       }
 
-      let [infoHash, ...filePath] = pathname.split('/')
-      filePath = decodeURI(filePath.join('/'))
+      const pathParts = pathname.split('/')
+      const infoHash = pathParts[0]
+      const filePath = decodeURI(pathParts.slice(1).join('/'))
 
       const torrent = await this.client.get(infoHash)
       if (!infoHash || !torrent) {

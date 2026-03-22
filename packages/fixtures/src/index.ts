@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path, { dirname } from 'path'
-import parseTorrent, { parseTorrentSync, toMagnetURI, type Instance } from '@z-torrent/parse'
+import { parseTorrentSync, toMagnetURI, type Instance } from '@z-torrent/parse'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -30,7 +30,7 @@ export interface Fixtures {
   blocklist: { path: string; gzipPath: string }
 }
 
-const fixtures: Fixtures = {
+export const fixtures: Fixtures = {
   leaves: {
     contentPath: path.join(__dirname, '../fixtures', 'Leaves of Grass by Walt Whitman.epub'),
     torrentPath: path.join(__dirname, '../fixtures', 'leaves.torrent'),
@@ -174,5 +174,3 @@ const fixtures: Fixtures = {
     gzipPath: path.join(__dirname, '../fixtures', 'blocklist.txt.gz'),
   },
 }
-
-export default fixtures

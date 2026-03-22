@@ -10,7 +10,7 @@ try {
 import { mkdirSync } from 'fs'
 import { resolve } from 'path'
 import prettierBytes from 'prettier-bytes'
-import WebTorrent from 'z-torrent'
+import { WebTorrent } from '@z-torrent/node'
 
 const DEFAULT_WSS_TRACKERS = [
   'wss://tracker.btorrent.xyz',

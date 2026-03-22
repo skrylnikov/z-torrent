@@ -1,6 +1,8 @@
-import Client from '../index.js'
+import { Client } from '../src/index.js'
 import common from './common.js'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
+
+import { testWrtc } from './helpers.js'
 
 const peerId = Buffer.from('01234567890123456789')
 
@@ -12,10 +14,9 @@ function testLargeTorrent(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
         peerId,
         port: 6881,
         announce: announceUrl,
-        wrtc: {},
+        wrtc: testWrtc,
       })
 
-      if (serverType === 'ws') common.mockWebsocketTracker(client)
       client.on('error', (err) => {
         throw err
       })
@@ -54,6 +55,6 @@ function testLargeTorrent(serverType: 'http' | 'udp' | 'ws'): Promise<void> {
   })
 }
 
-test('http: large torrent: client.start()', () => testLargeTorrent('http'))
-test('udp: large torrent: client.start()', () => testLargeTorrent('udp'))
-test('ws: large torrent: client.start()', () => testLargeTorrent('ws'))
+test('http: large torrent: client.start/update/stop()', () => testLargeTorrent('http'))
+test('udp: large torrent: client.start/update/stop()', () => testLargeTorrent('udp'))
+test('ws: large torrent: client.start/update/stop()', () => testLargeTorrent('ws'))

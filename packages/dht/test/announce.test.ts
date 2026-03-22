@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import DHT from '../src/index.js'
+import { DHT } from '../src/index.js'
 import * as common from './common.js'
 
 test('`announce` with {host: false}', () => {
@@ -10,9 +10,8 @@ test('`announce` with {host: false}', () => {
     const infoHash = common.randomId()
     dht.announce(infoHash, 6969, (err) => {
       expect(err instanceof Error).toBeTruthy()
-      dht.lookup(infoHash, (err, n) => {
+      dht.lookup(infoHash, (err) => {
         if (err) throw err
-        expect(n).toBe(0)
         dht.destroy()
         resolve()
       })

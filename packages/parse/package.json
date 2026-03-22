@@ -2,27 +2,18 @@
   "name": "@z-torrent/parse",
   "description": "Parse a torrent identifier (magnet uri, .torrent file, info hash)",
   "version": "0.0.5",
-  "author": {
-    "name": "WebTorrent LLC",
-    "email": "feross@webtorrent.io",
-    "url": "https://webtorrent.io"
-  },
-  "browser": {
-    "fs": false
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
+  "bugs": {
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
   },
   "bin": {
     "parse-torrent": "./dist/bin/cmd.js"
   },
-  "bugs": {
-    "url": "https://github.com/webtorrent/parse-torrent/issues"
-  },
   "type": "module",
   "dependencies": {
     "bencode": "^4.0.0",
-    "cross-fetch-ponyfill": "^1.0.3",
-    "get-stdin": "^9.0.0",
     "@z-torrent/magnet": "workspace:*",
-    "uint8-util": "^2.2.5",
+    "uint8-util": "^2.2.6",
     "sync-sha1": "^1.0.1"
   },
   "keywords": [
@@ -32,11 +23,12 @@
     "peer-to-peer",
     "read torrent",
     "torrent",
-    "webtorrent"
+    "webtorrent",
+    "z-torrent"
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0"
   },
   "exports": {
     ".": {
@@ -60,7 +52,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "test": "bun test test/ test/node/",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "size": "size-limit"
   },
   "size-limit": [
@@ -69,18 +62,7 @@
       "limit": "30 KB"
     }
   ],
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/feross"
-    },
-    {
-      "type": "patreon",
-      "url": "https://www.patreon.com/feross"
-    },
-    {
-      "type": "consulting",
-      "url": "https://feross.org/support"
-    }
-  ]
+  "devDependencies": {
+    "@types/bencode": "^2.0.4"
+  }
 }

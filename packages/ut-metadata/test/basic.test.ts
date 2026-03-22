@@ -1,4 +1,4 @@
-import fixtures from '@z-torrent/fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import bencode from 'bencode'
 import Protocol from '@z-torrent/protocol'
 import { expect, test } from 'bun:test'

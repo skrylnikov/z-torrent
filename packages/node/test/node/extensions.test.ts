@@ -1,6 +1,6 @@
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 test('extension support', async () => {
   let extendedHandshakes = 0

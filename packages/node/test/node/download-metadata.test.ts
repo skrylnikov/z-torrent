@@ -1,8 +1,8 @@
 import http from 'http'
-import fixtures from 'webtorrent-fixtures'
+import { fixtures } from '@z-torrent/fixtures'
 import MemoryChunkStore from 'memory-chunk-store'
 import { test, expect } from 'bun:test'
-import WebTorrent from '../../dist/index.js'
+import { WebTorrent } from '../../dist/index.js'
 
 function createServer(data: Buffer, cb: (url: string, server: http.Server) => void) {
   const server = http.createServer((req, res) => {

@@ -6,14 +6,14 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import net from 'net'
-import { Client as DHT } from '@z-torrent/dht'
+import { DHT } from '@z-torrent/dht'
 import { loadIPSet } from '@z-torrent/utils/load-ip-set'
 import NatAPI from '@silentbot1/nat-api'
 import FSChunkStore from 'fs-chunk-store'
 import cpus from 'cpus'
-import Discovery from '@z-torrent/discovery'
+import { Discovery } from '@z-torrent/discovery'
 
-import ConnPool from './lib/conn-pool.js'
+import { ConnPool } from './lib/conn-pool.js'
 import { NodeServer } from './lib/server.js'
 import type {
   PlatformAdapter,
@@ -50,7 +50,7 @@ export function createNodePlatformAdapter(): PlatformAdapter {
     },
 
     loadIPSet(blocklist, opts, cb) {
-      loadIPSet(blocklist, opts, cb)
+      loadIPSet(blocklist as Parameters<typeof loadIPSet>[0], opts as never, cb as never)
     },
 
     createNatTraversal(opts) {
