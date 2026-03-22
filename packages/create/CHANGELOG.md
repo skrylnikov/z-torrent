@@ -1,5 +1,13 @@
 # [6.1.0](https://github.com/webtorrent/create-torrent/compare/v6.0.18...v6.1.0) (2025-01-04)
 
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/merkle-tree@0.0.11
+  - @z-torrent/utils@0.0.11
+
 ## 0.0.10
 
 ### Patch Changes
