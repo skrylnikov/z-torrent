@@ -1,5 +1,50 @@
 # @z-torrent/core
 
+## 0.0.8
+
+### Patch Changes
+
+- [#16](https://github.com/skrylnikov/z-torrent/pull/16) [`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - **@z-torrent/core**
+  - Prefer npm typings: add `@types/debug`, `@types/escape-html`, `@types/mime`, `@types/range-parser`, `@types/streamx`, `@types/unordered-array-remove`; shrink `types/shims.d.ts` to modules without usable `@types` (incl. `run-parallel` / `run-parallel-limit` — DT signatures don’t match this codebase).
+  - Remove `cross-fetch-ponyfill`; use global `fetch` (Node ≥18 / DOM `lib`).
+  - Add `src/lib/streamx-pipeline.ts` — runtime `streamx` exports `pipeline`, but `@types/streamx` does not declare it.
+  - Correct `speed-limiter` shim: `throttle()` returns a `Transform` for `pipeline()`.
+  - Type fixes around protocol `Wire` vs strict `@types/streamx` stream events (`webconn`, `rarity-map`, `peer`); remove unused private `#hasStartupBitfield`.
+
+  **Dependencies**
+  - Bump `bitfield` to `^5.0.1` in `@z-torrent/core`, `@z-torrent/protocol`, and `@z-torrent/ut-metadata`.
+
+  **Repo hygiene**
+  - Delete root `types/cross-fetch-ponyfill.d.ts`.
+  - **@z-torrent/dht**: `parseIp` — avoid useless final `offset++` (eslint `no-useless-assignment`).
+  - **@z-torrent/tracker**: drop redundant `try/catch` rethrow in tests (eslint `no-useless-catch`).
+
+- [#16](https://github.com/skrylnikov/z-torrent/pull/16) [`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - **Breaking (client API)**
+  - Rename exports: `WebTorrent` → `ZTorrent` (`@z-torrent/node`, `@z-torrent/browser`), `WebTorrentCore` → `ZTorrentCore`, `WebTorrentCoreOpts` → `ZTorrentCoreOpts`, `WebTorrentClient` → `ZTorrentClient` (`@z-torrent/core`). No `WebTorrent` compatibility alias.
+  - Migration: `import { ZTorrent } from '@z-torrent/node'` / `'@z-torrent/browser'`; from core, `ZTorrentCore` and type `ZTorrentClient`.
+
+  **Behaviour notes**
+  - Default BitTorrent peer-id prefix remains `-WW…`; `bittorrent-peerid` may still label peers as **WebTorrent** in tracker stats until the prefix is changed deliberately.
+
+  **Housekeeping**
+  - Removed per-file `/*! … MIT … */` (and similar) banners from package sources; full license text remains in each package `LICENSE`.
+  - CLI `createdBy` default in `@z-torrent/create`, npm descriptions for tracker/discovery, docs/README examples, tests, and `@z-torrent/node` uTP warning string updated for Z-Torrent branding where they referred to the client class or product UA.
+
+- [#16](https://github.com/skrylnikov/z-torrent/pull/16) [`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - **Debug namespaces**
+  - All `debug` logger namespaces now use `@z-torrent/<package>:<scope>` (aligned with workspace package names).
+  - **Breaking for debugging only:** previous `DEBUG` values (`webtorrent*`, `bittorrent-*`, `torrent-discovery`, `ut_metadata`, etc.) no longer match. Use e.g. `DEBUG=@z-torrent/core:*`, `DEBUG=@z-torrent/protocol:wire`, or `DEBUG=@z-torrent/*`.
+
+  **Docs**
+  - Root [README.md](README.md) and [AGENTS.md](AGENTS.md) updated with the new convention and examples.
+
+- Updated dependencies [[`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c), [`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c), [`26ef5a0`](https://github.com/skrylnikov/z-torrent/commit/26ef5a081869b1130406a730db5ec088841aa06c)]:
+  - @z-torrent/merkle-tree@0.0.8
+  - @z-torrent/parse@0.0.8
+  - @z-torrent/protocol@0.0.8
+  - @z-torrent/utils@0.0.8
+  - @z-torrent/ut-metadata@0.0.8
+  - @z-torrent/ut-pex@0.0.8
+
 ## 0.0.7
 
 ### Patch Changes
