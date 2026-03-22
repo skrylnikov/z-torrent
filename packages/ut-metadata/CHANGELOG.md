@@ -1,5 +1,11 @@
 ## [4.0.3](https://github.com/webtorrent/ut_metadata/compare/v4.0.2...v4.0.3) (2023-08-10)
 
+## 0.0.10
+
+### Patch Changes
+
+- [`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix publish
+
 ## 0.0.9
 
 ## 0.0.8

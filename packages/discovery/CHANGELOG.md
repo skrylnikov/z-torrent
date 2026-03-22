@@ -1,5 +1,16 @@
 ## [11.0.19](https://github.com/webtorrent/torrent-discovery/compare/v11.0.18...v11.0.19) (2025-09-14)
 
+## 0.0.10
+
+### Patch Changes
+
+- [`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix publish
+
+- Updated dependencies [[`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d)]:
+  - @z-torrent/dht@0.0.10
+  - @z-torrent/lsd@0.0.10
+  - @z-torrent/tracker@0.0.10
+
 ## 0.0.9
 
 ### Patch Changes

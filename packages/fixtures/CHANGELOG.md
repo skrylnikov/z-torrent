@@ -1,5 +1,14 @@
 ## [2.0.2](https://github.com/webtorrent/webtorrent-fixtures/compare/v2.0.1...v2.0.2) (2023-01-31)
 
+## 0.0.2
+
+### Patch Changes
+
+- [`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d) Thanks [@skrylnikov](https://github.com/skrylnikov)! - fix publish
+
+- Updated dependencies [[`f50e9c1`](https://github.com/skrylnikov/z-torrent/commit/f50e9c1961d06ff0cbf1ab9d9a6d6b4809e7d75d)]:
+  - @z-torrent/parse@0.0.10
+
 ### Bug Fixes
 
 - top level await ([8f3f092](https://github.com/webtorrent/webtorrent-fixtures/commit/8f3f092e6e05da7b8d56c0e0aeabc43903fbb290))
