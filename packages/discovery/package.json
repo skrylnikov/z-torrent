@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/discovery",
   "description": "Discover BitTorrent peers (trackers, DHT, LSD, WebRTC)",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "browser": {
     "@z-torrent/dht": false,

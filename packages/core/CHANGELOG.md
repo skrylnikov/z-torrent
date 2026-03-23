@@ -1,5 +1,23 @@
 # @z-torrent/core
 
+## 0.0.13
+
+### Patch Changes
+
+- [#23](https://github.com/skrylnikov/z-torrent/pull/23) [`8aebfc5`](https://github.com/skrylnikov/z-torrent/commit/8aebfc5e68a32429755a1b5f8d910f5013c4502f) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Fix browser streaming throughput (“pipeline starvation”):
+  - Call `#update()` after piece selections are inserted (`#select`) so `selectStreamPieces` / `FileIterator` immediately resumes downloads when the prefetch loop had stalled.
+  - Call `#update()` from `critical()` so prioritized pieces start fetching right away.
+  - Fill each wire’s block pipeline in one `#update()` pass by looping `#updateWireWrapper()` until no wire can enqueue another request (fair round-robin preserved).
+  - Use a shorter `requestIdleCallback` timeout (50ms) on browser platforms so refills are less delayed under main-thread load.
+
+- Updated dependencies []:
+  - @z-torrent/protocol@0.0.13
+  - @z-torrent/parse@0.0.13
+  - @z-torrent/merkle-tree@0.0.13
+  - @z-torrent/ut-metadata@0.0.13
+  - @z-torrent/ut-pex@0.0.13
+  - @z-torrent/utils@0.0.13
+
 ## 0.0.12
 
 ### Patch Changes

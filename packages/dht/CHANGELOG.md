@@ -1,5 +1,7 @@
 ## [11.0.11](https://github.com/webtorrent/bittorrent-dht/compare/v11.0.10...v11.0.11) (2025-09-14)
 
+## 0.0.13
+
 ## 0.0.12
 
 ### Patch Changes
