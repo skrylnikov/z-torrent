@@ -1,5 +1,12 @@
 ## [11.2.2](https://github.com/webtorrent/bittorrent-tracker/compare/v11.2.1...v11.2.2) (2025-09-06)
 
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/utils@0.0.13
+
 ## 0.0.12
 
 ### Patch Changes
