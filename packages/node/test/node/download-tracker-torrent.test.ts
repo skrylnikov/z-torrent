@@ -7,12 +7,21 @@ import { Server as TrackerServer } from '@z-torrent/tracker'
 import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test.skipIf(!LIVE_NETWORK)('Download using UDP tracker (via .torrent file)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
-  torrentDownloadTest('udp'))
-test.skipIf(!LIVE_NETWORK)('Download using HTTP tracker (via .torrent file)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
-  torrentDownloadTest('http'))
-test.skipIf(!LIVE_NETWORK)('Download using WS tracker (via .torrent file)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
-  torrentDownloadTest('ws'))
+test.skipIf(!LIVE_NETWORK)(
+  'Download using UDP tracker (via .torrent file)',
+  { timeout: LIVE_TEST_TIMEOUT_MS },
+  () => torrentDownloadTest('udp')
+)
+test.skipIf(!LIVE_NETWORK)(
+  'Download using HTTP tracker (via .torrent file)',
+  { timeout: LIVE_TEST_TIMEOUT_MS },
+  () => torrentDownloadTest('http')
+)
+test.skipIf(!LIVE_NETWORK)(
+  'Download using WS tracker (via .torrent file)',
+  { timeout: LIVE_TEST_TIMEOUT_MS },
+  () => torrentDownloadTest('ws')
+)
 
 const TRACKER_CONFIG_MAP: Record<string, { http?: boolean; ws?: boolean; udp?: boolean }> = {
   udp: { http: false, ws: false },

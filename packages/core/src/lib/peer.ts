@@ -218,7 +218,10 @@ export class Peer extends EventEmitter {
       this.conn,
       this.throttleGroups!.down.throttle(),
       new Transform({
-        transform(chunk: Uint8Array, callback: (err?: Error | null, data?: Uint8Array) => void): void {
+        transform(
+          chunk: Uint8Array,
+          callback: (err?: Error | null, data?: Uint8Array) => void
+        ): void {
           self.emit('download', chunk.length)
           if (self.destroyed) return
           callback(null, chunk)
@@ -227,7 +230,10 @@ export class Peer extends EventEmitter {
       this.wire,
       this.throttleGroups!.up.throttle(),
       new Transform({
-        transform(chunk: Uint8Array, callback: (err?: Error | null, data?: Uint8Array) => void): void {
+        transform(
+          chunk: Uint8Array,
+          callback: (err?: Error | null, data?: Uint8Array) => void
+        ): void {
           self.emit('upload', chunk.length)
           if (self.destroyed) return
           callback(null, chunk)

@@ -12,10 +12,7 @@ function testRequestHandler(serverType: 'http' | 'ws'): Promise<void> {
   const OriginalSwarm = Server.Swarm
 
   class TestSwarm extends OriginalSwarm {
-    announce(
-      params: any,
-      cb: (err: Error | null, response?: any) => void
-    ): void {
+    announce(params: any, cb: (err: Error | null, response?: any) => void): void {
       super.announce(params, (err: Error | null, response?: any) => {
         if (err) {
           cb(err, response)

@@ -106,7 +106,10 @@ export class UDPTracker extends Tracker {
       }
 
       if (proxyOpts.proxy.type === 5) {
-        Socks.SocksClient.createConnection(proxyOpts as Parameters<typeof Socks.SocksClient.createConnection>[0], onGotConnection as any)
+        Socks.SocksClient.createConnection(
+          proxyOpts as Parameters<typeof Socks.SocksClient.createConnection>[0],
+          onGotConnection as any
+        )
       } else {
         debug('Ignoring Socks proxy for UDP request because type 5 is required')
         onGotConnection(null, null, null)
@@ -341,4 +344,3 @@ function toUInt64(n: number | string): Uint8Array {
 }
 
 function noop() {}
-

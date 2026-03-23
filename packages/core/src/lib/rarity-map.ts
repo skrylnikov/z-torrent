@@ -111,7 +111,8 @@ export class RarityMap {
 
   #cleanupWireEvents(wire: Wire): void {
     const streamWire = wire as unknown as WireEventTarget
-    if (this.#onWireHave) streamWire.removeListener('have', this.#onWireHave as (...args: unknown[]) => void)
+    if (this.#onWireHave)
+      streamWire.removeListener('have', this.#onWireHave as (...args: unknown[]) => void)
     if (this.#onWireBitfield)
       streamWire.removeListener('bitfield', this.#onWireBitfield as (...args: unknown[]) => void)
     const w = wire as any

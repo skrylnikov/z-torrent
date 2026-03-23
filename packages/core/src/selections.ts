@@ -61,31 +61,19 @@ export const isIntersecting =
     isInsideExisting(newItem, existing) ||
     isCoveringExisting(newItem, existing)
 
-function _isLowerIntersecting(
-  item: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
+function _isLowerIntersecting(item: MinimalSelectionItem, existing: MinimalSelectionItem): boolean {
   return item.from <= existing.from && item.to >= existing.from && item.to < existing.to
 }
 
-function _isUpperIntersecting(
-  item: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
+function _isUpperIntersecting(item: MinimalSelectionItem, existing: MinimalSelectionItem): boolean {
   return item.from > existing.from && item.from <= existing.to && item.to >= existing.to
 }
 
-function _isInsideExisting(
-  item: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
+function _isInsideExisting(item: MinimalSelectionItem, existing: MinimalSelectionItem): boolean {
   return item.from > existing.from && item.to < existing.to
 }
 
-function _isCoveringExisting(
-  item: MinimalSelectionItem,
-  existing: MinimalSelectionItem
-): boolean {
+function _isCoveringExisting(item: MinimalSelectionItem, existing: MinimalSelectionItem): boolean {
   return item.from <= existing.from && item.to >= existing.to
 }
 
@@ -109,7 +97,11 @@ export class Selections {
           existing.from = item.to + 1
         } else if (item.from === existing.to && item.to === existing.to) {
           existing.to = existing.to - 1
-        } else if (item.from > existing.from && item.to === existing.to && item.from <= existing.to) {
+        } else if (
+          item.from > existing.from &&
+          item.to === existing.to &&
+          item.from <= existing.to
+        ) {
           existing.to = Math.max(item.from - 1, 0)
         } else if (_isLowerIntersecting(item, existing)) {
           existing.to = Math.max(item.from - 1, 0)

@@ -891,7 +891,11 @@ class Wire extends Duplex {
     this.emit('pe4')
   }
 
-  _onHandshake(infoHashBuffer: Uint8Array, peerIdBuffer: Uint8Array, extensions: ProtocolExtensions): void {
+  _onHandshake(
+    infoHashBuffer: Uint8Array,
+    peerIdBuffer: Uint8Array,
+    extensions: ProtocolExtensions
+  ): void {
     const infoHash = arr2hex(infoHashBuffer)
     const peerId = arr2hex(peerIdBuffer)
 

@@ -117,25 +117,23 @@ export class ZTorrent extends ZTorrentCore {
     }
 
     parallel(
-      items.map(
-        (item) => async (cb: (err?: Error | null, result?: unknown) => void) => {
-          if (!opts.preloadedStore && isReadable(item)) {
-            const chunks: Uint8Array[] = []
-            try {
-              for await (const chunk of item as unknown as AsyncIterable<Uint8Array>) {
-                chunks.push(chunk)
-              }
-            } catch (err) {
-              return cb(err as Error)
+      items.map((item) => async (cb: (err?: Error | null, result?: unknown) => void) => {
+        if (!opts.preloadedStore && isReadable(item)) {
+          const chunks: Uint8Array[] = []
+          try {
+            for await (const chunk of item as unknown as AsyncIterable<Uint8Array>) {
+              chunks.push(chunk)
             }
-            const buf = concat(chunks)
-            ;(buf as { name?: string }).name = (item as { name?: string }).name
-            cb(undefined, buf)
-          } else {
-            cb(undefined, item)
+          } catch (err) {
+            return cb(err as Error)
           }
+          const buf = concat(chunks)
+          ;(buf as { name?: string }).name = (item as { name?: string }).name
+          cb(undefined, buf)
+        } else {
+          cb(undefined, item)
         }
-      ),
+      }),
       (err: Error | null | undefined, inputResult: unknown[] | undefined) => {
         if (this.destroyed) return
         if (err) return torrent.destroyWithError(err)
@@ -151,7 +149,8 @@ export class ZTorrent extends ZTorrentCore {
           createTorrent(inputResult as ParseInputInput, opts, async (createErr, torrentBuf) => {
             if (this.destroyed) return
             if (createErr) return torrent.destroyWithError(createErr)
-            if (!torrentBuf) return torrent.destroyWithError(new Error('createTorrent returned no buffer'))
+            if (!torrentBuf)
+              return torrent.destroyWithError(new Error('createTorrent returned no buffer'))
 
             const existingTorrent = await this.get(torrentBuf)
             if (existingTorrent) {
@@ -176,7 +175,9 @@ export class ZTorrent extends ZTorrentCore {
 }
 
 function isReadable(obj: unknown): boolean {
-  return typeof obj === 'object' && obj != null && typeof (obj as { pipe?: unknown }).pipe === 'function'
+  return (
+    typeof obj === 'object' && obj != null && typeof (obj as { pipe?: unknown }).pipe === 'function'
+  )
 }
 
 function isFileList(obj: unknown): boolean {

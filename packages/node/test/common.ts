@@ -20,9 +20,7 @@ export const PEER_LOCAL_TIMEOUT_MS = 15_000
 
 /** Remove optional BEP 46 / v2 `xt=urn:btmh:…` segment for stable magnet comparisons. */
 export function stripMagnetV2Xt(uri: string): string {
-  return uri
-    .replace(/&xt=urn%3Abtmh%3A[^&]*/gi, '')
-    .replace(/&xt=urn:btmh:[^&]*/gi, '')
+  return uri.replace(/&xt=urn%3Abtmh%3A[^&]*/gi, '').replace(/&xt=urn:btmh:[^&]*/gi, '')
 }
 
 export function expectSameMagnet(actual: string, expected: string): void {

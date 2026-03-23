@@ -18,9 +18,7 @@ test('periodic dht announce emits dhtAnnounce', () => {
     let count = 0
     const failTimer = setTimeout(() => {
       discovery.destroy(() => {
-        dht.destroy(() =>
-          reject(new Error(`expected at least 4 dhtAnnounce events, got ${count}`))
-        )
+        dht.destroy(() => reject(new Error(`expected at least 4 dhtAnnounce events, got ${count}`)))
       })
     }, 12_000)
 

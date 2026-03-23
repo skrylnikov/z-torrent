@@ -121,33 +121,78 @@ test('client.add: filesystem path to a torrent file, string', async () => {
   })
 })
 
-test('client.seed: filesystem path to file, string', async () => {
-  const client = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
+test(
+  'client.seed: filesystem path to file, string',
+  async () => {
+    const client = new ZTorrent({
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
+    })
 
-  client.on('error', (err: Error) => {
-    throw err.message
-  })
-  client.on('warning', (err: Error) => {
-    throw err.message
-  })
+    client.on('error', (err: Error) => {
+      throw err.message
+    })
+    client.on('warning', (err: Error) => {
+      throw err.message
+    })
 
-  await new Promise<void>((resolve, reject) => {
-    client.seed(
-      fixtures.leaves.contentPath,
-      {
-        name: 'Leaves of Grass by Walt Whitman.epub',
-        announce: [],
-      },
-      async (torrent: Torrent) => {
+    await new Promise<void>((resolve, reject) => {
+      client.seed(
+        fixtures.leaves.contentPath,
+        {
+          name: 'Leaves of Grass by Walt Whitman.epub',
+          announce: [],
+        },
+        async (torrent: Torrent) => {
+          expect((client as any).torrents.length).toBe(1)
+          expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
+          expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
+
+          await new Promise<void>((res, rej) =>
+            (client as any).remove(torrent, null, (err?: Error) => {
+              if (err) rej(err)
+              else res()
+            })
+          )
+          expect((client as any).torrents.length).toBe(0)
+
+          client.destroy((err?: Error) => {
+            if (err) reject(err)
+            else resolve()
+          })
+        }
+      )
+    })
+  },
+  { timeout: SEED_HEAVY_TIMEOUT_MS }
+)
+
+test(
+  'client.seed: filesystem path to folder with one file, string',
+  async () => {
+    const client = new ZTorrent({
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
+    })
+
+    client.on('error', (err: Error) => {
+      throw err.message
+    })
+    client.on('warning', (err: Error) => {
+      throw err.message
+    })
+
+    await new Promise<void>((resolve, reject) => {
+      client.seed(fixtures.folder.contentPath, { announce: [] }, async (torrent: Torrent) => {
         expect((client as any).torrents.length).toBe(1)
-        expect(torrent.infoHash).toBe(fixtures.leaves.parsedTorrent.infoHash)
-        expectSameMagnet(torrent.magnetURI, fixtures.leaves.magnetURI)
+        expect(torrent.infoHash).toBe(fixtures.folder.parsedTorrent.infoHash)
+        expectSameMagnet(torrent.magnetURI, fixtures.folder.magnetURI)
 
         await new Promise<void>((res, rej) =>
           (client as any).remove(torrent, null, (err?: Error) => {
@@ -161,97 +206,64 @@ test('client.seed: filesystem path to file, string', async () => {
           if (err) reject(err)
           else resolve()
         })
-      }
-    )
-  })
-}, { timeout: SEED_HEAVY_TIMEOUT_MS })
-
-test('client.seed: filesystem path to folder with one file, string', async () => {
-  const client = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
-
-  client.on('error', (err: Error) => {
-    throw err.message
-  })
-  client.on('warning', (err: Error) => {
-    throw err.message
-  })
-
-  await new Promise<void>((resolve, reject) => {
-    client.seed(fixtures.folder.contentPath, { announce: [] }, async (torrent: Torrent) => {
-      expect((client as any).torrents.length).toBe(1)
-      expect(torrent.infoHash).toBe(fixtures.folder.parsedTorrent.infoHash)
-      expectSameMagnet(torrent.magnetURI, fixtures.folder.magnetURI)
-
-      await new Promise<void>((res, rej) =>
-        (client as any).remove(torrent, null, (err?: Error) => {
-          if (err) rej(err)
-          else res()
-        })
-      )
-      expect((client as any).torrents.length).toBe(0)
-
-      client.destroy((err?: Error) => {
-        if (err) reject(err)
-        else resolve()
       })
     })
-  })
-}, { timeout: SEED_HEAVY_TIMEOUT_MS })
+  },
+  { timeout: SEED_HEAVY_TIMEOUT_MS }
+)
 
-test('client.seed: filesystem path to folder with multiple files, string', async () => {
-  const client = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
+test(
+  'client.seed: filesystem path to folder with multiple files, string',
+  async () => {
+    const client = new ZTorrent({
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
+    })
 
-  client.on('error', (err: Error) => {
-    throw err.message
-  })
-  client.on('warning', (err: Error) => {
-    throw err.message
-  })
+    client.on('error', (err: Error) => {
+      throw err.message
+    })
+    client.on('warning', (err: Error) => {
+      throw err.message
+    })
 
-  await new Promise<void>((resolve, reject) => {
-    client.seed(fixtures.numbers.contentPath, { announce: [] }, async (torrent: Torrent) => {
-      expect((client as any).torrents.length).toBe(1)
-      expect(torrent.infoHash).toBe(fixtures.numbers.parsedTorrent.infoHash)
-      expectSameMagnet(torrent.magnetURI, fixtures.numbers.magnetURI)
+    await new Promise<void>((resolve, reject) => {
+      client.seed(fixtures.numbers.contentPath, { announce: [] }, async (torrent: Torrent) => {
+        expect((client as any).torrents.length).toBe(1)
+        expect(torrent.infoHash).toBe(fixtures.numbers.parsedTorrent.infoHash)
+        expectSameMagnet(torrent.magnetURI, fixtures.numbers.magnetURI)
 
-      const downloaded = torrent.files.map((file) => ({
-        length: file.length,
-        downloaded: file.downloaded,
-      }))
+        const downloaded = torrent.files.map((file) => ({
+          length: file.length,
+          downloaded: file.downloaded,
+        }))
 
-      expect(downloaded).toEqual([
-        { length: 1, downloaded: 1 },
-        { length: 2, downloaded: 2 },
-        { length: 3, downloaded: 3 },
-      ])
+        expect(downloaded).toEqual([
+          { length: 1, downloaded: 1 },
+          { length: 2, downloaded: 2 },
+          { length: 3, downloaded: 3 },
+        ])
 
-      await new Promise<void>((res, rej) =>
-        (client as any).remove(torrent, null, (err?: Error) => {
-          if (err) rej(err)
-          else res()
+        await new Promise<void>((res, rej) =>
+          (client as any).remove(torrent, null, (err?: Error) => {
+            if (err) rej(err)
+            else res()
+          })
+        )
+        expect((client as any).torrents.length).toBe(0)
+
+        client.destroy((err?: Error) => {
+          if (err) reject(err)
+          else resolve()
         })
-      )
-      expect((client as any).torrents.length).toBe(0)
-
-      client.destroy((err?: Error) => {
-        if (err) reject(err)
-        else resolve()
       })
     })
-  })
-}, { timeout: SEED_HEAVY_TIMEOUT_MS })
+  },
+  { timeout: SEED_HEAVY_TIMEOUT_MS }
+)
 
 test('client.add: invalid torrent id: invalid filesystem path', async () => {
   const client = new ZTorrent({
@@ -280,72 +292,88 @@ test('client.add: invalid torrent id: invalid filesystem path', async () => {
   })
 })
 
-test('client.remove: opts.destroyStore', async () => {
-  const client = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
-
-  client.on('error', (err: Error) => {
-    throw err.message
-  })
-  client.on('warning', (err: Error) => {
-    throw err.message
-  })
-
-  await new Promise<void>((resolve, reject) => {
-    client.seed(fixtures.alice.content, { name: 'alice.txt', announce: [] }, (torrent: Torrent) => {
-      const torrentPath = torrent.path
-      ;(client as any).remove(torrent, { destroyStore: true }, (err?: Error) => {
-        if (err) throw err
-
-        fs.stat(path.join(torrentPath as string, 'alice.txt'), (err) => {
-          expect(err && (err as NodeJS.ErrnoException).code === 'ENOENT').toBeTruthy()
-
-          client.destroy((err?: Error) => {
-            if (err) reject(err)
-            else resolve()
-          })
-        })
-      })
+test(
+  'client.remove: opts.destroyStore',
+  async () => {
+    const client = new ZTorrent({
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
     })
-  })
-}, { timeout: SEED_HEAVY_TIMEOUT_MS })
 
-test('torrent.destroy: opts.destroyStore', async () => {
-  const client = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
-
-  client.on('error', (err: Error) => {
-    throw err.message
-  })
-  client.on('warning', (err: Error) => {
-    throw err.message
-  })
-
-  await new Promise<void>((resolve, reject) => {
-    client.seed(fixtures.alice.content, { name: 'alice.txt', announce: [] }, (torrent: Torrent) => {
-      const torrentPath = torrent.path
-      ;(torrent as any).destroy({ destroyStore: true }, (err?: Error) => {
-        if (err) throw err
-
-        fs.stat(path.join(torrentPath as string, 'alice.txt'), (err) => {
-          expect(err && (err as NodeJS.ErrnoException).code === 'ENOENT').toBeTruthy()
-
-          client.destroy((err?: Error) => {
-            if (err) reject(err)
-            else resolve()
-          })
-        })
-      })
+    client.on('error', (err: Error) => {
+      throw err.message
     })
-  })
-}, { timeout: SEED_HEAVY_TIMEOUT_MS })
+    client.on('warning', (err: Error) => {
+      throw err.message
+    })
+
+    await new Promise<void>((resolve, reject) => {
+      client.seed(
+        fixtures.alice.content,
+        { name: 'alice.txt', announce: [] },
+        (torrent: Torrent) => {
+          const torrentPath = torrent.path
+          ;(client as any).remove(torrent, { destroyStore: true }, (err?: Error) => {
+            if (err) throw err
+
+            fs.stat(path.join(torrentPath as string, 'alice.txt'), (err) => {
+              expect(err && (err as NodeJS.ErrnoException).code === 'ENOENT').toBeTruthy()
+
+              client.destroy((err?: Error) => {
+                if (err) reject(err)
+                else resolve()
+              })
+            })
+          })
+        }
+      )
+    })
+  },
+  { timeout: SEED_HEAVY_TIMEOUT_MS }
+)
+
+test(
+  'torrent.destroy: opts.destroyStore',
+  async () => {
+    const client = new ZTorrent({
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
+    })
+
+    client.on('error', (err: Error) => {
+      throw err.message
+    })
+    client.on('warning', (err: Error) => {
+      throw err.message
+    })
+
+    await new Promise<void>((resolve, reject) => {
+      client.seed(
+        fixtures.alice.content,
+        { name: 'alice.txt', announce: [] },
+        (torrent: Torrent) => {
+          const torrentPath = torrent.path
+          ;(torrent as any).destroy({ destroyStore: true }, (err?: Error) => {
+            if (err) throw err
+
+            fs.stat(path.join(torrentPath as string, 'alice.txt'), (err) => {
+              expect(err && (err as NodeJS.ErrnoException).code === 'ENOENT').toBeTruthy()
+
+              client.destroy((err?: Error) => {
+                if (err) reject(err)
+                else resolve()
+              })
+            })
+          })
+        }
+      )
+    })
+  },
+  { timeout: SEED_HEAVY_TIMEOUT_MS }
+)

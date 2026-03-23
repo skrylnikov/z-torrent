@@ -72,7 +72,11 @@ describe('buildFileV2Merkle', () => {
 
 describe('padPieceBlockHashes', () => {
   test('first piece pads to next pow2 of block count', () => {
-    const h = [sha256Data(new Uint8Array([1])), sha256Data(new Uint8Array([2])), sha256Data(new Uint8Array([3]))]
+    const h = [
+      sha256Data(new Uint8Array([1])),
+      sha256Data(new Uint8Array([2])),
+      sha256Data(new Uint8Array([3])),
+    ]
     const p = padPieceBlockHashes(h, 4, true)
     expect(p.length).toBe(4)
     expect(p[3]!.every((b) => b === 0)).toBe(true)

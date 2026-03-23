@@ -98,18 +98,14 @@ export class HTTPTracker extends Tracker {
     if (this.destroyed) return
 
     if (!this.scrapeUrl) {
-      this.client.emit(
-        'error',
-        new Error(`scrape not supported ${this.announceUrl}`)
-      )
+      this.client.emit('error', new Error(`scrape not supported ${this.announceUrl}`))
       return
     }
 
     const infoHashes =
       Array.isArray(opts.infoHash) && opts.infoHash.length > 0
         ? opts.infoHash.map((infoHash) => hex2bin(infoHash))
-        : (opts.infoHash && hex2bin(opts.infoHash as string)) ||
-          this.client.infoHashBinary
+        : (opts.infoHash && hex2bin(opts.infoHash as string)) || this.client.infoHashBinary
     const params = {
       info_hash: infoHashes,
     }
@@ -308,4 +304,3 @@ export class HTTPTracker extends Tracker {
     })
   }
 }
-

@@ -7,7 +7,10 @@ import * as common from './common.js'
 // test vectors from http://bittorrent.org/beps/bep_0044.html
 test('dht store test vectors - test 1 (mutable)', () => {
   return new Promise<void>((resolve) => {
-    const pub = Buffer.from('77ff84905a91936367c01360803104f92432fcd904a43511876df5cdf3e7e548', 'hex')
+    const pub = Buffer.from(
+      '77ff84905a91936367c01360803104f92432fcd904a43511876df5cdf3e7e548',
+      'hex'
+    )
     const value = 'Hello World!'
 
     const dht1 = new DHT({ bootstrap: false, verify: ed.verify } as any)
@@ -66,7 +69,10 @@ test('dht store test vectors - test 1 (mutable)', () => {
 
 test('dht store test vectors - test 2 (mutable with salt)', () => {
   return new Promise<void>((resolve) => {
-    const pub = Buffer.from('77ff84905a91936367c01360803104f92432fcd904a43511876df5cdf3e7e548', 'hex')
+    const pub = Buffer.from(
+      '77ff84905a91936367c01360803104f92432fcd904a43511876df5cdf3e7e548',
+      'hex'
+    )
     const value = 'Hello World!'
 
     const dht1 = new DHT({ bootstrap: false, verify: ed.verify } as any)
@@ -97,9 +103,7 @@ test('dht store test vectors - test 2 (mutable with salt)', () => {
         v: Buffer.from(value),
         salt: Buffer.from('foobar'),
         sign(buf: Buffer) {
-          expect(Buffer.from(buf).toString()).toBe(
-            '4:salt6:foobar3:seqi1e1:v12:Hello World!'
-          )
+          expect(Buffer.from(buf).toString()).toBe('4:salt6:foobar3:seqi1e1:v12:Hello World!')
           const sig = Buffer.from(
             '6834284b6b24c3204eb2fea824d82f88883a3d95e8b4a21b8c0ded553d17d17d' +
               'df9a8a7104b1258f30bed3787e6cb896fca78c58f8e03b5f18f14951a87d9a08',

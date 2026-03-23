@@ -43,9 +43,9 @@ test('verify info-hash an additional source attribute set on the info dict', asy
 
   expect(parsedTorrent.name).toBe('folder')
   expect(parsedTorrent.private).toBe(true)
-  expect(Buffer.from((parsedTorrent.info as Record<string, unknown>).source as Uint8Array).toString()).toBe(
-    'SOURCE'
-  )
+  expect(
+    Buffer.from((parsedTorrent.info as Record<string, unknown>).source as Uint8Array).toString()
+  ).toBe('SOURCE')
   expect(parsedTorrent.announce).toEqual(['http://private.tracker.org/'])
   expect(files[0]!.path).toBe(join('folder', 'file.txt'))
   expect(files[0]!.length).toBe(15)

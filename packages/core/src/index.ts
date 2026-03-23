@@ -20,4 +20,10 @@ export { VERSION, VERSION_STR } from './version.js'
 export type { TorrentOpts, ParsedTorrent, ZTorrentClient } from './lib/torrent.js'
 export type { FileMetadata } from './lib/file.js'
 export type { ThrottleGroups, PeerSwarm } from './lib/peer.js'
-export type { Request, Response, ServerOptions, ClientWithTorrents, TorrentWithFiles } from './lib/server-base.js'
+export type {
+  Request,
+  Response,
+  ServerOptions,
+  ClientWithTorrents,
+  TorrentWithFiles,
+} from './lib/server-base.js'

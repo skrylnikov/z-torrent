@@ -33,13 +33,7 @@ export type {
 } from './client-types.js'
 
 /** Value that identifies a torrent for `get` / `add` / `remove`. */
-export type TorrentId =
-  | string
-  | ArrayBufferView
-  | ParsedTorrent
-  | ParseInstance
-  | Torrent
-  | null
+export type TorrentId = string | ArrayBufferView | ParsedTorrent | ParseInstance | Torrent | null
 
 const debug = debugFactory('@z-torrent/core:client')
 

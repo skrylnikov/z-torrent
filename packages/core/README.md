@@ -27,16 +27,16 @@ const stream = await file.stream()
 
 ## Public API (high level)
 
-| Export | Role |
-|--------|------|
-| `ZTorrentCore` | Client; requires `platform` in constructor options |
-| `Torrent` | Single swarm / transfer |
-| `File`, `FileIterator` | File view and async byte iteration |
-| `Peer`, `WebConn`, `RarityMap` | Wire / peer helpers |
-| `ServerBase` | Shared HTTP index/file serving logic |
-| `Selections` | Piece interval selection utilities |
-| `VERSION` | Package version string |
-| Types | `PlatformAdapter`, `ZTorrentClient`, `TorrentOpts`, server types, etc. |
+| Export                         | Role                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| `ZTorrentCore`                 | Client; requires `platform` in constructor options                     |
+| `Torrent`                      | Single swarm / transfer                                                |
+| `File`, `FileIterator`         | File view and async byte iteration                                     |
+| `Peer`, `WebConn`, `RarityMap` | Wire / peer helpers                                                    |
+| `ServerBase`                   | Shared HTTP index/file serving logic                                   |
+| `Selections`                   | Piece interval selection utilities                                     |
+| `VERSION`                      | Package version string                                                 |
+| Types                          | `PlatformAdapter`, `ZTorrentClient`, `TorrentOpts`, server types, etc. |
 
 ### Platform hooks on `ZTorrentCore`
 

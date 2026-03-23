@@ -3,12 +3,7 @@ import bencode from 'bencode'
 
 import Debug from 'debug'
 import KBucket from 'k-bucket'
-import krpc, {
-  type KRpc,
-  type KRpcNode,
-  type KRpcMessage,
-  type KRpcPeer,
-} from 'k-rpc'
+import krpc, { type KRpc, type KRpcNode, type KRpcMessage, type KRpcPeer } from 'k-rpc'
 import low from 'last-one-wins'
 import { LRUCache } from 'lru-cache'
 import records from 'record-cache'

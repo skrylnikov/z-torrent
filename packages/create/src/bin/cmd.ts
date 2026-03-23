@@ -50,18 +50,22 @@ if (!infile || argv.help) {
   process.exit(0)
 }
 
-createTorrent(infile, argv as unknown as CreateTorrentOptions, (err: Error | null, torrent?: Uint8Array) => {
-  if (err) {
-    console.error(err.stack)
-    process.exit(1)
-  } else if (outfile && torrent) {
-    fs.writeFile(outfile, torrent, (writeErr: Error | null) => {
-      if (writeErr) {
-        console.error(writeErr.stack)
-        process.exit(1)
-      }
-    })
-  } else if (torrent) {
-    process.stdout.write(torrent)
+createTorrent(
+  infile,
+  argv as unknown as CreateTorrentOptions,
+  (err: Error | null, torrent?: Uint8Array) => {
+    if (err) {
+      console.error(err.stack)
+      process.exit(1)
+    } else if (outfile && torrent) {
+      fs.writeFile(outfile, torrent, (writeErr: Error | null) => {
+        if (writeErr) {
+          console.error(writeErr.stack)
+          process.exit(1)
+        }
+      })
+    } else if (torrent) {
+      process.stdout.write(torrent)
+    }
   }
-})
+)

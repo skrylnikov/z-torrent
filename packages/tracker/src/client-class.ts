@@ -123,7 +123,10 @@ function buildSubTrackers(
   return trackers
 }
 
-export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker: TrackerCtor | null) {
+export function createTrackerClient(
+  HTTPTracker: TrackerCtor | null,
+  UDPTracker: TrackerCtor | null
+) {
   class Client extends EventEmitter {
     readonly peerId: string
     readonly peerIdBuffer: Uint8Array
@@ -162,10 +165,15 @@ export function createTrackerClient(HTTPTracker: TrackerCtor | null, UDPTracker:
       if (!opts.peerId) throw new Error('Option `peerId` is required')
       if (!opts.infoHash) throw new Error('Option `infoHash` is required')
       if (!opts.announce) throw new Error('Option `announce` is required')
-      if (typeof process !== 'undefined' && !(process as { browser?: boolean }).browser && !opts.port)
+      if (
+        typeof process !== 'undefined' &&
+        !(process as { browser?: boolean }).browser &&
+        !opts.port
+      )
         throw new Error('Option `port` is required')
 
-      this.peerId = typeof opts.peerId === 'string' ? opts.peerId : arr2hex(opts.peerId as Uint8Array)
+      this.peerId =
+        typeof opts.peerId === 'string' ? opts.peerId : arr2hex(opts.peerId as Uint8Array)
       this.peerIdBuffer = hex2arr(this.peerId)
       this.peerIdBinary = hex2bin(this.peerId)
 

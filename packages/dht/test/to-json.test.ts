@@ -14,8 +14,7 @@ test('dht.toJSON: re-use dht nodes by calling dht.addNode', () => {
       const dht2 = new DHT({ bootstrap: false })
 
       dht1.nodes.toArray().forEach((node) => {
-        if (node.id && node.host)
-          dht2.addNode({ host: node.host, port: node.port, id: node.id })
+        if (node.id && node.host) dht2.addNode({ host: node.host, port: node.port, id: node.id })
       })
 
       dht2.on('ready', () => {
