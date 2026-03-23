@@ -171,7 +171,9 @@ class TorrentIdParser {
     } else if (ArrayBuffer.isView(torrentId) && torrentId.length === 20) {
       return magnet.decode(`magnet:?xt=urn:btih:${arr2hex(torrentId as Uint8Array)}`) as Instance
     } else if (ArrayBuffer.isView(torrentId) && torrentId.length === 32) {
-      return magnet.decode(`magnet:?xt=urn:btmh:1220${arr2hex(torrentId as Uint8Array)}`) as Instance
+      return magnet.decode(
+        `magnet:?xt=urn:btmh:1220${arr2hex(torrentId as Uint8Array)}`
+      ) as Instance
     } else if (ArrayBuffer.isView(torrentId)) {
       return this.#decodeTorrentFile(torrentId as Uint8Array)
     } else if (
@@ -274,7 +276,8 @@ class TorrentIdParser {
 
     if (torrentObj['creation date'])
       result.created = new Date((torrentObj['creation date'] as number) * 1000)
-    if (torrentObj['created by']) result.createdBy = arr2text(torrentObj['created by'] as Uint8Array)
+    if (torrentObj['created by'])
+      result.createdBy = arr2text(torrentObj['created by'] as Uint8Array)
 
     if (ArrayBuffer.isView(torrentObj.comment))
       result.comment = arr2text(torrentObj.comment as Uint8Array)
@@ -373,10 +376,7 @@ class TorrentIdParser {
   }
 
   /** Split BEP 52 `piece layers` blob into 32-byte layer hashes; index by `pieces root` hex. */
-  #attachV2PieceLayout(
-    result: Instance,
-    pieceLayers: Record<string, Uint8Array | Buffer>
-  ): void {
+  #attachV2PieceLayout(result: Instance, pieceLayers: Record<string, Uint8Array | Buffer>): void {
     const byHex: Record<string, Uint8Array[]> = {}
     for (const [key, buf] of Object.entries(pieceLayers)) {
       const rootHex = this.#piecesRootKeyToHex(key)
@@ -410,7 +410,10 @@ class TorrentIdParser {
     throw new Error('Invalid piece layers dictionary key length')
   }
 
-  #collectV2FilesFromTree(tree: FileTree, prefix: string[] = []): Omit<V2FileLayoutEntry, 'byteOffset' | 'startPiece' | 'endPiece'>[] {
+  #collectV2FilesFromTree(
+    tree: FileTree,
+    prefix: string[] = []
+  ): Omit<V2FileLayoutEntry, 'byteOffset' | 'startPiece' | 'endPiece'>[] {
     const names = Object.keys(tree).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     const out: Omit<V2FileLayoutEntry, 'byteOffset' | 'startPiece' | 'endPiece'>[] = []
     for (const name of names) {
@@ -450,8 +453,7 @@ class TorrentIdParser {
     const layout: V2FileLayoutEntry[] = []
     for (const f of raw) {
       const startPiece = (cursor / pieceLength) | 0
-      const endPiece =
-        f.length === 0 ? startPiece : ((cursor + f.length - 1) / pieceLength) | 0
+      const endPiece = f.length === 0 ? startPiece : ((cursor + f.length - 1) / pieceLength) | 0
       layout.push({
         ...f,
         byteOffset: cursor,

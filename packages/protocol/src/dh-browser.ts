@@ -31,7 +31,11 @@ export interface DiffieHellman {
   computeSecret(otherPublicKey: string, inEncoding: 'hex', outEncoding: 'hex'): string
 }
 
-export function createDiffieHellman(primeHex: string, _encoding: string, generator: number): DiffieHellman {
+export function createDiffieHellman(
+  primeHex: string,
+  _encoding: string,
+  generator: number
+): DiffieHellman {
   const p = BigInt('0x' + primeHex)
   const g = BigInt(generator)
   let privateKey: bigint

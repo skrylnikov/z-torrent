@@ -485,12 +485,7 @@ test('mutable update mesh', () => {
       send(1, 5, common.fill(500, 'whatever'), checkDone)
     }
 
-    function send(
-      srci: number,
-      dsti: number,
-      value: Buffer,
-      done: () => void
-    ) {
+    function send(srci: number, dsti: number, value: Buffer, done: () => void) {
       const src = dht[srci]!
       const dst = dht[dsti]!
       const keypair = ed.keygen()
@@ -562,9 +557,7 @@ test('invalid sequence', () => {
       function check() {
         dht1.get(hash0!, (err, res) => {
           if (err) throw err
-          expect(res!.v.toString('utf8')).toBe(
-            common.fill(500, '5').toString('utf8')
-          )
+          expect(res!.v.toString('utf8')).toBe(common.fill(500, '5').toString('utf8'))
           expect(res!.seq).toBe(5)
           cleanup()
           resolve()
@@ -623,9 +616,7 @@ test('valid sequence', () => {
       function check() {
         dht1.get(hash0!, (err, res) => {
           if (err) throw err
-          expect(res!.v.toString('utf8')).toBe(
-            common.fill(500, '5').toString('utf8')
-          )
+          expect(res!.v.toString('utf8')).toBe(common.fill(500, '5').toString('utf8'))
           expect(res!.seq).toBe(5)
           cleanup()
           resolve()

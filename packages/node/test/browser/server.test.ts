@@ -6,11 +6,11 @@ import { fixtures } from '@z-torrent/fixtures'
 // logic taken from https://github.com/atom/electron/issues/2288#issuecomment-123147993
 // Service Worker API is not available in Node/Bun
 
-if (!(global as any)?.process?.versions?.electron && typeof navigator?.serviceWorker !== 'undefined') {
-  const img = Buffer.from(
-    'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-    'base64'
-  )
+if (
+  !(global as any)?.process?.versions?.electron &&
+  typeof navigator?.serviceWorker !== 'undefined'
+) {
+  const img = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
   ;(img as Buffer & { name: string }).name = 'img.png'
 
   test('SW Registration and errors', async () => {

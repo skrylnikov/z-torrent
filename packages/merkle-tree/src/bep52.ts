@@ -186,7 +186,11 @@ export function buildMerkleLayers(leaves: Uint8Array[]): Uint8Array[][] {
  * Uncle hashes for one leaf index, from leaf layer up `proofLayers` steps.
  * Returns uncles from bottom to top (closest to root last).
  */
-export function unclesForLeafIndex(layers: Uint8Array[][], leafIndex: number, proofLayers: number): Uint8Array[] {
+export function unclesForLeafIndex(
+  layers: Uint8Array[][],
+  leafIndex: number,
+  proofLayers: number
+): Uint8Array[] {
   const uncles: Uint8Array[] = []
   let idx = leafIndex
   for (let depth = 0; depth < proofLayers && depth < layers.length - 1; depth++) {

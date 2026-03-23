@@ -3,10 +3,7 @@ import Protocol from '@z-torrent/protocol'
 
 test('hashRequest throws if v2 not negotiated on handshake', () => {
   const wire = new Protocol()
-  wire.handshake(
-    Buffer.from('01234567890123456789'),
-    Buffer.from('12345678901234567890')
-  )
+  wire.handshake(Buffer.from('01234567890123456789'), Buffer.from('12345678901234567890'))
   const root = new Uint8Array(32)
   expect(() => wire.hashRequest(root, 0, 0, 1, 0)).toThrow(/v2 support/)
 })

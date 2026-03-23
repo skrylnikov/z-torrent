@@ -14,12 +14,15 @@ function serverTest(
 ): Promise<void> {
   const hostname = serverFamily === 'inet6' ? '[::1]' : '127.0.0.1'
 
-  const opts: { serverType: 'http' | 'udp' | 'ws'; peersCacheLength?: number; serverFamily?: string } =
-    {
-      serverType,
-      peersCacheLength: 2,
-      serverFamily,
-    }
+  const opts: {
+    serverType: 'http' | 'udp' | 'ws'
+    peersCacheLength?: number
+    serverFamily?: string
+  } = {
+    serverType,
+    peersCacheLength: 2,
+    serverFamily,
+  }
 
   return new Promise((resolve, reject) => {
     common.createServer(opts, (server: Server, _announceUrl) => {

@@ -928,4 +928,3 @@ function toNumber(x: any): number | false {
 }
 
 function noop() {}
-

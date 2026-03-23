@@ -57,7 +57,10 @@ class GetFilesImpl {
 
   static #traversePath(
     path: string,
-    fn: (path: string, cb: (err: Error | null, result?: CollectedFile | CollectedFile[]) => void) => void,
+    fn: (
+      path: string,
+      cb: (err: Error | null, result?: CollectedFile | CollectedFile[]) => void
+    ) => void,
     cb: (err: Error | null, result?: CollectedFile | CollectedFile[]) => void
   ): void {
     fs.stat(path, (err, stats) => {

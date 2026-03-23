@@ -304,7 +304,7 @@
 - Sixia "Leask" Huang (i@leaskh.com)
 - Izaac Wilkowski (im.izaac.seo@gmail.com)
 - Banou (me@banou.dev)
-- Cas_ (6506529+ThaUnknown@users.noreply.github.com)
+- Cas\_ (6506529+ThaUnknown@users.noreply.github.com)
 - Andréas Livet (andreas.livet@gmail.com)
 - Evan Hahn (me@evanhahn.com)
 - Arsène Fougerouse (arsene582@gmail.com)

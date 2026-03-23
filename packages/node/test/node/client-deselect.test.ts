@@ -70,7 +70,10 @@ function setupClient({
   })
 }
 
-function assertRangesEqual(ranges: Array<{ from: number; to: number }>, expected: [number, number][]) {
+function assertRangesEqual(
+  ranges: Array<{ from: number; to: number }>,
+  expected: [number, number][]
+) {
   expect(ranges.length).toBe(expected.length)
   const sorted = [...ranges].sort((a, b) => a.from - b.from)
   expected.sort((a, b) => a[0] - b[0])
@@ -118,74 +121,90 @@ test('client.deselect: whole torrent', { timeout: PEER_LOCAL_TIMEOUT_MS }, async
   })
 })
 
-test('client.deselect: whole torrent - start as deselected', { timeout: PEER_LOCAL_TIMEOUT_MS }, async () => {
-  await setupClient({
-    onTorrent: () => {},
-    addTorrentProps: { deselect: true },
-    onIdle: (torrent) => {
-      expect(torrent.pieces.filter((a) => a === null).length).toBe(0)
-    },
-  })
-})
+test(
+  'client.deselect: whole torrent - start as deselected',
+  { timeout: PEER_LOCAL_TIMEOUT_MS },
+  async () => {
+    await setupClient({
+      onTorrent: () => {},
+      addTorrentProps: { deselect: true },
+      onIdle: (torrent) => {
+        expect(torrent.pieces.filter((a) => a === null).length).toBe(0)
+      },
+    })
+  }
+)
 
 // Idle can fire before all wanted pieces are flushed; piece counts are timing-sensitive.
-test.skip('client.deselect: partial torrent - second half deselected', { timeout: PEER_LOCAL_TIMEOUT_MS }, async () => {
-  let lastPieceIndex: number
-  await setupClient({
-    onTorrent: (torrent) => {
-      lastPieceIndex = Math.floor((torrent.pieces.length - 1) / 2)
-      torrent.deselect(0, lastPieceIndex)
-    },
-    onIdle: (torrent) => {
-      expect(torrent.pieces.filter((a) => a === null).length).toBe(
-        torrent.pieces.length - 1 - lastPieceIndex!
-      )
-    },
-  })
-})
+test.skip(
+  'client.deselect: partial torrent - second half deselected',
+  { timeout: PEER_LOCAL_TIMEOUT_MS },
+  async () => {
+    let lastPieceIndex: number
+    await setupClient({
+      onTorrent: (torrent) => {
+        lastPieceIndex = Math.floor((torrent.pieces.length - 1) / 2)
+        torrent.deselect(0, lastPieceIndex)
+      },
+      onIdle: (torrent) => {
+        expect(torrent.pieces.filter((a) => a === null).length).toBe(
+          torrent.pieces.length - 1 - lastPieceIndex!
+        )
+      },
+    })
+  }
+)
 
-test.skip('client.deselect: partial torrent - second half deselected (alt)', { timeout: PEER_LOCAL_TIMEOUT_MS }, async () => {
-  let lastPieceIndex: number
-  await setupClient({
-    onTorrent: (torrent) => {
-      lastPieceIndex = Math.floor((torrent.pieces.length - 1) / 2)
-      torrent.deselect(lastPieceIndex, torrent.pieces.length - 1)
-    },
-    onIdle: (torrent) => {
-      expect(torrent.pieces.filter((a) => a === null).length).toBe(
-        torrent.pieces.length - 1 - lastPieceIndex!
-      )
-    },
-  })
-})
+test.skip(
+  'client.deselect: partial torrent - second half deselected (alt)',
+  { timeout: PEER_LOCAL_TIMEOUT_MS },
+  async () => {
+    let lastPieceIndex: number
+    await setupClient({
+      onTorrent: (torrent) => {
+        lastPieceIndex = Math.floor((torrent.pieces.length - 1) / 2)
+        torrent.deselect(lastPieceIndex, torrent.pieces.length - 1)
+      },
+      onIdle: (torrent) => {
+        expect(torrent.pieces.filter((a) => a === null).length).toBe(
+          torrent.pieces.length - 1 - lastPieceIndex!
+        )
+      },
+    })
+  }
+)
 
-test('client.deselect: multiple overlapping ranges', { timeout: PEER_LOCAL_TIMEOUT_MS }, async () => {
-  await setupClient({
-    addTorrentProps: { deselect: true },
-    onTorrent: (torrent) => {
-      torrent.select(3, 10)
-      torrent.select(5, 12)
-      torrent.select(12, 18)
-      torrent.select(15, 22)
-      torrent.select(0, 4)
-      const ranges1 = torrent.getPieceSelectionRanges()
-      expect(ranges1.length).toBe(1)
-      assertRangesEqual(ranges1, [[0, 22]])
+test(
+  'client.deselect: multiple overlapping ranges',
+  { timeout: PEER_LOCAL_TIMEOUT_MS },
+  async () => {
+    await setupClient({
+      addTorrentProps: { deselect: true },
+      onTorrent: (torrent) => {
+        torrent.select(3, 10)
+        torrent.select(5, 12)
+        torrent.select(12, 18)
+        torrent.select(15, 22)
+        torrent.select(0, 4)
+        const ranges1 = torrent.getPieceSelectionRanges()
+        expect(ranges1.length).toBe(1)
+        assertRangesEqual(ranges1, [[0, 22]])
 
-      torrent.deselect(4, 8)
-      torrent.deselect(14, 17)
-      torrent.deselect(20, 21)
-      const ranges2 = torrent.getPieceSelectionRanges()
-      expect(ranges2.length).toBe(4)
-      assertRangesEqual(ranges2, [
-        [0, 3],
-        [9, 13],
-        [18, 19],
-        [22, 22],
-      ])
-    },
-    onIdle: (torrent) => {
-      expect(torrent.pieces.filter((a) => a === null).length).toBe(12)
-    },
-  })
-})
+        torrent.deselect(4, 8)
+        torrent.deselect(14, 17)
+        torrent.deselect(20, 21)
+        const ranges2 = torrent.getPieceSelectionRanges()
+        expect(ranges2.length).toBe(4)
+        assertRangesEqual(ranges2, [
+          [0, 3],
+          [9, 13],
+          [18, 19],
+          [22, 22],
+        ])
+      },
+      onIdle: (torrent) => {
+        expect(torrent.pieces.filter((a) => a === null).length).toBe(12)
+      },
+    })
+  }
+)

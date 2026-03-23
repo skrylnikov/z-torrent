@@ -99,10 +99,14 @@ export function querystringStringify(obj: ParsedUrlQueryInput): string {
     )
     if (Array.isArray(value)) {
       for (const v of value) {
-        parts.push(`${encodedKey}=${(escape as (s: string) => string)(String(v)).replace(/[@*/+]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`)
+        parts.push(
+          `${encodedKey}=${(escape as (s: string) => string)(String(v)).replace(/[@*/+]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`
+        )
       }
     } else {
-      parts.push(`${encodedKey}=${(escape as (s: string) => string)(String(value)).replace(/[@*/+]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`)
+      parts.push(
+        `${encodedKey}=${(escape as (s: string) => string)(String(value)).replace(/[@*/+]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`
+      )
     }
   }
   return parts.join('&')

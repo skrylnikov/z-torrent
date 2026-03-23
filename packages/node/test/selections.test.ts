@@ -97,52 +97,43 @@ function assertSelectionRanges(selection: Selections, expected: Interval[]): voi
 
 for (const [functionName, { fn, cases }] of Object.entries(testCases)) {
   for (const { newItem, existing } of cases) {
-    test(
-      `should return true for newItem: ${toString(newItem)} and existing: ${toString(existing)} and everything else should be false`,
-      () => {
-        expect(fn(newItem, existing)).toBe(true)
-        for (const otherFn of Object.keys(testCases)) {
-          if (otherFn !== functionName) {
-            expect((testCases as Record<string, { fn: typeof fn }>)[otherFn]!.fn(newItem, existing)).toBe(
-              false
-            )
-          }
+    test(`should return true for newItem: ${toString(newItem)} and existing: ${toString(existing)} and everything else should be false`, () => {
+      expect(fn(newItem, existing)).toBe(true)
+      for (const otherFn of Object.keys(testCases)) {
+        if (otherFn !== functionName) {
+          expect(
+            (testCases as Record<string, { fn: typeof fn }>)[otherFn]!.fn(newItem, existing)
+          ).toBe(false)
         }
       }
-    )
+    })
   }
 }
 
 for (const { cases } of Object.values(testCases)) {
   for (const { newItem, existing, expectedRemoveResult } of cases) {
-    test(
-      `should remove the given item: ${toString(newItem)} from existing selection: ${toString(existing)} and leave: ${toString(expectedRemoveResult)}`,
-      () => {
-        const selection = new Selections()
-        selection.insert(existing as Parameters<Selections['insert']>[0])
-        selection.remove(newItem)
-        assertSelectionRanges(selection, expectedRemoveResult)
-      }
-    )
+    test(`should remove the given item: ${toString(newItem)} from existing selection: ${toString(existing)} and leave: ${toString(expectedRemoveResult)}`, () => {
+      const selection = new Selections()
+      selection.insert(existing as Parameters<Selections['insert']>[0])
+      selection.remove(newItem)
+      assertSelectionRanges(selection, expectedRemoveResult)
+    })
   }
 }
 
 for (const { cases } of Object.values(testCases)) {
   for (const { newItem, existing, expectedRemoveResult } of cases) {
-    test(
-      `should truncate the existing item: ${toString(existing)} to prevent overlapping with the new selection: ${toString(newItem)}`,
-      () => {
-        const selection = new Selections()
-        selection.insert(existing as Parameters<Selections['insert']>[0])
-        selection.insert(newItem as Parameters<Selections['insert']>[0])
-        const expected = { from: Infinity, to: 0 }
-        for (const item of [...expectedRemoveResult, newItem]) {
-          expected.from = Math.min(expected.from, item.from)
-          expected.to = Math.max(expected.to, item.to)
-        }
-        assertSelectionRanges(selection, [expected])
+    test(`should truncate the existing item: ${toString(existing)} to prevent overlapping with the new selection: ${toString(newItem)}`, () => {
+      const selection = new Selections()
+      selection.insert(existing as Parameters<Selections['insert']>[0])
+      selection.insert(newItem as Parameters<Selections['insert']>[0])
+      const expected = { from: Infinity, to: 0 }
+      for (const item of [...expectedRemoveResult, newItem]) {
+        expected.from = Math.min(expected.from, item.from)
+        expected.to = Math.max(expected.to, item.to)
       }
-    )
+      assertSelectionRanges(selection, [expected])
+    })
   }
 }
 

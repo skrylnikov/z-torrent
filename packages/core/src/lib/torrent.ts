@@ -42,6 +42,12 @@ const SPEED_THRESHOLD = 3 * Piece.BLOCK_LENGTH
 const PIPELINE_MIN_DURATION = 0.5
 const PIPELINE_MAX_DURATION = 1
 
+/** Max wait before requestIdleCallback runs (browser); lower keeps streaming pipeline fed under load */
+const UPDATE_IDLE_CALLBACK_TIMEOUT_MS = 50
+
+/** Cap block requests enqueued per #updateWireWrapper pass to avoid long main-thread stalls */
+const MAX_REQUESTS_PER_UPDATE = 128
+
 const RECHOKE_INTERVAL = 10_000
 const RECHOKE_OPTIMISTIC_DURATION = 2
 
@@ -138,10 +144,7 @@ export interface ZTorrentClient {
   emit: (event: string, ...args: unknown[]) => boolean
 }
 
-export class Torrent
-  extends EventEmitter
-  implements TorrentWire, TorrentForFile, PeerSwarm
-{
+export class Torrent extends EventEmitter implements TorrentWire, TorrentForFile, PeerSwarm {
   #instanceDebugId: string
   client: ZTorrentClient
   announce?: string[]
@@ -593,9 +596,7 @@ export class Torrent
         (parsedTorrent.infoHashV2 &&
           this.infoHashV2 &&
           parsedTorrent.infoHashV2 === this.infoHashV2) ||
-        (parsedTorrent.infoHash &&
-          this.infoHash &&
-          parsedTorrent.infoHash === this.infoHash)
+        (parsedTorrent.infoHash && this.infoHash && parsedTorrent.infoHash === this.infoHash)
       if (!xsMatches) {
         this.emit(
           'warning',
@@ -813,7 +814,10 @@ export class Torrent
 
     const onChokeTimeout = () => {
       if (this.destroyed || wire.destroyed) return
-      if (this.#getQueuedPeerCount() > 2 * (this.#numConns - this.numPeers) && (wire as any).amInterested) {
+      if (
+        this.#getQueuedPeerCount() > 2 * (this.#numConns - this.numPeers) &&
+        (wire as any).amInterested
+      ) {
         wire.destroy()
       } else {
         timeoutId = setTimeout(onChokeTimeout, CHOKE_TIMEOUT)
@@ -941,7 +945,7 @@ export class Torrent
   #update(): void {
     const idleCallback = this.client.platform.idleCallback
     if (idleCallback) {
-      idleCallback(() => this.#updateWireWrapper(), { timeout: 250 })
+      idleCallback(() => this.#updateWireWrapper(), { timeout: UPDATE_IDLE_CALLBACK_TIMEOUT_MS })
     } else {
       this.#updateWireWrapper()
     }
@@ -949,10 +953,21 @@ export class Torrent
 
   #updateWireWrapper(): void {
     if (this.destroyed) return
-    const ite = randomIterate(this.wires)
-    let wire
-    while ((wire = ite())) {
-      this.#updateWire(wire)
+    let enqueued = 0
+    let anyProgress = true
+    while (anyProgress && enqueued < MAX_REQUESTS_PER_UPDATE) {
+      anyProgress = false
+      const ite = randomIterate(this.wires)
+      let wire
+      while ((wire = ite())) {
+        if (this.#updateWire(wire)) {
+          anyProgress = true
+          enqueued++
+        }
+      }
+    }
+    if (anyProgress) {
+      queueMicrotask(() => this.#updateWireWrapper())
     }
     this.#checkIdle()
   }
@@ -1592,7 +1607,6 @@ export class Torrent
     })
   }
 
-
   destroyWithError(err: Error, cb?: () => void): void {
     this.#destroyTorrent(err, undefined, cb)
   }
@@ -1740,6 +1754,7 @@ export class Torrent
     for (let i = start; i <= end; ++i) {
       this._critical[i] = 1
     }
+    this.#update()
   }
 
   #select(
@@ -1757,13 +1772,10 @@ export class Torrent
       to: end,
       offset: 0,
       priority,
-      ...(notify != null
-        ? { notify }
-        : stream
-          ? { notify: () => {} }
-          : {}),
+      ...(notify != null ? { notify } : stream ? { notify: () => {} } : {}),
       isStreamSelection: stream,
     })
+    this.#update()
   }
 
   #deselect(start: number, end: number, isStreamSelection?: boolean): void {

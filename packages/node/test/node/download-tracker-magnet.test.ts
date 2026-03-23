@@ -7,12 +7,21 @@ import { Server as TrackerServer } from '@z-torrent/tracker'
 import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test.skipIf(!LIVE_NETWORK)('Download using UDP tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
-  magnetDownloadTest('udp'))
-test.skipIf(!LIVE_NETWORK)('Download using HTTP tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
-  magnetDownloadTest('http'))
-test.skipIf(!LIVE_NETWORK)('Download using WS tracker (via magnet uri)', { timeout: LIVE_TEST_TIMEOUT_MS }, () =>
-  magnetDownloadTest('ws'))
+test.skipIf(!LIVE_NETWORK)(
+  'Download using UDP tracker (via magnet uri)',
+  { timeout: LIVE_TEST_TIMEOUT_MS },
+  () => magnetDownloadTest('udp')
+)
+test.skipIf(!LIVE_NETWORK)(
+  'Download using HTTP tracker (via magnet uri)',
+  { timeout: LIVE_TEST_TIMEOUT_MS },
+  () => magnetDownloadTest('http')
+)
+test.skipIf(!LIVE_NETWORK)(
+  'Download using WS tracker (via magnet uri)',
+  { timeout: LIVE_TEST_TIMEOUT_MS },
+  () => magnetDownloadTest('ws')
+)
 
 const TRACKER_CONFIG_MAP: Record<string, { http?: boolean; ws?: boolean; udp?: boolean }> = {
   udp: { http: false, ws: false },

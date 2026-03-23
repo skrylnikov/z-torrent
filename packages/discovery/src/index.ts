@@ -1,4 +1,3 @@
-
 import Debug from 'debug'
 import { EventEmitter } from 'eventemitter3'
 import parallel from 'run-parallel'
@@ -126,10 +125,14 @@ export class Discovery extends EventEmitter {
     } else if (opts.tracker && typeof opts.tracker === 'object') {
       this.#trackerOpts = Object.assign({}, opts.tracker)
       this.tracker = this.#createTracker(this.infoHash)
-      this.trackerV2 = this.#infoHashV2Truncated ? this.#createTracker(this.#infoHashV2Truncated) : null
+      this.trackerV2 = this.#infoHashV2Truncated
+        ? this.#createTracker(this.#infoHashV2Truncated)
+        : null
     } else {
       this.tracker = this.#createTracker(this.infoHash)
-      this.trackerV2 = this.#infoHashV2Truncated ? this.#createTracker(this.#infoHashV2Truncated) : null
+      this.trackerV2 = this.#infoHashV2Truncated
+        ? this.#createTracker(this.#infoHashV2Truncated)
+        : null
     }
 
     if (opts.dht === false || typeof DHT !== 'function') {
@@ -283,9 +286,12 @@ export class Discovery extends EventEmitter {
       this.emit('dhtAnnounce')
 
       if (!this.destroyed) {
-        const timer = setTimeout(() => {
-          this.#dhtAnnounce()
-        }, this.#intervalMs + Math.floor((Math.random() * this.#intervalMs) / 5))
+        const timer = setTimeout(
+          () => {
+            this.#dhtAnnounce()
+          },
+          this.#intervalMs + Math.floor((Math.random() * this.#intervalMs) / 5)
+        )
         this.#dhtTimeout = timer
         if (typeof timer.unref === 'function') timer.unref()
       }

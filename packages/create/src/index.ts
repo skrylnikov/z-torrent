@@ -13,11 +13,7 @@ import type { ReadStream } from 'node:fs'
 import type { Readable } from 'node:stream'
 
 import { getFiles } from './get-files.js'
-import {
-  addFileToV2Torrent,
-  buildHybridV1Layout,
-  toBep52PieceLength,
-} from './bep52-build.js'
+import { addFileToV2Torrent, buildHybridV1Layout, toBep52PieceLength } from './bep52-build.js'
 
 export const announceList = [
   ['udp://tracker.leechers-paradise.org:6969'],
@@ -508,7 +504,11 @@ class CreateTorrentImpl {
               throw new Error('filesystem paths do not work in the browser')
             }
             const keepRoot = numPaths > 1 || isSingleFileTorrent
-            getFiles(item as string, keepRoot, pcb as (err: Error | null, files?: FileItem[]) => void)
+            getFiles(
+              item as string,
+              keepRoot,
+              pcb as (err: Error | null, files?: FileItem[]) => void
+            )
             return
           } else {
             throw new Error('invalid input type')
@@ -542,7 +542,9 @@ class CreateTorrentImpl {
 
   static execParseInput(
     input: InputItem | InputItem[],
-    opts?: CreateTorrentOptions | ((err: Error | null, files?: FileItem[], single?: boolean) => void),
+    opts?:
+      | CreateTorrentOptions
+      | ((err: Error | null, files?: FileItem[], single?: boolean) => void),
     cb?: (err: Error | null, files?: FileItem[], single?: boolean) => void
   ): void {
     if (typeof opts === 'function') [opts, cb] = [undefined, opts]

@@ -472,7 +472,7 @@ function testUnsupportedTracker(announceUrl: string): Promise<void> {
       announce: announceUrl,
       peerId: peerId1,
       port,
-          wrtc: testWrtc,
+      wrtc: testWrtc,
     })
 
     client.on('error', (err) => {
@@ -493,12 +493,10 @@ test('http: invalid tracker port', () =>
   testUnsupportedTracker('http://127.0.0.1:69691337/announce'))
 test('http: invalid tracker url', () => testUnsupportedTracker('http:'))
 test('http: invalid tracker url with slash', () => testUnsupportedTracker('http://'))
-test('udp: invalid tracker port', () =>
-  testUnsupportedTracker('udp://127.0.0.1:69691337'))
+test('udp: invalid tracker port', () => testUnsupportedTracker('udp://127.0.0.1:69691337'))
 test('udp: invalid tracker url', () => testUnsupportedTracker('udp:'))
 test('udp: invalid tracker url with slash', () => testUnsupportedTracker('udp://'))
-test('ws: invalid tracker port', () =>
-  testUnsupportedTracker('ws://127.0.0.1:69691337'))
+test('ws: invalid tracker port', () => testUnsupportedTracker('ws://127.0.0.1:69691337'))
 test('ws: invalid tracker url', () => testUnsupportedTracker('ws:'))
 test('ws: invalid tracker url with slash', () => testUnsupportedTracker('ws://'))
 

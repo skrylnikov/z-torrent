@@ -16,8 +16,7 @@ npm install @z-torrent/dht
 import { DHT } from '@z-torrent/dht'
 import { magnet } from '@z-torrent/magnet'
 
-const uri =
-  'magnet:?xt=urn:btih:e3811b9539cacff680e418124272177c47477157'
+const uri = 'magnet:?xt=urn:btih:e3811b9539cacff680e418124272177c47477157'
 const parsed = magnet.decode(uri)
 
 const dht = new DHT()

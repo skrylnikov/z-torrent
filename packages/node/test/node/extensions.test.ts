@@ -40,34 +40,34 @@ test('extension support', async () => {
   await new Promise<void>((resolve) => {
     done = resolve
     client1 = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
+    })
 
-  client1.on('error', (err) => {
-    throw err
-  })
-  client1.on('warning', (err) => {
-    throw err
-  })
+    client1.on('error', (err) => {
+      throw err
+    })
+    client1.on('warning', (err) => {
+      throw err
+    })
 
-  client2 = new ZTorrent({
-    dht: false,
-    tracker: false,
-    lsd: false,
-    natUpnp: false,
-    natPmp: false,
-  })
+    client2 = new ZTorrent({
+      dht: false,
+      tracker: false,
+      lsd: false,
+      natUpnp: false,
+      natPmp: false,
+    })
 
-  client2.on('error', (err) => {
-    throw err
-  })
-  client2.on('warning', (err) => {
-    throw err
-  })
+    client2.on('error', (err) => {
+      throw err
+    })
+    client2.on('warning', (err) => {
+      throw err
+    })
 
     client1.add(fixtures.leaves.parsedTorrent, (torrent1: any) => {
       torrent1.on('wire', (wire: any) => {

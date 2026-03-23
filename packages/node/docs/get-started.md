@@ -133,7 +133,10 @@ downloaded.
 <html>
   <body>
     <h1>Download files using Z-Torrent (BitTorrent over WebRTC in the browser).</h1>
-    <p>Serve this page over HTTP(S), copy <code>sw.min.js</code> from <code>@z-torrent/browser</code> next to it, then open the page.</p>
+    <p>
+      Serve this page over HTTP(S), copy <code>sw.min.js</code> from
+      <code>@z-torrent/browser</code> next to it, then open the page.
+    </p>
 
     <form>
       <label for="torrentId">Download from a magnet link: </label>

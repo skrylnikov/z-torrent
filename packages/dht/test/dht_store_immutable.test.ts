@@ -132,9 +132,7 @@ test('multi-party immutable put/get', () => {
 
         dht2.get(hash!, (err, res) => {
           if (err) throw err
-          expect(res!.v.toString('utf8')).toBe(
-            value.toString('utf8')
-          )
+          expect(res!.v.toString('utf8')).toBe(value.toString('utf8'))
           cleanup()
           resolve()
         })

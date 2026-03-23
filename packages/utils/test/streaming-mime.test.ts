@@ -18,7 +18,9 @@ test('resolveTorrentFileMime keeps specific lite types', () => {
   expect(resolveTorrentFileMime('x.mkv', null)).toBe('video/x-matroska')
   expect(resolveTorrentFileMime('x.mkv', 'application/octet-stream')).toBe('video/x-matroska')
   expect(resolveTorrentFileMime('x.mp4', 'video/mp4')).toBe('video/mp4')
-  expect(resolveTorrentFileMime('x.bin', 'application/octet-stream')).toBe('application/octet-stream')
+  expect(resolveTorrentFileMime('x.bin', 'application/octet-stream')).toBe(
+    'application/octet-stream'
+  )
 })
 
 test('normalizeSwResponseContentType', () => {

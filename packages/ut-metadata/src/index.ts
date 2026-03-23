@@ -145,9 +145,7 @@ export class UtMetadata extends EventEmitter {
     }
     // v2-only swarms use the first 20 bytes of SHA-256(info) in the handshake, not SHA-1(info).
     const handshakeIsV2Truncated =
-      !!this.#infoHashV2 &&
-      !!this.#infoHash &&
-      this.#infoHash === this.#infoHashV2.slice(0, 40)
+      !!this.#infoHashV2 && !!this.#infoHash && this.#infoHash === this.#infoHashV2.slice(0, 40)
     if (this.#infoHash && !handshakeIsV2Truncated) {
       const sha1Hex = await hash(metadata, 'hex')
       if (this.#infoHash !== sha1Hex) {

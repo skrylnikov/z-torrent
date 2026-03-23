@@ -5,93 +5,97 @@ import { Server as Tracker } from '@z-torrent/tracker'
 import { ZTorrent } from '../../dist/index.js'
 import { LIVE_NETWORK, LIVE_TEST_TIMEOUT_MS } from '../common.js'
 
-test.skipIf(!LIVE_NETWORK)('client.seed: stream', async () => {
-  const tracker = new Tracker({ udp: false, ws: false })
+test.skipIf(!LIVE_NETWORK)(
+  'client.seed: stream',
+  async () => {
+    const tracker = new Tracker({ udp: false, ws: false })
 
-  tracker.on('error', (err) => {
-    throw err
-  })
-  tracker.on('warning', (err) => {
-    throw err
-  })
+    tracker.on('error', (err) => {
+      throw err
+    })
+    tracker.on('warning', (err) => {
+      throw err
+    })
 
-  let seeder: any
-  let client: any
-  let magnetURI: string
+    let seeder: any
+    let client: any
+    let magnetURI: string
 
-  await new Promise<void>((resolve, reject) => {
-    series(
-      [
-        (cb) => {
-          tracker.listen(cb)
-        },
+    await new Promise<void>((resolve, reject) => {
+      series(
+        [
+          (cb) => {
+            tracker.listen(cb)
+          },
 
-        (cb) => {
-          const port = (tracker as any).http.address().port
-          const announceUrl = `http://localhost:${port}/announce`
+          (cb) => {
+            const port = (tracker as any).http.address().port
+            const announceUrl = `http://localhost:${port}/announce`
 
-          seeder = new ZTorrent({ dht: false, lsd: false })
+            seeder = new ZTorrent({ dht: false, lsd: false })
 
-          seeder.on('error', (err) => {
-            throw err
-          })
-          seeder.on('warning', (err) => {
-            throw err
-          })
+            seeder.on('error', (err) => {
+              throw err
+            })
+            seeder.on('warning', (err) => {
+              throw err
+            })
 
-          const stream = Readable.from([Buffer.from('HELLO WORLD\n')])
+            const stream = Readable.from([Buffer.from('HELLO WORLD\n')])
 
-          const seederOpts = {
-            name: 'hello.txt',
-            pieceLength: 5,
-            announce: [announceUrl],
-          }
-          seeder.seed([stream], seederOpts, (torrent: any) => {
-            magnetURI = torrent.magnetURI
-            cb(null)
-          })
-        },
-
-        (cb) => {
-          client = new ZTorrent({ dht: false, lsd: false })
-
-          client.on('error', (err) => {
-            throw err
-          })
-          client.on('warning', (err) => {
-            throw err
-          })
-
-          client.add(magnetURI!, async (dl: any) => {
-            expect(dl.files.length).toBe(1)
-            expect(dl.files[0].name).toBe('hello.txt')
-            expect(dl.files[0].length).toBe(12)
-            try {
-              const buf = await dl.files[0].arrayBuffer()
-              expect(Buffer.from(buf).toString('utf8')).toBe('HELLO WORLD\n')
-            } catch (err) {
-              if (err) throw err
+            const seederOpts = {
+              name: 'hello.txt',
+              pieceLength: 5,
+              announce: [announceUrl],
             }
+            seeder.seed([stream], seederOpts, (torrent: any) => {
+              magnetURI = torrent.magnetURI
+              cb(null)
+            })
+          },
 
-            cb(null)
+          (cb) => {
+            client = new ZTorrent({ dht: false, lsd: false })
+
+            client.on('error', (err) => {
+              throw err
+            })
+            client.on('warning', (err) => {
+              throw err
+            })
+
+            client.add(magnetURI!, async (dl: any) => {
+              expect(dl.files.length).toBe(1)
+              expect(dl.files[0].name).toBe('hello.txt')
+              expect(dl.files[0].length).toBe(12)
+              try {
+                const buf = await dl.files[0].arrayBuffer()
+                expect(Buffer.from(buf).toString('utf8')).toBe('HELLO WORLD\n')
+              } catch (err) {
+                if (err) throw err
+              }
+
+              cb(null)
+            })
+          },
+        ],
+        (err) => {
+          if (err) {
+            reject(err)
+            return
+          }
+          seeder.destroy((err) => {
+            if (err) reject(err)
           })
-        },
-      ],
-      (err) => {
-        if (err) {
-          reject(err)
-          return
+          client.destroy((err) => {
+            if (err) reject(err)
+          })
+          tracker.close(() => {
+            resolve()
+          })
         }
-        seeder.destroy((err) => {
-          if (err) reject(err)
-        })
-        client.destroy((err) => {
-          if (err) reject(err)
-        })
-        tracker.close(() => {
-          resolve()
-        })
-      }
-    )
-  })
-}, { timeout: LIVE_TEST_TIMEOUT_MS })
+      )
+    })
+  },
+  { timeout: LIVE_TEST_TIMEOUT_MS }
+)

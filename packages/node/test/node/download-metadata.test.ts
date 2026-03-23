@@ -184,10 +184,9 @@ test('Download metadata magnet URI with unsupported protocol in xs parameter', a
     throw err
   })
 
-  client.add(
-    `${fixtures.leaves.magnetURI}&xs=${encodeURIComponent('invalidurl:example')}`,
-    { store: MemoryChunkStore }
-  )
+  client.add(`${fixtures.leaves.magnetURI}&xs=${encodeURIComponent('invalidurl:example')}`, {
+    store: MemoryChunkStore,
+  })
 
   await new Promise<void>((resolve) => {
     setTimeout(() => {

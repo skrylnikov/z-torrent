@@ -20,12 +20,12 @@ import { Client, Server } from '@z-torrent/tracker'
 
 ### Subpath exports
 
-| Path | Purpose |
-|------|---------|
-| `@z-torrent/tracker` | `Client` and `Server` |
-| `@z-torrent/tracker/client` | Tracker client only. In bundlers, the `browser` condition resolves to a build **without** Node-only HTTP/UDP (WebSocket trackers only). |
-| `@z-torrent/tracker/server` | Tracker server only |
-| `@z-torrent/tracker/websocket-tracker` | WebSocket tracker implementation (advanced) |
+| Path                                   | Purpose                                                                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `@z-torrent/tracker`                   | `Client` and `Server`                                                                                                                   |
+| `@z-torrent/tracker/client`            | Tracker client only. In bundlers, the `browser` condition resolves to a build **without** Node-only HTTP/UDP (WebSocket trackers only). |
+| `@z-torrent/tracker/server`            | Tracker server only                                                                                                                     |
+| `@z-torrent/tracker/websocket-tracker` | WebSocket tracker implementation (advanced)                                                                                             |
 
 ### Client (Node)
 

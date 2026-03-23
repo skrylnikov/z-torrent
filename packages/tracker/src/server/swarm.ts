@@ -51,11 +51,7 @@ interface ServerLike {
 class PeersCache extends EventEmitter {
   readonly #cache: LRUCache<string, PeerData>
 
-  constructor(
-    max: number,
-    ttlMs: number,
-    onEvictOrExpire: (peer: PeerData, id: string) => void
-  ) {
+  constructor(max: number, ttlMs: number, onEvictOrExpire: (peer: PeerData, id: string) => void) {
     super()
     this.#cache = new LRUCache<string, PeerData>({
       max,
