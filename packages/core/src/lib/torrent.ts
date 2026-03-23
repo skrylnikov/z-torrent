@@ -45,6 +45,9 @@ const PIPELINE_MAX_DURATION = 1
 /** Max wait before requestIdleCallback runs (browser); lower keeps streaming pipeline fed under load */
 const UPDATE_IDLE_CALLBACK_TIMEOUT_MS = 50
 
+/** Cap block requests enqueued per #updateWireWrapper pass to avoid long main-thread stalls */
+const MAX_REQUESTS_PER_UPDATE = 128
+
 const RECHOKE_INTERVAL = 10_000
 const RECHOKE_OPTIMISTIC_DURATION = 2
 
@@ -950,14 +953,21 @@ export class Torrent extends EventEmitter implements TorrentWire, TorrentForFile
 
   #updateWireWrapper(): void {
     if (this.destroyed) return
+    let enqueued = 0
     let anyProgress = true
-    while (anyProgress) {
+    while (anyProgress && enqueued < MAX_REQUESTS_PER_UPDATE) {
       anyProgress = false
       const ite = randomIterate(this.wires)
       let wire
       while ((wire = ite())) {
-        if (this.#updateWire(wire)) anyProgress = true
+        if (this.#updateWire(wire)) {
+          anyProgress = true
+          enqueued++
+        }
       }
+    }
+    if (anyProgress) {
+      queueMicrotask(() => this.#updateWireWrapper())
     }
     this.#checkIdle()
   }
