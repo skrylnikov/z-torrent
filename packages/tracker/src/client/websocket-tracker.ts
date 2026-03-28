@@ -237,23 +237,61 @@ export class WebSocketTracker extends Tracker {
       peer = this._createPeer()
       peer.id = bin2hex(data.peer_id)
       const offerId = data.offer_id
-      peer.once('signal', (answer: any) => {
+      const remotePeerId = data.peer_id
+      let initialAnswer: any = null
+      const candidateLines: string[] = []
+      let sent = false
+
+      const sendAnswer = () => {
+        if (!initialAnswer) return
+        let sdp = initialAnswer.sdp
+        for (const line of candidateLines) {
+          sdp += '\r\na=' + line
+        }
+        const answer = { ...initialAnswer, sdp }
         const params = {
           action: 'announce',
           info_hash: this.client.infoHashBinary,
           peer_id: this.client.peerIdBinary,
-          to_peer_id: data.peer_id,
+          to_peer_id: remotePeerId,
           answer,
           offer_id: offerId,
         }
         if (this._trackerId) (params as any).trackerid = this._trackerId
         this._send(params)
+      }
+
+      const trySendAnswer = () => {
+        if (sent || !initialAnswer) return
+        const hasSrflx = candidateLines.some((c) => c.includes('typ srflx'))
+        if (hasSrflx) {
+          sent = true
+          clearTimeout(timer)
+          sendAnswer()
+        }
+      }
+
+      const timer = setTimeout(() => {
+        sent = true
+        sendAnswer()
+      }, TRICKLE_BUFFER_MS)
+
+      peer.once('signal', (answer: any) => {
+        initialAnswer = answer
+        trySendAnswer()
       })
+
       peer.on('signal', (signal: any) => {
         if (signal.candidate) {
-          this._sendCandidate(offerId, data.peer_id, signal)
+          if (signal.candidate.candidate) {
+            candidateLines.push(signal.candidate.candidate)
+          }
+          if (sent) {
+            this._sendCandidate(offerId, remotePeerId, signal)
+          }
         }
       })
+
       peer.once('connect', () => {
         delete this._connectedPeers[bin2hex(offerId)]
       })

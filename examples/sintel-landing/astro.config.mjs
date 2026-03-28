@@ -16,5 +16,10 @@ export default defineConfig({
     optimizeDeps: {
       include: ['webrtc-polyfill', '@thaunknown/simple-peer'],
     },
+    resolve: {
+      alias: {
+        events: 'events-universal',
+      },
+    },
   },
 })
