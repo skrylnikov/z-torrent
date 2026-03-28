@@ -15,9 +15,13 @@ const RECONNECT_VARIANCE = 5 * 60 * 1000
 const OFFER_TIMEOUT = 50 * 1000
 const TRICKLE_BUFFER_MS = 200
 
+const INITIAL_NUMWANT = 3
+const MAX_NUMWANT = 5
+
 export class WebSocketTracker extends Tracker {
   peers: Record<string, any>
   _connectedPeers: Record<string, any>
+  _successfulConnections = 0
   socket: any
   reconnecting: boolean
   retries: number
@@ -60,7 +64,8 @@ export class WebSocketTracker extends Tracker {
     if (opts.event === 'stopped' || opts.event === 'completed') {
       this._send(params)
     } else {
-      const numwant = Math.min(opts.numwant, 3)
+      const maxNumwant = this._successfulConnections > 0 ? MAX_NUMWANT : INITIAL_NUMWANT
+      const numwant = Math.min(opts.numwant, maxNumwant)
       this._generateOffers(numwant, (offers) => {
         params.numwant = numwant
         params.offers = offers
@@ -315,7 +320,6 @@ export class WebSocketTracker extends Tracker {
             sdp: (data.answer.sdp as string).replace(/a=setup:actpass\r?\n/g, 'a=setup:active\r\n'),
           })
         }
-        peer.signal(data.answer)
         clearTimeout(peer.trackerTimeout)
         peer.trackerTimeout = null
         delete this.peers[offerId]
@@ -325,6 +329,7 @@ export class WebSocketTracker extends Tracker {
             this._sendCandidate(data.offer_id, remotePeerId, signal)
           }
         })
+        peer.signal(data.answer)
         peer.once('connect', () => {
           delete this._connectedPeers[offerId]
         })
@@ -506,6 +511,7 @@ export class WebSocketTracker extends Tracker {
       peer.destroy()
     }
     function onConnect() {
+      self._successfulConnections++
       peer.removeListener('error', onError)
       peer.removeListener('connect', onConnect)
     }

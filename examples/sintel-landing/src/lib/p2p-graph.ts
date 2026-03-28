@@ -9,11 +9,14 @@ export interface P2PGraphNode {
   id: string
   name: string
   me?: boolean
+  connecting?: boolean
   downloaded?: number
   uploaded?: number
 }
 
-export type P2PPeerUpdate = Partial<Pick<P2PGraphNode, 'name' | 'downloaded' | 'uploaded'>>
+export type P2PPeerUpdate = Partial<
+  Pick<P2PGraphNode, 'name' | 'connecting' | 'downloaded' | 'uploaded'>
+>
 
 export interface P2PGraphAPI {
   add: (peer: P2PGraphNode) => void
@@ -30,6 +33,7 @@ type LinkDatum = { source: LinkEnd; target: LinkEnd }
 const LINK_COLOR = '#C8C8C8'
 const NODE_ME = 'hsl(210, 70%, 72.5%)'
 const NODE_PEER = 'hsl(55, 70%, 72.5%)'
+const NODE_CONNECTING = 'hsl(0, 0%, 45%)'
 const NODE_HOVER = '#A9A9A9'
 
 function linkId(v: LinkEnd): string {
@@ -38,6 +42,12 @@ function linkId(v: LinkEnd): string {
 
 function linkKey(l: LinkDatum): string {
   return `${linkId(l.source)}-${linkId(l.target)}`
+}
+
+function nodeColor(d: P2PGraphNode): string {
+  if (d.me) return NODE_ME
+  if (d.connecting) return NODE_CONNECTING
+  return NODE_PEER
 }
 
 function peerTooltipText(d: P2PGraphNode & d3.SimulationNodeDatum): string {
@@ -50,8 +60,7 @@ function peerTooltipText(d: P2PGraphNode & d3.SimulationNodeDatum): string {
 }
 
 export function createP2PGraph(selector: string): P2PGraphAPI {
-  const root =
-    typeof selector === 'string' ? document.querySelector(selector) : selector
+  const root = typeof selector === 'string' ? document.querySelector(selector) : selector
   if (!root || !(root instanceof HTMLElement)) {
     throw new Error(`P2PGraph: element not found: ${selector}`)
   }
@@ -80,7 +89,10 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
     .forceSimulation(nodes)
     .force(
       'link',
-      d3.forceLink(links).id((d) => (d as P2PGraphNode).id).distance(100)
+      d3
+        .forceLink(links)
+        .id((d) => (d as P2PGraphNode).id)
+        .distance(100)
     )
     .force('charge', d3.forceManyBody().strength(-200))
     .force('center', d3.forceCenter(width() / 2, height() / 2))
@@ -102,6 +114,14 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
     })
   }
 
+  function isConnectingLink(d: LinkDatum): boolean {
+    const tid = linkId(d.target)
+    const sid = linkId(d.source)
+    const tNode = nodes.find((n) => n.id === tid)
+    const sNode = nodes.find((n) => n.id === sid)
+    return !!((tNode && tNode.connecting) || (sNode && sNode.connecting && !sNode.me))
+  }
+
   function render() {
     const linkUpdate = linkEl
       .selectAll<SVGLineElement, LinkDatum>('line')
@@ -114,9 +134,10 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
       .append('line')
       .attr('class', 'link')
       .attr('stroke', LINK_COLOR)
-      .attr('stroke-opacity', 0.5)
       .attr('stroke-width', 0.7)
       .merge(linkUpdate)
+      .attr('stroke-dasharray', (d) => (isConnectingLink(d) ? '4,4' : null))
+      .attr('stroke-opacity', (d) => (isConnectingLink(d) ? 0.3 : 0.5))
 
     const nodeUpdate = nodeEl
       .selectAll<SVGGElement, P2PGraphNode>('g.node')
@@ -150,7 +171,7 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
     nodeEnter
       .append('circle')
       .attr('r', (d) => (d.me ? 15 : 10))
-      .attr('fill', (d) => (d.me ? NODE_ME : NODE_PEER))
+      .attr('fill', (d) => nodeColor(d))
       .each(function (d) {
         d3.select(this).append('title').text(peerTooltipText(d))
       })
@@ -158,7 +179,7 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
         d3.select(this).attr('fill', NODE_HOVER)
       })
       .on('mouseout', function (event, d) {
-        d3.select(this).attr('fill', d.me ? NODE_ME : NODE_PEER)
+        d3.select(this).attr('fill', nodeColor(d))
       })
 
     nodeEnter
@@ -174,7 +195,7 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
     node
       .select('circle')
       .attr('r', (d) => (d.me ? 15 : 10))
-      .attr('fill', (d) => (d.me ? NODE_ME : NODE_PEER))
+      .attr('fill', (d) => nodeColor(d))
 
     syncPeerDom(node)
 
@@ -182,23 +203,19 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
       link
         .attr(
           'x1',
-          (d) =>
-            (typeof d.source === 'object' ? d.source.x : getNode(d.source as string)?.x) ?? 0
+          (d) => (typeof d.source === 'object' ? d.source.x : getNode(d.source as string)?.x) ?? 0
         )
         .attr(
           'y1',
-          (d) =>
-            (typeof d.source === 'object' ? d.source.y : getNode(d.source as string)?.y) ?? 0
+          (d) => (typeof d.source === 'object' ? d.source.y : getNode(d.source as string)?.y) ?? 0
         )
         .attr(
           'x2',
-          (d) =>
-            (typeof d.target === 'object' ? d.target.x : getNode(d.target as string)?.x) ?? 0
+          (d) => (typeof d.target === 'object' ? d.target.x : getNode(d.target as string)?.x) ?? 0
         )
         .attr(
           'y2',
-          (d) =>
-            (typeof d.target === 'object' ? d.target.y : getNode(d.target as string)?.y) ?? 0
+          (d) => (typeof d.target === 'object' ? d.target.y : getNode(d.target as string)?.y) ?? 0
         )
 
       node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`)
@@ -207,7 +224,10 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
     simulation.nodes(nodes)
     simulation.force(
       'link',
-      d3.forceLink(links).id((d) => (d as P2PGraphNode).id).distance(100)
+      d3
+        .forceLink(links)
+        .id((d) => (d as P2PGraphNode).id)
+        .distance(100)
     )
     simulation.alpha(0.5).restart()
   }
@@ -255,6 +275,11 @@ export function createP2PGraph(selector: string): P2PGraphAPI {
       if (data.name !== undefined) node.name = data.name
       if (data.downloaded !== undefined) node.downloaded = data.downloaded
       if (data.uploaded !== undefined) node.uploaded = data.uploaded
+      if (data.connecting !== undefined && node.connecting !== data.connecting) {
+        node.connecting = data.connecting
+        render()
+        return
+      }
       const sel = nodeEl.selectAll<SVGGElement, P2PGraphNode>('g.node').filter((d) => d.id === id)
       syncPeerDom(sel)
     },

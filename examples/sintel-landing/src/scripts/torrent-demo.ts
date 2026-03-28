@@ -1,4 +1,3 @@
-import 'webrtc-polyfill' // Required for WebRTC in some browsers
 import { createP2PGraph } from '../lib/p2p-graph'
 import { WSS_TRACKERS } from '../config/trackers'
 import prettierBytes from 'prettier-bytes'
@@ -35,9 +34,15 @@ interface TorrentWire {
   on: (ev: string, fn: (...args: unknown[]) => void) => void
 }
 
+interface Discovery {
+  on: (ev: string, fn: (...args: unknown[]) => void) => void
+}
+
 interface Torrent {
   files: { name: string; streamTo: (el: HTMLMediaElement) => HTMLMediaElement }[]
   on: (ev: string, fn: (...args: unknown[]) => void) => void
+  discovery: Discovery | null
+  wires: TorrentWire[]
   numPeers: number
   progress: number
   downloaded: number
@@ -66,7 +71,12 @@ export async function initTorrentDemo() {
       beginButton.remove()
       startDemo()
     })
-    hero.appendChild(beginButton)
+    const videoWrap = document.getElementById('videoWrap')
+    if (videoWrap) {
+      hero.insertBefore(beginButton, videoWrap)
+    } else {
+      hero.appendChild(beginButton)
+    }
   } else {
     startDemo()
   }
@@ -75,10 +85,19 @@ export async function initTorrentDemo() {
 async function runDemo(): Promise<void> {
   localStorage.setItem('debug', '@z-torrent/*,-@z-torrent/protocol:wire')
 
+  if (!globalThis.RTCPeerConnection) {
+    await import('webrtc-polyfill')
+  }
+
   const graph = createP2PGraph('.torrent-graph')
   graph.add({ id: 'You', name: 'You', me: true })
 
-  const { ZTorrent } = await import('@z-torrent/browser')
+  const [{ ZTorrent }, reg] = await Promise.all([
+    import('@z-torrent/browser'),
+    navigator.serviceWorker
+      .register('/sw.min.js', { scope: '/' })
+      .then(() => navigator.serviceWorker.ready),
+  ])
   const client = new ZTorrent({
     // webSeeds: false,
     tracker: {
@@ -86,7 +105,10 @@ async function runDemo(): Promise<void> {
       rtcConfig: {
         iceServers: [
           {
-            urls: ['stun:turn.z-torrent.xyz:3478'],
+            urls: [
+              'stun:turn.z-torrent.xyz:3478',
+              //'stun:stun.l.google.com:19302'
+            ],
           },
           {
             urls: ['turn:turn.z-torrent.xyz:3478'],
@@ -105,8 +127,6 @@ async function runDemo(): Promise<void> {
     }
   })
 
-  const reg = await navigator.serviceWorker.register('/sw.min.js', { scope: '/' })
-  await navigator.serviceWorker.ready
   client.createServer({ controller: reg as unknown as ServiceWorkerRegistration })
 
   const $body = document.body
@@ -142,12 +162,33 @@ async function runDemo(): Promise<void> {
       videoOverlay.addEventListener('click', unmute)
     }
 
-    torrent.on('wire', (wire: unknown) => {
+    const wiredPeers = new Set<string>()
+
+    if (torrent.discovery) {
+      torrent.discovery.on('peer', (peer: unknown) => {
+        if (typeof peer === 'string') return
+        const sp = peer as { id?: string; once: (ev: string, fn: () => void) => void }
+        const id = sp.id
+        if (!id) return
+        graph.add({ id, name: id.slice(0, 6), connecting: true })
+        graph.connect('You', id)
+        sp.once('close', () => {
+          if (!wiredPeers.has(id)) {
+            graph.disconnect('You', id)
+            graph.remove(id)
+          }
+        })
+      })
+    }
+
+    const handleWire = (wire: unknown) => {
       const w = wire as TorrentWire
       const rawPeerId = w.peerId
       const id = typeof rawPeerId === 'string' ? rawPeerId : rawPeerId.toString()
+      wiredPeers.add(id)
       const shortId = id.slice(0, 6)
       const initialName = w.remoteAddress ?? shortId
+      graph.updatePeer(id, { name: initialName, connecting: false })
       graph.add({ id, name: initialName })
       graph.connect('You', id)
 
@@ -170,7 +211,13 @@ async function runDemo(): Promise<void> {
         graph.disconnect('You', id)
         graph.remove(id)
       })
-    })
+    }
+
+    torrent.on('wire', handleWire)
+
+    for (const wire of torrent.wires) {
+      handleWire(wire)
+    }
 
     const onProgress = () => {
       if (!$progressBar || !$numPeers || !$downloaded || !$total || !$remaining) return

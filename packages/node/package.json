@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@silentbot1/nat-api": "^0.4.9",
-    "@thaunknown/simple-peer": "^10.0.11",
+    "@thaunknown/simple-peer": "^10.1.0",
     "@z-torrent/core": "workspace:*",
     "@z-torrent/create": "workspace:*",
     "@z-torrent/dht": "workspace:*",
