@@ -613,7 +613,7 @@ export class Server extends EventEmitter {
         response.interval = Math.ceil(this.intervalMs / 1000 / 5)
       }
 
-      if (!(params as any).answer) {
+      if (!(params as any).answer && !(params as any).candidate) {
         socket.send(JSON.stringify(response), socket.onSend as any)
         debug('sent response %s to %s', JSON.stringify(response), params!.peer_id)
       }

@@ -60,9 +60,9 @@ export function parseWebSocketRequest(
     }
     params.peer_id = bin2hex(params.peer_id)
 
-    if (params.answer) {
+    if (params.answer || params.candidate) {
       if (typeof params.to_peer_id !== 'string' || params.to_peer_id.length !== 20) {
-        throw new Error('invalid `to_peer_id` (required with `answer`)')
+        throw new Error('invalid `to_peer_id` (required with `answer` or `candidate`)')
       }
       params.to_peer_id = bin2hex(params.to_peer_id)
     }
