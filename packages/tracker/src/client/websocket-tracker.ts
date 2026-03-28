@@ -272,7 +272,10 @@ export class WebSocketTracker extends Tracker {
         this.client.emit('peer', peer)
         if (data.answer.type === 'offer') {
           debug('fixing incorrect answer.type "offer" -> "answer" from %s', bin2hex(data.peer_id))
-          data.answer = Object.assign({}, data.answer, { type: 'answer' })
+          data.answer = Object.assign({}, data.answer, {
+            type: 'answer',
+            sdp: (data.answer.sdp as string).replace(/a=setup:actpass\r?\n/g, 'a=setup:active\r\n'),
+          })
         }
         peer.signal(data.answer)
         clearTimeout(peer.trackerTimeout)
