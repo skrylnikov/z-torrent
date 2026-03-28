@@ -36,6 +36,10 @@
     "./netmask": {
       "import": "./dist/netmask.js",
       "types": "./dist/netmask.d.ts"
+    },
+    "./once": {
+      "import": "./dist/once.js",
+      "types": "./dist/once.d.ts"
     }
   },
   "files": [

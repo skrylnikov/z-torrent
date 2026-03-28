@@ -16,6 +16,7 @@ const OFFER_TIMEOUT = 50 * 1000
 
 export class WebSocketTracker extends Tracker {
   peers: Record<string, any>
+  _connectedPeers: Record<string, any>
   socket: any
   reconnecting: boolean
   retries: number
@@ -34,6 +35,7 @@ export class WebSocketTracker extends Tracker {
     debug('new websocket tracker %s', announceUrl)
 
     this.peers = {}
+    this._connectedPeers = {}
     this.socket = null
     this.reconnecting = false
     this.retries = 0
@@ -57,7 +59,7 @@ export class WebSocketTracker extends Tracker {
     if (opts.event === 'stopped' || opts.event === 'completed') {
       this._send(params)
     } else {
-      const numwant = Math.min(opts.numwant, 5)
+      const numwant = Math.min(opts.numwant, 3)
       this._generateOffers(numwant, (offers) => {
         params.numwant = numwant
         params.offers = offers
@@ -94,6 +96,10 @@ export class WebSocketTracker extends Tracker {
       peer.destroy()
     }
     this.peers = null!
+    for (const offerId in this._connectedPeers) {
+      this._connectedPeers[offerId].destroy()
+    }
+    this._connectedPeers = null!
     if (this.socket) {
       this.socket.removeListener('connect', this._onSocketConnectBound)
       this.socket.removeListener('data', this._onSocketDataBound)
@@ -130,6 +136,7 @@ export class WebSocketTracker extends Tracker {
   _openSocket(): void {
     this.destroyed = false
     if (!this.peers) this.peers = {}
+    if (!this._connectedPeers) this._connectedPeers = {}
     this._onSocketConnectBound = () => this._onSocketConnect()
     this._onSocketErrorBound = (err: Error) => this._onSocketError(err)
     this._onSocketDataBound = (data: any) => this._onSocketData(data)
@@ -228,6 +235,7 @@ export class WebSocketTracker extends Tracker {
       debug('creating peer (from remote offer)')
       peer = this._createPeer()
       peer.id = bin2hex(data.peer_id)
+      const offerId = data.offer_id
       peer.once('signal', (answer: any) => {
         const params = {
           action: 'announce',
@@ -235,11 +243,23 @@ export class WebSocketTracker extends Tracker {
           peer_id: this.client.peerIdBinary,
           to_peer_id: data.peer_id,
           answer,
-          offer_id: data.offer_id,
+          offer_id: offerId,
         }
         if (this._trackerId) (params as any).trackerid = this._trackerId
         this._send(params)
       })
+      peer.on('signal', (signal: any) => {
+        if (signal.candidate) {
+          this._sendCandidate(offerId, data.peer_id, signal)
+        }
+      })
+      peer.once('connect', () => {
+        delete this._connectedPeers[bin2hex(offerId)]
+      })
+      peer.once('close', () => {
+        delete this._connectedPeers[bin2hex(offerId)]
+      })
+      this._connectedPeers[bin2hex(offerId)] = peer
       this.client.emit('peer', peer)
       peer.signal(data.offer)
     }
@@ -253,10 +273,48 @@ export class WebSocketTracker extends Tracker {
         clearTimeout(peer.trackerTimeout)
         peer.trackerTimeout = null
         delete this.peers[offerId]
+        const remotePeerId = data.peer_id
+        peer.on('signal', (signal: any) => {
+          if (signal.candidate) {
+            this._sendCandidate(data.offer_id, remotePeerId, signal)
+          }
+        })
+        peer.once('connect', () => {
+          delete this._connectedPeers[offerId]
+        })
+        peer.once('close', () => {
+          delete this._connectedPeers[offerId]
+        })
+        this._connectedPeers[offerId] = peer
       } else {
         debug(`got unexpected answer: ${JSON.stringify(data.answer)}`)
       }
     }
+    if (data.candidate && data.offer_id && data.peer_id) {
+      const offerId = bin2hex(data.offer_id)
+      peer = this._connectedPeers[offerId]
+      if (peer && !peer.destroyed) {
+        debug('got ICE candidate from %s for offer %s', bin2hex(data.peer_id), offerId)
+        peer.signal(data.candidate)
+      } else {
+        debug(
+          'dropping ICE candidate: no peer for offer_id=%s from %s',
+          offerId,
+          bin2hex(data.peer_id)
+        )
+      }
+    }
+  }
+
+  _sendCandidate(offerId: string, toPeerId: string, signal: any): void {
+    this._send({
+      action: 'announce',
+      info_hash: this.client.infoHashBinary,
+      peer_id: this.client.peerIdBinary,
+      to_peer_id: toPeerId,
+      offer_id: offerId,
+      candidate: signal,
+    })
   }
 
   _onScrapeResponse(data: any): void {
@@ -332,6 +390,7 @@ export class WebSocketTracker extends Tracker {
         debug('tracker timeout: destroying peer')
         peer.trackerTimeout = null
         delete self.peers[offerId]
+        delete self._connectedPeers[offerId]
         peer.destroy()
       }, OFFER_TIMEOUT)
       if (peer.trackerTimeout.unref) peer.trackerTimeout.unref()
@@ -348,7 +407,7 @@ export class WebSocketTracker extends Tracker {
     const self = this
     opts = Object.assign(
       {
-        trickle: false,
+        trickle: true,
         config: self.client.rtcConfig,
         wrtc: self.client.wrtc,
       },

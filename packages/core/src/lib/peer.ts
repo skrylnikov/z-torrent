@@ -378,6 +378,23 @@ export class Peer extends EventEmitter {
       }
       peer.conn.once('connect', onConnect)
       peer.conn.once('error', onError)
+
+      if (peer.conn.pc) {
+        const pc = peer.conn.pc
+        pc.addEventListener('iceconnectionstatechange', () => {
+          if (peer.destroyed) return
+          const state = pc.iceConnectionState
+          if (state === 'failed') {
+            debug('ICE connection failed for peer %s, attempting restart', peer.id)
+            try {
+              pc.restartIce()
+            } catch {
+              peer.destroy(new Error('ICE connection failed and restartIce not supported'))
+            }
+          }
+        })
+      }
+
       peer.startConnectTimeout()
     }
 

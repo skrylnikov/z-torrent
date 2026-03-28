@@ -205,7 +205,8 @@ class TorrentIdParser {
 
   #decodeTorrentFile(torrent: Uint8Array | Record<string, unknown>): Instance {
     if (ArrayBuffer.isView(torrent)) {
-      torrent = bencode.decode(Buffer.from(torrent)) as Record<string, unknown>
+      // @ts-expect-error bencode.decode accepts Uint8Array at runtime; @types/bencode is outdated
+      torrent = bencode.decode(torrent) as Record<string, unknown>
     }
 
     const torrentObj = torrent as Record<string, unknown>
@@ -259,7 +260,7 @@ class TorrentIdParser {
       const enc =
         infoBufferEncoded instanceof Uint8Array
           ? infoBufferEncoded
-          : new Uint8Array(infoBufferEncoded as Buffer)
+          : new Uint8Array(infoBufferEncoded)
       result.infoHashV2Buffer = this.#sha256BencodedInfo(enc)
       result.infoHashV2 = arr2hex(result.infoHashV2Buffer!)
     }
@@ -376,11 +377,11 @@ class TorrentIdParser {
   }
 
   /** Split BEP 52 `piece layers` blob into 32-byte layer hashes; index by `pieces root` hex. */
-  #attachV2PieceLayout(result: Instance, pieceLayers: Record<string, Uint8Array | Buffer>): void {
+  #attachV2PieceLayout(result: Instance, pieceLayers: Record<string, Uint8Array>): void {
     const byHex: Record<string, Uint8Array[]> = {}
     for (const [key, buf] of Object.entries(pieceLayers)) {
       const rootHex = this.#piecesRootKeyToHex(key)
-      const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+      const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf as ArrayBuffer)
       if (u8.length % 32 !== 0) {
         throw new Error(
           `Invalid piece layers length for root ${rootHex.slice(0, 8)}…: expected multiple of 32 bytes, got ${u8.length}`
@@ -421,7 +422,7 @@ class TorrentIdParser {
       if (!node || typeof node !== 'object') continue
       const emptyMeta = (node as Record<string, unknown>)[''] as Record<string, unknown> | undefined
       if (emptyMeta && typeof emptyMeta.length === 'number') {
-        const pr = emptyMeta['pieces root'] as Uint8Array | Buffer | undefined
+        const pr = emptyMeta['pieces root'] as Uint8Array | undefined
         const root =
           pr && (pr instanceof Uint8Array || ArrayBuffer.isView(pr))
             ? new Uint8Array(pr.buffer, pr.byteOffset, pr.byteLength)

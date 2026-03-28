@@ -10,6 +10,7 @@ export default defineConfig({
     'src/load-ip-set.ts',
     'src/ip-set.ts',
     'src/netmask.ts',
+    'src/once.ts',
   ],
   platform: 'node',
   format: 'esm',
