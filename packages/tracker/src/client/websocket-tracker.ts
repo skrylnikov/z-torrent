@@ -13,6 +13,7 @@ const RECONNECT_MINIMUM = 10 * 1000
 const RECONNECT_MAXIMUM = 60 * 60 * 1000
 const RECONNECT_VARIANCE = 5 * 60 * 1000
 const OFFER_TIMEOUT = 50 * 1000
+const TRICKLE_BUFFER_MS = 200
 
 export class WebSocketTracker extends Tracker {
   peers: Record<string, any>
@@ -269,6 +270,10 @@ export class WebSocketTracker extends Tracker {
       if (peer) {
         peer.id = bin2hex(data.peer_id)
         this.client.emit('peer', peer)
+        if (data.answer.type === 'offer') {
+          debug('fixing incorrect answer.type "offer" -> "answer" from %s', bin2hex(data.peer_id))
+          data.answer = Object.assign({}, data.answer, { type: 'answer' })
+        }
         peer.signal(data.answer)
         clearTimeout(peer.trackerTimeout)
         peer.trackerTimeout = null
@@ -382,10 +387,48 @@ export class WebSocketTracker extends Tracker {
       const peer = (self.peers[offerId] = self._createPeer({
         initiator: true,
       }))
+      let initialOffer: any = null
+      const candidateLines: string[] = []
+      let sent = false
+
       peer.once('signal', (offer: any) => {
+        initialOffer = offer
+        trySend()
+      })
+
+      peer.on('signal', (signal: any) => {
+        if (signal.candidate && signal.candidate.candidate) {
+          candidateLines.push(signal.candidate.candidate)
+          trySend()
+        }
+      })
+
+      const timer = setTimeout(() => {
+        sent = true
+        sendOffer()
+      }, TRICKLE_BUFFER_MS)
+
+      function trySend() {
+        if (sent || !initialOffer) return
+        const hasSrflx = candidateLines.some((c) => c.includes('typ srflx'))
+        if (hasSrflx) {
+          sent = true
+          clearTimeout(timer)
+          sendOffer()
+        }
+      }
+
+      function sendOffer() {
+        if (!initialOffer) return
+        let sdp = initialOffer.sdp
+        for (const line of candidateLines) {
+          sdp += '\r\na=' + line
+        }
+        const offer = { ...initialOffer, sdp }
         offers.push({ offer, offer_id: hex2bin(offerId) })
         checkDone()
-      })
+      }
+
       peer.trackerTimeout = setTimeout(() => {
         debug('tracker timeout: destroying peer')
         peer.trackerTimeout = null
