@@ -1,5 +1,4 @@
 import { defineConfig } from 'astro/config'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { zTorrentSW } from '@z-torrent/browser/vite'
 
 export default defineConfig({
@@ -8,17 +7,7 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
   vite: {
-    plugins: [
-      zTorrentSW(),
-      nodePolyfills({
-        protocolImports: true,
-        globals: {
-          Buffer: true,
-          global: true,
-          process: true,
-        },
-      }),
-    ],
+    plugins: [zTorrentSW()],
     define: {
       global: 'globalThis',
       'process.env': '{}',

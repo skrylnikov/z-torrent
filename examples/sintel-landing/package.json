@@ -9,16 +9,15 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@thaunknown/simple-peer": "^10.0.11",
-    "astro": "^5.0.0",
+    "@thaunknown/simple-peer": "^10.1.0",
+    "@z-torrent/browser": "workspace:*",
+    "astro": "6.1.1",
     "d3": "^7.9.0",
-    "prettier-bytes": "^1.0.0",
-    "throttleit": "^2.0.0",
-    "webrtc-polyfill": "^1.1.5",
-    "@z-torrent/browser": "workspace:*"
+    "prettier-bytes": "^1.0.4",
+    "throttleit": "^2.1.0",
+    "webrtc-polyfill": "^1.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vite-plugin-node-polyfills": "0.17.0"
+    "typescript": "^5.9.3"
   }
 }

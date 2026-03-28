@@ -2,7 +2,7 @@ import { EventEmitter } from 'eventemitter3'
 import bencode from 'bencode'
 import BitField from 'bitfield'
 import Debug from 'debug'
-import { hash, arr2text, concat } from 'uint8-util'
+import { hash, arr2text, text2arr, concat } from 'uint8-util'
 
 const debug = Debug('@z-torrent/ut-metadata:metadata')
 
@@ -93,7 +93,8 @@ export class UtMetadata extends EventEmitter {
     try {
       const str = arr2text(buf)
       const trailerIndex = str.indexOf('ee') + 2
-      dict = bencode.decode(Buffer.from(str.substring(0, trailerIndex))) as MessageDict
+      // @ts-expect-error bencode.decode accepts Uint8Array at runtime; @types/bencode is outdated
+      dict = bencode.decode(text2arr(str.substring(0, trailerIndex))) as MessageDict
       trailer = buf.slice(trailerIndex)
     } catch {
       return
@@ -131,7 +132,8 @@ export class UtMetadata extends EventEmitter {
     debug('set metadata')
 
     try {
-      const decoded = bencode.decode(Buffer.from(metadata))
+      // @ts-expect-error bencode.decode accepts Uint8Array at runtime; @types/bencode is outdated
+      const decoded = bencode.decode(metadata)
       if (decoded && typeof decoded === 'object' && 'info' in decoded) {
         metadata = Uint8Array.from(bencode.encode((decoded as { info: unknown }).info))
       }
@@ -164,7 +166,8 @@ export class UtMetadata extends EventEmitter {
       'metadata',
       Uint8Array.from(
         bencode.encode({
-          info: bencode.decode(Buffer.from(this.metadata)),
+          // @ts-expect-error bencode.decode accepts Uint8Array at runtime; @types/bencode is outdated
+          info: bencode.decode(this.metadata),
         })
       )
     )

@@ -26,6 +26,7 @@ interface ParsedParams {
   answer?: RTCSessionDescriptionInit
   offer_id?: string
   offers?: Array<{ offer: RTCSessionDescriptionInit; offer_id: string }>
+  candidate?: RTCIceCandidateInit
   left?: number
   numwant?: number
   compact?: number

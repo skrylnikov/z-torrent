@@ -675,6 +675,43 @@ export class Server extends EventEmitter {
 
           done()
         })
+      } else if ((params as any).candidate) {
+        debug(
+          'got ICE candidate from %s for offer_id=%s',
+          params!.peer_id,
+          (params as any).offer_id
+        )
+
+        this.getSwarm(params!.info_hash as string, (err, swarm) => {
+          if (this.destroyed) return
+          if (err) return this.emit('warning', err)
+          if (!swarm) {
+            return this.emit('warning', new Error('no swarm with that `info_hash`'))
+          }
+          const toPeer = swarm!.peers.get((params as any).to_peer_id)
+          if (!toPeer) {
+            debug(
+              'dropping candidate: no peer for to_peer_id=%s (evicted or race)',
+              (params as any).to_peer_id
+            )
+            return
+          }
+          if (!toPeer.socket) return
+
+          toPeer.socket.send(
+            JSON.stringify({
+              action: 'announce',
+              candidate: (params as any).candidate,
+              offer_id: (params as any).offer_id,
+              peer_id: hex2bin(params!.peer_id!),
+              info_hash: hex2bin(params!.info_hash as string),
+            }),
+            (toPeer.socket as WebSocketWithExtra).onSend as any
+          )
+          debug('sent candidate to %s from %s', toPeer.peerId, params!.peer_id)
+
+          done()
+        })
       } else {
         done()
       }
