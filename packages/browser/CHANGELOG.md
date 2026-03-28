@@ -1,5 +1,14 @@
 # @z-torrent/browser
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [[`7fa312a`](https://github.com/skrylnikov/z-torrent/commit/7fa312ad64d338d2506729f23629ef13d9ae43f3)]:
+  - @z-torrent/tracker@0.0.15
+  - @z-torrent/core@0.0.15
+  - @z-torrent/utils@0.0.15
+
 ## 0.0.14
 
 ### Patch Changes

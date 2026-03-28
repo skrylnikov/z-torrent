@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/ut-pex",
   "description": "Extension for Peer Discovery (PEX)",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {
     "url": "https://github.com/skrylnikov/z-torrent/issues"

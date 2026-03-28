@@ -1,5 +1,17 @@
 # @z-torrent/core
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/protocol@0.0.15
+  - @z-torrent/parse@0.0.15
+  - @z-torrent/merkle-tree@0.0.15
+  - @z-torrent/ut-metadata@0.0.15
+  - @z-torrent/ut-pex@0.0.15
+  - @z-torrent/utils@0.0.15
+
 ## 0.0.14
 
 ### Patch Changes
