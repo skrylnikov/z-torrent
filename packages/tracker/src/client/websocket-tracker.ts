@@ -21,6 +21,7 @@ const MAX_NUMWANT = 5
 export class WebSocketTracker extends Tracker {
   peers: Record<string, any>
   _connectedPeers: Record<string, any>
+  _peerPendingCandidates = new WeakMap<object, any[]>()
   _successfulConnections = 0
   socket: any
   reconnecting: boolean
@@ -335,11 +336,11 @@ export class WebSocketTracker extends Tracker {
           }
         })
         // Flush any ICE candidates that were buffered before remotePeerId was known
-        if (peer._pendingCandidates) {
-          for (const signal of peer._pendingCandidates) {
+        if (this._peerPendingCandidates.has(peer)) {
+          for (const signal of this._peerPendingCandidates.get(peer)!) {
             this._sendCandidate(data.offer_id, remotePeerId, signal)
           }
-          delete peer._pendingCandidates
+          this._peerPendingCandidates.delete(peer)
         }
         peer.signal(data.answer)
         peer.once('connect', () => {
@@ -466,8 +467,8 @@ export class WebSocketTracker extends Tracker {
           }
         }
         if (signal.candidate && sent) {
-          if (!Array.isArray(peer._pendingCandidates)) peer._pendingCandidates = []
-          peer._pendingCandidates.push(signal)
+          if (!self._peerPendingCandidates.has(peer)) self._peerPendingCandidates.set(peer, [])
+          self._peerPendingCandidates.get(peer)!.push(signal)
         }
       })
 
