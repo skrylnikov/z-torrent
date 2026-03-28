@@ -1,5 +1,7 @@
 ## [7.0.7](https://github.com/webtorrent/magnet-uri/compare/v7.0.6...v7.0.7) (2025-01-04)
 
+## 0.0.14
+
 ## 0.0.13
 
 ## 0.0.12

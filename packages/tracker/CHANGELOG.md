@@ -1,5 +1,14 @@
 ## [11.2.2](https://github.com/webtorrent/bittorrent-tracker/compare/v11.2.1...v11.2.2) (2025-09-06)
 
+## 0.0.14
+
+### Patch Changes
+
+- [#25](https://github.com/skrylnikov/z-torrent/pull/25) [`e8fbe6e`](https://github.com/skrylnikov/z-torrent/commit/e8fbe6ec0c05e9512f07386c6d0434fdde39ca73) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Enable trickle ICE for faster WebRTC connection establishment in Firefox and other browsers. ICE candidates are now sent incrementally through the tracker instead of waiting for full gathering before signaling. The tracker server now forwards ICE candidate messages between peers. Backward compatible with non-trickle peers via peer reflexive candidate discovery.
+
+- Updated dependencies []:
+  - @z-torrent/utils@0.0.14
+
 ## 0.0.13
 
 ### Patch Changes
