@@ -1,5 +1,14 @@
 ## [11.2.2](https://github.com/webtorrent/bittorrent-tracker/compare/v11.2.1...v11.2.2) (2025-09-06)
 
+## 0.0.15
+
+### Patch Changes
+
+- [`7fa312a`](https://github.com/skrylnikov/z-torrent/commit/7fa312ad64d338d2506729f23629ef13d9ae43f3) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Use `WeakMap` for buffering trickle ICE candidates instead of storing them directly on the simple-peer instance. This prevents a name collision with simple-peer's internal `_pendingCandidates` property, which caused a crash ("can't access property forEach") when the answer was received after our code deleted the property.
+
+- Updated dependencies []:
+  - @z-torrent/utils@0.0.15
+
 ## 0.0.14
 
 ### Patch Changes
