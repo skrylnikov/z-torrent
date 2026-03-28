@@ -1,5 +1,19 @@
 # @z-torrent/core
 
+## 0.0.14
+
+### Patch Changes
+
+- [#25](https://github.com/skrylnikov/z-torrent/pull/25) [`e8fbe6e`](https://github.com/skrylnikov/z-torrent/commit/e8fbe6ec0c05e9512f07386c6d0434fdde39ca73) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Add ICE restart on connection failure for WebRTC peers. When `iceConnectionState` transitions to `'failed'`, attempt `restartIce()` before destroying the peer. This improves connection reliability especially in Firefox which is more aggressive about declaring ICE failure.
+
+- Updated dependencies []:
+  - @z-torrent/protocol@0.0.14
+  - @z-torrent/parse@0.0.14
+  - @z-torrent/merkle-tree@0.0.14
+  - @z-torrent/ut-metadata@0.0.14
+  - @z-torrent/ut-pex@0.0.14
+  - @z-torrent/utils@0.0.14
+
 ## 0.0.13
 
 ### Patch Changes

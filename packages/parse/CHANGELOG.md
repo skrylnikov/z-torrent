@@ -1,5 +1,12 @@
 ## [11.0.19](https://github.com/webtorrent/parse-torrent/compare/v11.0.18...v11.0.19) (2025-10-07)
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/magnet@0.0.14
+
 ## 0.0.13
 
 ### Patch Changes
