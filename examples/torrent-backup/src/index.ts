@@ -31,7 +31,12 @@ function parseList(value: string | undefined): string[] {
   if (!value || typeof value !== 'string') return []
   return value
     .split(/[,\n]/)
-    .map((s) => s.trim().replace(/^["']|["']$/g, '').replace(/\\"/g, '"'))
+    .map((s) =>
+      s
+        .trim()
+        .replace(/^["']|["']$/g, '')
+        .replace(/\\"/g, '"')
+    )
     .filter(Boolean)
 }
 
@@ -42,7 +47,9 @@ function main() {
   const httpPort = process.env.TORRENT_HTTP_PORT ? parseInt(process.env.TORRENT_HTTP_PORT, 10) : 0
 
   if (magnets.length === 0) {
-    console.error('TORRENT_MAGNETS is empty. Set magnet links via env (comma or newline separated).')
+    console.error(
+      'TORRENT_MAGNETS is empty. Set magnet links via env (comma or newline separated).'
+    )
     process.exit(1)
   }
 
@@ -56,9 +63,24 @@ function main() {
   console.log('Trackers:', trackers)
   console.log('Magnets:', magnets.length)
 
+  const turnUrl = process.env.TURN_URL || 'turn:turn.z-torrent.xyz:3478'
+  const turnUsername = process.env.TURN_USERNAME || 'z-torrent'
+  const turnCredential = process.env.TURN_CREDENTIAL || ''
+  const stunUrl = process.env.STUN_URL || 'stun:turn.z-torrent.xyz:3478'
+
+  const iceServers: { urls: string[]; username?: string; credential?: string }[] = [
+    { urls: [stunUrl, 'stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+  ]
+  if (turnCredential) {
+    iceServers.push({ urls: [turnUrl], username: turnUsername, credential: turnCredential })
+  }
+
   const client = new ZTorrent({
     natUpnp: true,
     natPmp: true,
+    tracker: {
+      rtcConfig: { iceServers },
+    },
   })
 
   client.on('error', (err) => {
@@ -95,7 +117,9 @@ function main() {
       }
 
       const wireAddr = (w: WireLike) =>
-        w.remoteAddress ? `${w.remoteAddress}:${w.remotePort ?? '?'}` : w.peerId?.toString?.()?.slice(0, 8) || '?'
+        w.remoteAddress
+          ? `${w.remoteAddress}:${w.remotePort ?? '?'}`
+          : w.peerId?.toString?.()?.slice(0, 8) || '?'
 
       let lastTransferLog = 0
       const logActivePeers = () => {
@@ -113,10 +137,14 @@ function main() {
           const protocol = PROTOCOL_NAMES[w.type || ''] || w.type || '?'
           const addr = wireAddr(w)
           if (down > 0) {
-            console.log(`[${torrent.name}] Downloading from ${addr} via ${protocol} — ${prettierBytes(down)}/s`)
+            console.log(
+              `[${torrent.name}] Downloading from ${addr} via ${protocol} — ${prettierBytes(down)}/s`
+            )
           }
           if (up > 0) {
-            console.log(`[${torrent.name}] Seeding to ${addr} via ${protocol} — ${prettierBytes(up)}/s`)
+            console.log(
+              `[${torrent.name}] Seeding to ${addr} via ${protocol} — ${prettierBytes(up)}/s`
+            )
           }
         }
       }

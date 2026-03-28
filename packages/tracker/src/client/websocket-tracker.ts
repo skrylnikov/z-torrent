@@ -248,11 +248,12 @@ export class WebSocketTracker extends Tracker {
       let sent = false
 
       const sendAnswer = () => {
-        if (!initialAnswer) return
-        let sdp = initialAnswer.sdp
+        if (!initialAnswer?.sdp) return
+        let sdp = initialAnswer.sdp.replace(/\r?\n$/, '')
         for (const line of candidateLines) {
           sdp += '\r\na=' + line
         }
+        sdp += '\r\n'
         const answer = { ...initialAnswer, sdp }
         const params = {
           action: 'announce',
@@ -281,9 +282,13 @@ export class WebSocketTracker extends Tracker {
         sendAnswer()
       }, TRICKLE_BUFFER_MS)
 
-      peer.once('signal', (answer: any) => {
-        initialAnswer = answer
-        trySendAnswer()
+      peer.once('signal', function onFirstSignal(answer: any) {
+        if (answer.sdp) {
+          initialAnswer = answer
+          trySendAnswer()
+        } else {
+          peer.once('signal', onFirstSignal)
+        }
       })
 
       peer.on('signal', (signal: any) => {
@@ -298,10 +303,10 @@ export class WebSocketTracker extends Tracker {
       })
 
       peer.once('connect', () => {
-        delete this._connectedPeers[bin2hex(offerId)]
+        if (this._connectedPeers) delete this._connectedPeers[bin2hex(offerId)]
       })
       peer.once('close', () => {
-        delete this._connectedPeers[bin2hex(offerId)]
+        if (this._connectedPeers) delete this._connectedPeers[bin2hex(offerId)]
       })
       this._connectedPeers[bin2hex(offerId)] = peer
       this.client.emit('peer', peer)
@@ -329,12 +334,19 @@ export class WebSocketTracker extends Tracker {
             this._sendCandidate(data.offer_id, remotePeerId, signal)
           }
         })
+        // Flush any ICE candidates that were buffered before remotePeerId was known
+        if (peer._pendingCandidates) {
+          for (const signal of peer._pendingCandidates) {
+            this._sendCandidate(data.offer_id, remotePeerId, signal)
+          }
+          delete peer._pendingCandidates
+        }
         peer.signal(data.answer)
         peer.once('connect', () => {
-          delete this._connectedPeers[offerId]
+          if (this._connectedPeers) delete this._connectedPeers[offerId]
         })
         peer.once('close', () => {
-          delete this._connectedPeers[offerId]
+          if (this._connectedPeers) delete this._connectedPeers[offerId]
         })
         this._connectedPeers[offerId] = peer
       } else {
@@ -437,15 +449,25 @@ export class WebSocketTracker extends Tracker {
       const candidateLines: string[] = []
       let sent = false
 
-      peer.once('signal', (offer: any) => {
-        initialOffer = offer
-        trySend()
+      peer.once('signal', function onFirstSignal(offer: any) {
+        if (offer.sdp) {
+          initialOffer = offer
+          trySend()
+        } else {
+          peer.once('signal', onFirstSignal)
+        }
       })
 
       peer.on('signal', (signal: any) => {
         if (signal.candidate && signal.candidate.candidate) {
           candidateLines.push(signal.candidate.candidate)
-          trySend()
+          if (!sent) {
+            trySend()
+          }
+        }
+        if (signal.candidate && sent) {
+          if (!Array.isArray(peer._pendingCandidates)) peer._pendingCandidates = []
+          peer._pendingCandidates.push(signal)
         }
       })
 
@@ -465,11 +487,12 @@ export class WebSocketTracker extends Tracker {
       }
 
       function sendOffer() {
-        if (!initialOffer) return
-        let sdp = initialOffer.sdp
+        if (!initialOffer?.sdp) return
+        let sdp = initialOffer.sdp.replace(/\r?\n$/, '')
         for (const line of candidateLines) {
           sdp += '\r\na=' + line
         }
+        sdp += '\r\n'
         const offer = { ...initialOffer, sdp }
         offers.push({ offer, offer_id: hex2bin(offerId) })
         checkDone()
