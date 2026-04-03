@@ -1,0 +1,22 @@
+{
+  "name": "seed-server",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@z-torrent/node": "workspace:*",
+    "@z-torrent/parse": "workspace:*",
+    "dotenv": "^16.4.5",
+    "prettier-bytes": "^1.0.0",
+    "webrtc-polyfill": "^1.1.5",
+    "utp-native": "^2.5.3",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

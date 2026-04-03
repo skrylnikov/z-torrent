@@ -1,0 +1,48 @@
+{
+  "name": "@z-torrent/host-sdk",
+  "description": "PostMessage SDK for z-torrent hosted sites to request torrent content from the parent portal",
+  "version": "0.0.1",
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "bittorrent",
+    "host-sdk",
+    "peer-to-peer",
+    "postmessage",
+    "torrent",
+    "webtorrent",
+    "z-torrent"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/host-sdk"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsdown": "^0.21.3",
+    "typescript": "^5.9.3"
+  }
+}

@@ -14,11 +14,6 @@ declare module 'run-parallel' {
   export default parallel
 }
 
-declare module 'piece-length' {
-  function pieceLength(totalLength: number): number
-  export default pieceLength
-}
-
 declare module 'is-file' {
   function isFile(path: string, cb: (err: Error | null, result?: boolean) => void): void
   export default isFile

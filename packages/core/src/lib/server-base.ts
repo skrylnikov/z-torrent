@@ -2,6 +2,7 @@ import escapeHtml from 'escape-html'
 import rangeParser from 'range-parser'
 
 import type { File } from './file.js'
+import type { ZTManifest } from '../types/manifest.js'
 
 const keepAliveTime = 20000
 
@@ -9,6 +10,8 @@ export interface ServerOptions {
   origin?: string | false
   hostname?: string
   pathname?: string
+  hostingMode?: boolean
+  manifest?: ZTManifest
 }
 
 export interface Request {
@@ -152,18 +155,24 @@ export abstract class ServerBase {
     return res
   }
 
-  serveFile(file: File, req: Request, res: Response): Response {
+  serveFile(file: File, req: Request, res: Response, fileOpts?: { custom404?: boolean }): Response {
     res.status = 200
 
-    res.headers['Expires'] = '0'
-    res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    if (this.opts.hostingMode && !fileOpts?.custom404) {
+      res.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    } else if (this.opts.hostingMode && fileOpts?.custom404) {
+      res.headers['Cache-Control'] = 'no-store'
+    } else {
+      res.headers['Expires'] = '0'
+      res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    }
     res.headers['Accept-Ranges'] = 'bytes'
     res.headers['Content-Type'] = file.type
     res.headers['transferMode.dlna.org'] = 'Streaming'
     res.headers['contentFeatures.dlna.org'] =
       'DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000'
 
-    if (req.destination === 'document') {
+    if (req.destination === 'document' && !this.opts.hostingMode) {
       res.headers['Content-Type'] = 'application/octet-stream'
       res.headers['Content-Disposition'] =
         `attachment; filename*=UTF-8''${encodeRFC5987(file.name)}`
@@ -185,16 +194,45 @@ export abstract class ServerBase {
 
       if (req.method === 'GET') {
         res.body = this.createFileBody(file, req, rangeObj)
+        if (
+          this.opts.hostingMode &&
+          req.destination === 'document' &&
+          file.type === 'text/html' &&
+          typeof res.body !== 'boolean'
+        ) {
+          const infoHash = this._extractInfoHash(req.url)
+          if (infoHash) {
+            const baseTag = `<base href="${this.pathname}/${infoHash}/">`
+            res.body = injectBaseTag(res.body as AsyncIterable<Uint8Array>, baseTag)
+          }
+        }
       } else {
         res.body = false
       }
     } else {
-      res.headers['Content-Length'] = file.length
-
       if (req.method === 'GET') {
         res.body = this.createFileBody(file, req, null)
       } else {
         res.body = false
+      }
+
+      if (
+        this.opts.hostingMode &&
+        req.destination === 'document' &&
+        file.type === 'text/html' &&
+        typeof res.body !== 'string' &&
+        typeof res.body !== 'boolean'
+      ) {
+        const infoHash = this._extractInfoHash(req.url)
+        if (infoHash) {
+          const baseTag = `<base href="${this.pathname}/${infoHash}/">`
+          res.body = injectBaseTag(res.body as AsyncIterable<Uint8Array>, baseTag)
+          res.headers['Transfer-Encoding'] = 'chunked'
+        } else {
+          res.headers['Content-Length'] = file.length
+        }
+      } else {
+        res.headers['Content-Length'] = file.length
       }
     }
     return res
@@ -207,7 +245,12 @@ export abstract class ServerBase {
     const res: Response = {
       headers: {
         'X-Content-Type-Options': 'nosniff',
-        'Content-Security-Policy': "base-uri 'none'; frame-ancestors 'none'; form-action 'none';",
+        // Hosting mode: permissive CSP so arbitrary static sites (iframes, inline
+        // scripts, eval in demos) work. Arbitrary torrent content can execute —
+        // treat hosted bundles as untrusted; see docs/security.
+        'Content-Security-Policy': this.opts.hostingMode
+          ? "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+          : "base-uri 'none'; frame-ancestors 'none'; form-action 'none';",
       },
       status: 200,
       body: '',
@@ -218,7 +261,7 @@ export abstract class ServerBase {
         this.opts.origin === '*' ? '*' : req.headers.origin || '*'
     }
 
-    if (pathname === 'favicon.ico') {
+    if (pathname === 'favicon.ico' && !this.opts.hostingMode) {
       return cb(ServerBase.serve404Page(res))
     }
 
@@ -257,10 +300,41 @@ export abstract class ServerBase {
         return ServerBase.serveTorrentPage(torrentWithFiles, res, this.pathname)
       }
 
-      const file = torrentWithFiles.files.find((f) => f.path.replace(/\\/g, '/') === filePath)
-      if (!file) {
+      if (this.opts.hostingMode && this.opts.manifest?.routing?.redirects?.length) {
+        const redirect = matchRedirect(filePath, this.opts.manifest.routing.redirects)
+        if (redirect) {
+          res.status = redirect.status
+          res.headers['Location'] = redirect.to
+          res.headers['Content-Length'] = 0
+          res.body = false
+          return res
+        }
+      }
+
+      const resolved = resolveFile(filePath, torrentWithFiles, {
+        hostingMode: this.opts.hostingMode,
+        manifest: this.opts.manifest,
+        destination: req.destination,
+      })
+
+      if (!resolved) {
         return ServerBase.serve404Page(res)
       }
+
+      const { file, status404 } = resolved
+      if (status404) {
+        const fileRes = this.serveFile(file, req, res, { custom404: true })
+        fileRes.status = 404
+        return fileRes
+      }
+
+      if (this.opts.hostingMode && this.opts.manifest?.routing?.headers?.length) {
+        const customHeaders = matchHeaders(filePath, this.opts.manifest.routing.headers)
+        for (const [key, value] of customHeaders) {
+          res.headers[key] = value
+        }
+      }
+
       return this.serveFile(file, req, res)
     }
 
@@ -278,6 +352,23 @@ export abstract class ServerBase {
     return cb(ServerBase.serveMethodNotAllowed(res))
   }
 
+  _extractInfoHash(url: string): string | null {
+    try {
+      const pathname = new URL(url, 'http://example.com').pathname
+      const prefix = this.pathname + '/'
+      const idx = pathname.indexOf(prefix)
+      if (idx === -1) return null
+      const rest = pathname.slice(idx + prefix.length)
+      const hash = rest.split('/')[0]
+      if (/^[a-f0-9]{40}$/i.test(hash) || /^[a-f0-9]{64}$/i.test(hash)) {
+        return hash.toLowerCase()
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
   close(cb: () => void = () => {}): void {
     this.closed = true
     this.pendingReady.forEach((onReady) => {
@@ -292,6 +383,67 @@ export abstract class ServerBase {
     else this.close(cb)
     this.client = null as any
   }
+}
+
+function resolveFile(
+  filePath: string,
+  torrent: TorrentWithFiles,
+  opts: { hostingMode?: boolean; manifest?: ZTManifest; destination?: string }
+): { file: File; status404?: boolean } | null {
+  const find = (p: string) => torrent.files.find((f) => f.path.replace(/\\/g, '/') === p)
+
+  // a. Exact path match
+  let file = find(filePath)
+
+  // b. Torrent name prefix stripping (hosting mode only, when torrent has a name folder)
+  const prefix = opts.hostingMode && torrent.name ? torrent.name + '/' : null
+  if (!file && prefix) {
+    file = find(prefix + filePath)
+  }
+
+  // c. Directory → index.html (trailing slash)
+  if (!file && filePath.endsWith('/')) {
+    if (prefix) {
+      file = find(prefix + filePath + 'index.html')
+    } else {
+      file = find(filePath + 'index.html')
+    }
+  }
+
+  // d. Extension fallback → .html
+  if (!file) {
+    if (prefix) {
+      file = find(prefix + filePath + '.html')
+    } else {
+      file = find(filePath + '.html')
+    }
+  }
+
+  // e. SPA fallback (hosting mode + manifest.type === 'spa' + document destination)
+  if (
+    !file &&
+    opts.hostingMode &&
+    opts.manifest?.type === 'spa' &&
+    opts.destination === 'document'
+  ) {
+    const fallback = opts.manifest.routing?.fallback ?? 'index.html'
+    if (prefix) {
+      file = find(prefix + fallback)
+    } else {
+      file = find(fallback)
+    }
+  }
+
+  if (file) return { file }
+
+  // f. Custom 404 page (hosting mode + manifest.routing.errors['404'])
+  if (opts.hostingMode && opts.manifest?.routing?.errors?.['404']) {
+    const errorPagePath = opts.manifest.routing.errors['404']
+    const errorFile = find(errorPagePath)
+    if (errorFile) return { file: errorFile, status404: true }
+  }
+
+  return null
 }
 
 function getPageHTML(title: string, pageHtml: string): string {
@@ -314,4 +466,159 @@ function encodeRFC5987(str: string): string {
     .replace(/['()]/g, escape)
     .replace(/\*/g, '%2A')
     .replace(/%(?:7C|60|5E)/g, unescape)
+}
+
+/** `>` that closes `<head ...>` after `headIdx`, skipping quoted attribute regions. */
+function findHeadTagCloseAngle(haystack: Uint8Array, headIdx: number): number {
+  const start = headIdx + 5
+  if (start >= haystack.length) return -1
+  let inQuote: number | null = null
+  for (let i = start; i < haystack.length; i++) {
+    const b = haystack[i]
+    if (inQuote !== null) {
+      if (b === inQuote) inQuote = null
+      continue
+    }
+    if (b === 0x27 || b === 0x22) {
+      inQuote = b
+      continue
+    }
+    if (b === 0x3e) return i
+  }
+  return -1
+}
+
+const INJECT_BASE_TAG_SCAN_MAX = 262144
+
+function injectBaseTag(
+  source: AsyncIterable<Uint8Array>,
+  baseTag: string
+): AsyncIterable<Uint8Array> {
+  const baseBytes = new TextEncoder().encode(baseTag)
+  const headOpen = new TextEncoder().encode('<head')
+  return {
+    [Symbol.asyncIterator]() {
+      const inner = source[Symbol.asyncIterator]()
+      let passThrough = false
+      let pending = new Uint8Array(0)
+      let sourceDone = false
+
+      return {
+        async next(): Promise<IteratorResult<Uint8Array>> {
+          if (passThrough) return inner.next() as Promise<IteratorResult<Uint8Array>>
+
+          while (!sourceDone && pending.length < INJECT_BASE_TAG_SCAN_MAX) {
+            const { value: chunk, done } = await inner.next()
+            if (done) {
+              sourceDone = true
+              break
+            }
+            const nextChunk = chunk as Uint8Array
+            const merged = new Uint8Array(pending.length + nextChunk.length)
+            merged.set(pending)
+            merged.set(nextChunk, pending.length)
+            pending = merged
+
+            const headIdx = findBytesCaseInsensitive(pending, headOpen)
+            if (headIdx === -1) {
+              if (pending.length >= INJECT_BASE_TAG_SCAN_MAX) {
+                passThrough = true
+                const out = pending
+                pending = new Uint8Array(0)
+                return { value: out, done: false }
+              }
+              continue
+            }
+
+            const closeIdx = findHeadTagCloseAngle(pending, headIdx)
+            if (closeIdx === -1) {
+              if (pending.length >= INJECT_BASE_TAG_SCAN_MAX) {
+                passThrough = true
+                const out = pending
+                pending = new Uint8Array(0)
+                return { value: out, done: false }
+              }
+              continue
+            }
+
+            const insertPos = closeIdx + 1
+            const out = new Uint8Array(pending.length + baseBytes.length)
+            out.set(pending.subarray(0, insertPos))
+            out.set(baseBytes, insertPos)
+            out.set(pending.subarray(insertPos), insertPos + baseBytes.length)
+            pending = new Uint8Array(0)
+            passThrough = true
+            return { value: out, done: false }
+          }
+
+          if (sourceDone && pending.length > 0) {
+            passThrough = true
+            const out = pending
+            pending = new Uint8Array(0)
+            return { value: out, done: false }
+          }
+
+          return { value: undefined, done: true }
+        },
+      }
+    },
+  }
+}
+
+function findBytesCaseInsensitive(haystack: Uint8Array, needle: Uint8Array): number {
+  if (needle.length === 0) return 0
+  outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if ((haystack[i + j] | 0x20) !== (needle[j] | 0x20)) continue outer
+    }
+    return i
+  }
+  return -1
+}
+
+function matchRedirect(
+  filePath: string,
+  redirects: Array<{ from: string; to: string; status?: 301 | 302 | 307 | 308 }>
+): { to: string; status: 301 | 302 | 307 | 308 } | null {
+  for (const r of redirects) {
+    if (filePath === r.from || globMatch(filePath, r.from)) {
+      return { to: r.to, status: r.status ?? 301 }
+    }
+  }
+  return null
+}
+
+function matchHeaders(
+  filePath: string,
+  headerRules: Array<{ match: string; headers: Record<string, string> }>
+): Array<[string, string]> {
+  const result: Array<[string, string]> = []
+  for (const rule of headerRules) {
+    if (globMatch(filePath, rule.match)) {
+      for (const [key, value] of Object.entries(rule.headers)) {
+        result.push([key, value])
+      }
+    }
+  }
+  return result
+}
+
+function globMatch(path: string, pattern: string): boolean {
+  const normalize = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '')
+  const normPath = normalize(path)
+  const normPattern = normalize(pattern)
+
+  if (normPattern === '*') return true
+  if (normPattern === normPath) return true
+
+  const regexStr = normPattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*/g, '.*')
+    .replace(/\?/g, '.')
+
+  try {
+    return new RegExp(`^${regexStr}$`, 'i').test(normPath)
+  } catch {
+    return false
+  }
 }

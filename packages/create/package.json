@@ -22,7 +22,6 @@
     "join-async-iterator": "^1.1.1",
     "junk": "^4.0.1",
     "minimist": "^1.2.8",
-    "piece-length": "^2.0.1",
     "run-parallel": "^1.2.0",
     "uint8-util": "^2.2.6"
   },

@@ -1,4 +1,5 @@
 export * from './interfaces.js'
+export type { ZTManifest } from './types/manifest.js'
 export * from './selections.js'
 export {
   ZTorrentCore,

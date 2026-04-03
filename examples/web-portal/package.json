@@ -1,0 +1,21 @@
+{
+  "name": "@z-torrent/web-portal",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@z-torrent/browser": "workspace:*",
+    "prettier-bytes": "^1.0.4"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "svelte": "^5.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0"
+  }
+}

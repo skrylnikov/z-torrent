@@ -1,0 +1,17 @@
+services:
+  seed-server:
+    # CI publishes to ghcr.io/<github.repository_owner>/z-torrent-seed-server
+    image: ghcr.io/${SEED_IMAGE_OWNER:-skrylnikov}/z-torrent-seed-server:latest
+    ports:
+      - '8080:8080'
+      - '3000:3000'
+    volumes:
+      - torrent-downloads:/app/examples/seed-server/downloads
+      - torrent-data:/app/examples/seed-server/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  torrent-downloads:
+  torrent-data:

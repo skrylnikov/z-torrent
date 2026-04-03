@@ -66,7 +66,10 @@ export class WebSocketTracker extends Tracker {
       this._send(params)
     } else {
       const maxNumwant = this._successfulConnections > 0 ? MAX_NUMWANT : INITIAL_NUMWANT
-      const numwant = Math.min(opts.numwant, maxNumwant)
+      const rawNumwant = opts.numwant
+      const effectiveNumwant =
+        rawNumwant === undefined || Number.isNaN(rawNumwant) ? maxNumwant : rawNumwant
+      const numwant = Math.min(effectiveNumwant, maxNumwant)
       this._generateOffers(numwant, (offers) => {
         params.numwant = numwant
         params.offers = offers

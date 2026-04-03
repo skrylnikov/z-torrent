@@ -40,6 +40,14 @@
     "./once": {
       "import": "./dist/once.js",
       "types": "./dist/once.d.ts"
+    },
+    "./piece-length": {
+      "import": "./dist/piece-length.js",
+      "types": "./dist/piece-length.d.ts"
+    },
+    "./idb-chunk-store": {
+      "import": "./dist/idb-chunk-store.js",
+      "types": "./dist/idb-chunk-store.d.ts"
     }
   },
   "files": [

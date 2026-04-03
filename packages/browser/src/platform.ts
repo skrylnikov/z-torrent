@@ -2,7 +2,7 @@
  * Browser platform adapter for z-torrent-core.
  */
 
-import MemoryChunkStore from 'memory-chunk-store'
+import { IDBChunkStore } from '@z-torrent/utils/idb-chunk-store'
 import { BrowserServer, type BrowserServerOptions } from './lib/server.js'
 import { BrowserDiscovery } from './lib/browser-discovery.js'
 import type {
@@ -21,7 +21,7 @@ const IDLE_CALLBACK =
 
 export function createBrowserPlatformAdapter(): PlatformAdapter {
   return {
-    defaultStore: MemoryChunkStore as ChunkStoreConstructor,
+    defaultStore: IDBChunkStore as unknown as ChunkStoreConstructor,
     tmpDir: '/',
     fsConcurrency: 2,
     utpSupport: false,

@@ -1,0 +1,58 @@
+{
+  "name": "@z-torrent/publish",
+  "description": "Publish static sites as torrents",
+  "version": "0.0.1",
+  "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
+  "type": "module",
+  "bin": {
+    "z-torrent-publish": "./dist/cli.js"
+  },
+  "bugs": {
+    "url": "https://github.com/skrylnikov/z-torrent/issues"
+  },
+  "dependencies": {
+    "@z-torrent/create": "workspace:*",
+    "@z-torrent/core": "workspace:*",
+    "@z-torrent/parse": "workspace:*",
+    "@z-torrent/utils": "workspace:*"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "bittorrent",
+    "hosting",
+    "peer-to-peer",
+    "publish",
+    "static-site",
+    "torrent",
+    "webtorrent",
+    "z-torrent"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skrylnikov/z-torrent.git",
+    "directory": "packages/publish"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  }
+}
