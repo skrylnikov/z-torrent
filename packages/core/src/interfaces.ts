@@ -1,4 +1,5 @@
 import type { IPInput, IPSet } from '@z-torrent/utils'
+import type { ZTManifest } from './types/manifest.js'
 
 /** Chunk storage abstraction — read/write piece data */
 export interface ChunkStore {
@@ -85,6 +86,8 @@ export interface ServerOptions {
   origin?: string | false
   hostname?: string
   pathname?: string
+  hostingMode?: boolean
+  manifest?: ZTManifest
 }
 
 /** Platform adapter — injects platform-specific implementations into core */

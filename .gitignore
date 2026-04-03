@@ -8,3 +8,9 @@ dist
 .workspace-protocol-backup.json
 .astro
 downloads
+
+# Local tooling / agent state
+.sisyphus/
+
+# Seed server runtime SQLite and uploads (see examples/seed-server README)
+examples/seed-server/data/

@@ -1,6 +1,6 @@
 import bencode from 'bencode'
 import blockIterator from 'block-iterator'
-import calcPieceLength from 'piece-length'
+import { calcPieceLength } from '@z-torrent/utils/piece-length'
 import corePath from 'path'
 import isFile from 'is-file'
 import { isJunk } from 'junk'

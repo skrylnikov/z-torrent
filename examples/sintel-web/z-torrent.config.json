@@ -1,0 +1,24 @@
+{
+  "site": {
+    "name": "Sintel — Z-Torrent Demo",
+    "description": "Sintel short film landing page with P2P video streaming, hosted on z-torrent",
+    "lang": "en"
+  },
+  "type": "static",
+  "routing": {
+    "entry": "index.html"
+  },
+  "priority": ["index.html", "_astro/*.css"],
+  "framework": "astro",
+  "publish": {
+    "dir": "dist",
+    "server": "$ZT_SEED_SERVER_URL",
+    "apiKey": "$ZT_SEED_SERVER_API_KEY",
+    "trackers": [
+      ["wss://tracker.openwebtorrent.com"],
+      ["wss://tracker.webtorrent.dev"],
+      ["wss://tracker.btorrent.xyz"]
+    ],
+    "pieceLength": 32768
+  }
+}

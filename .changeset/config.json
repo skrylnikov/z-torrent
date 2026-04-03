@@ -18,12 +18,14 @@
       "@z-torrent/merkle-tree",
       "@z-torrent/ut-metadata",
       "@z-torrent/ut-pex",
-      "@z-torrent/utils"
+      "@z-torrent/utils",
+      "@z-torrent/publish",
+      "@z-torrent/host-sdk"
     ]
   ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["torrent-backup", "sintel-landing"]
+  "ignore": ["seed-server", "sintel-landing"]
 }

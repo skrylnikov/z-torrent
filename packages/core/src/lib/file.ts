@@ -124,7 +124,7 @@ export class File extends EventEmitter implements FileWire {
     const end = opts?.end && opts.end < this.length ? opts.end : this.length - 1
 
     if (this.done) {
-      return chunkStoreRead(this._torrent.store!, {
+      return chunkStoreRead(this._torrent.store as Parameters<typeof chunkStoreRead>[0], {
         offset: start + this.offset,
         length: end - start + 1,
       }) as AsyncIterable<Uint8Array>

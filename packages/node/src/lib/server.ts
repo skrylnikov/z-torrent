@@ -3,11 +3,14 @@ import pump from 'pump'
 import { Readable } from 'streamx'
 import { ServerBase, type Request, type Response } from '@z-torrent/core'
 import type { File } from '@z-torrent/core'
+import type { ZTManifest } from '@z-torrent/core'
 
 export interface NodeServerOptions {
   origin?: string | false
   hostname?: string
   pathname?: string
+  hostingMode?: boolean
+  manifest?: ZTManifest
 }
 
 export class NodeServer extends ServerBase {

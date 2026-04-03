@@ -5,6 +5,7 @@ import { createBrowserPlatformAdapter } from './platform.js'
 import type { BrowserServerOptions } from './lib/server.js'
 
 export { FileIterator, Torrent, Peer, RarityMap, WebConn, ServerBase, File } from '@z-torrent/core'
+export { type ZTManifest } from '@z-torrent/core'
 
 export type ZTorrentBrowserOpts = Omit<ZTorrentCoreOpts, 'platform'>
 

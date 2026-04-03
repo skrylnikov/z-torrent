@@ -11,8 +11,8 @@ import type { DHTInstance } from '../interfaces.js'
 
 const CONNECT_TIMEOUT_TCP = 5_000
 const CONNECT_TIMEOUT_UTP = 5_000
-const CONNECT_TIMEOUT_WEBRTC = 25_000
-const HANDSHAKE_TIMEOUT = 25_000
+const CONNECT_TIMEOUT_WEBRTC = 15_000
+const HANDSHAKE_TIMEOUT = 10_000
 
 const TYPE_TCP_INCOMING = 'tcpIncoming'
 const TYPE_TCP_OUTGOING = 'tcpOutgoing'
@@ -43,6 +43,13 @@ export interface ThrottleGroups {
   up: { throttle: () => Transform }
 }
 
+interface PeerOptions {
+  connectTimeoutTcp?: number
+  connectTimeoutUtp?: number
+  connectTimeoutWebRtc?: number
+  handshakeTimeout?: number
+}
+
 export interface PeerSwarm extends TorrentWire {
   destroyed: boolean
   infoHash: string
@@ -68,13 +75,17 @@ export class Peer extends EventEmitter {
   retries: number
   connectTimeout!: ReturnType<typeof setTimeout> | null
   handshakeTimeout!: ReturnType<typeof setTimeout> | null
+  _connectTimeoutTcp: number
+  _connectTimeoutUtp: number
+  _connectTimeoutWebRtc: number
+  _handshakeTimeout: number
   sentPe1: boolean
   sentPe2: boolean
   sentPe3: boolean
   sentPe4: boolean
   sentHandshake: boolean
 
-  constructor(id: string, type: PeerType) {
+  constructor(id: string, type: PeerType, opts: PeerOptions = {}) {
     super()
 
     this.id = id
@@ -93,6 +104,10 @@ export class Peer extends EventEmitter {
     this.destroyed = false
     this.timeout = null
     this.retries = 0
+    this._connectTimeoutTcp = opts.connectTimeoutTcp ?? CONNECT_TIMEOUT_TCP
+    this._connectTimeoutUtp = opts.connectTimeoutUtp ?? CONNECT_TIMEOUT_UTP
+    this._connectTimeoutWebRtc = opts.connectTimeoutWebRtc ?? CONNECT_TIMEOUT_WEBRTC
+    this._handshakeTimeout = opts.handshakeTimeout ?? HANDSHAKE_TIMEOUT
 
     this.sentPe1 = false
     this.sentPe2 = false
@@ -287,9 +302,9 @@ export class Peer extends EventEmitter {
     clearTimeout(this.connectTimeout!)
 
     const connectTimeoutValues: Record<string, number> = {
-      webrtc: CONNECT_TIMEOUT_WEBRTC,
-      tcpOutgoing: CONNECT_TIMEOUT_TCP,
-      utpOutgoing: CONNECT_TIMEOUT_UTP,
+      webrtc: this._connectTimeoutWebRtc ?? CONNECT_TIMEOUT_WEBRTC,
+      tcpOutgoing: this._connectTimeoutTcp ?? CONNECT_TIMEOUT_TCP,
+      utpOutgoing: this._connectTimeoutUtp ?? CONNECT_TIMEOUT_UTP,
     }
 
     this.connectTimeout = setTimeout(() => {
@@ -302,7 +317,7 @@ export class Peer extends EventEmitter {
     clearTimeout(this.handshakeTimeout!)
     this.handshakeTimeout = setTimeout(() => {
       this.destroy(new Error('handshake timeout'))
-    }, HANDSHAKE_TIMEOUT)
+    }, this._handshakeTimeout ?? HANDSHAKE_TIMEOUT)
     if ((this.handshakeTimeout as any)?.unref) (this.handshakeTimeout as any).unref()
   }
 
@@ -353,9 +368,10 @@ export class Peer extends EventEmitter {
     conn: any,
     swarm: PeerSwarm,
     throttleGroups: ThrottleGroups,
-    source: PeerSource | null = null
+    source: PeerSource | null = null,
+    opts: PeerOptions = {}
   ): Peer {
-    const peer = new Peer(conn.id, 'webrtc')
+    const peer = new Peer(conn.id, 'webrtc', opts)
     peer.conn = conn
     peer.swarm = swarm
     peer.throttleGroups = throttleGroups
@@ -401,35 +417,50 @@ export class Peer extends EventEmitter {
     return peer
   }
 
-  static createTCPIncomingPeer(conn: any, throttleGroups: ThrottleGroups): Peer {
-    return Peer._createIncomingPeer(conn, TYPE_TCP_INCOMING, throttleGroups)
+  static createTCPIncomingPeer(
+    conn: any,
+    throttleGroups: ThrottleGroups,
+    opts: PeerOptions = {}
+  ): Peer {
+    return Peer._createIncomingPeer(conn, TYPE_TCP_INCOMING, throttleGroups, opts)
   }
 
-  static createUTPIncomingPeer(conn: any, throttleGroups: ThrottleGroups): Peer {
-    return Peer._createIncomingPeer(conn, TYPE_UTP_INCOMING, throttleGroups)
+  static createUTPIncomingPeer(
+    conn: any,
+    throttleGroups: ThrottleGroups,
+    opts: PeerOptions = {}
+  ): Peer {
+    return Peer._createIncomingPeer(conn, TYPE_UTP_INCOMING, throttleGroups, opts)
   }
 
   static createTCPOutgoingPeer(
     addr: string,
     swarm: PeerSwarm,
     throttleGroups: ThrottleGroups,
-    source: PeerSource
+    source: PeerSource,
+    opts: PeerOptions = {}
   ): Peer {
-    return Peer._createOutgoingPeer(addr, swarm, TYPE_TCP_OUTGOING, throttleGroups, source)
+    return Peer._createOutgoingPeer(addr, swarm, TYPE_TCP_OUTGOING, throttleGroups, source, opts)
   }
 
   static createUTPOutgoingPeer(
     addr: string,
     swarm: PeerSwarm,
     throttleGroups: ThrottleGroups,
-    source: PeerSource
+    source: PeerSource,
+    opts: PeerOptions = {}
   ): Peer {
-    return Peer._createOutgoingPeer(addr, swarm, TYPE_UTP_OUTGOING, throttleGroups, source)
+    return Peer._createOutgoingPeer(addr, swarm, TYPE_UTP_OUTGOING, throttleGroups, source, opts)
   }
 
-  static _createIncomingPeer(conn: any, type: PeerType, throttleGroups: ThrottleGroups): Peer {
+  static _createIncomingPeer(
+    conn: any,
+    type: PeerType,
+    throttleGroups: ThrottleGroups,
+    opts: PeerOptions = {}
+  ): Peer {
     const addr = `${conn.remoteAddress}:${conn.remotePort}`
-    const peer = new Peer(addr, type)
+    const peer = new Peer(addr, type, opts)
     peer.conn = conn
     peer.addr = addr
     peer.throttleGroups = throttleGroups
@@ -444,9 +475,10 @@ export class Peer extends EventEmitter {
     swarm: PeerSwarm,
     type: PeerType,
     throttleGroups: ThrottleGroups,
-    source: PeerSource | null = null
+    source: PeerSource | null = null,
+    opts: PeerOptions = {}
   ): Peer {
-    const peer = new Peer(addr, type)
+    const peer = new Peer(addr, type, opts)
     peer.addr = addr
     peer.swarm = swarm
     peer.throttleGroups = throttleGroups
@@ -459,9 +491,10 @@ export class Peer extends EventEmitter {
     conn: any,
     id: string,
     swarm: PeerSwarm,
-    throttleGroups: ThrottleGroups
+    throttleGroups: ThrottleGroups,
+    opts: PeerOptions = {}
   ): Peer {
-    const peer = new Peer(id, TYPE_WEBSEED)
+    const peer = new Peer(id, TYPE_WEBSEED, opts)
 
     peer.swarm = swarm
     peer.conn = conn

@@ -4,13 +4,18 @@ import {
   type File,
   type ClientWithTorrents,
   type ServerOptions,
+  type ZTManifest,
 } from '@z-torrent/core'
+import Debug from 'debug'
 
 export interface BrowserServerOptions extends ServerOptions {
   controller: ServiceWorkerRegistration
+  hostingMode?: boolean
+  manifest?: ZTManifest
 }
 
 const keepAliveTime = 20000
+const debug = Debug('@z-torrent/browser:server')
 
 type StreamBody = { destroy?: () => void; [Symbol.asyncIterator]?: () => AsyncIterator<Uint8Array> }
 
@@ -21,6 +26,7 @@ export class BrowserServer extends ServerBase {
   override pathname: string
   #address: { port: string; family: string; address: string }
   #boundHandler: (event: MessageEvent) => void
+  #cancelResponse: Promise<Response> | null = null
 
   constructor(client: ClientWithTorrents, opts: BrowserServerOptions) {
     if (!(opts.controller instanceof ServiceWorkerRegistration)) {
@@ -47,9 +53,17 @@ export class BrowserServer extends ServerBase {
 
     this.#boundHandler = this.wrapRequest.bind(this)
     navigator.serviceWorker.addEventListener('message', this.#boundHandler)
-    void fetch(`${this.pathname}/cancel/`).then((res) => {
-      void res.body?.cancel()
-    })
+    // Keep fetch alive so tab unload aborts body → SW removes client from active set.
+    this.#cancelResponse = fetch(`${this.pathname}/cancel/`)
+  }
+
+  #abortCancelFetch(): void {
+    this.#cancelResponse
+      ?.then((res) => {
+        void res.body?.cancel()
+      })
+      .catch(() => {})
+    this.#cancelResponse = null
   }
 
   createFileBody(
@@ -69,7 +83,8 @@ export class BrowserServer extends ServerBase {
     const port = event.ports[0]
     if (port === undefined) return
 
-    this.onRequest(req as Request, ({ status, headers, body }) => {
+    const onRequestResult = this.onRequest(req as Request, ({ status, headers, body }) => {
+      debug('responding to %s status=%d', req.url, status)
       const streamBody = body as StreamBody | undefined
       const asyncIterator = streamBody?.[Symbol.asyncIterator]?.()
 
@@ -88,8 +103,8 @@ export class BrowserServer extends ServerBase {
           let chunk: Uint8Array | undefined
           try {
             chunk = asyncIterator ? (await asyncIterator.next()).value : undefined
-          } catch {
-            // chunk is yet to be downloaded or it somehow failed
+          } catch (err: unknown) {
+            debug('file stream error: %O', err)
           }
           port.postMessage(chunk)
           if (!chunk) cleanup()
@@ -109,6 +124,17 @@ export class BrowserServer extends ServerBase {
         body: asyncIterator ? 'STREAM' : body,
       })
     })
+
+    if (onRequestResult && typeof onRequestResult === 'object' && 'catch' in onRequestResult) {
+      onRequestResult.catch((err: unknown) => {
+        debug('onRequest error: %O url=%s', err, req.url)
+        port.postMessage({
+          status: 500,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          body: 'Internal error',
+        })
+      })
+    }
   }
 
   listen(_port: unknown, cb: () => void): void {
@@ -121,10 +147,12 @@ export class BrowserServer extends ServerBase {
 
   override close(cb?: () => void): void {
     navigator.serviceWorker.removeEventListener('message', this.#boundHandler)
+    this.#abortCancelFetch()
     super.close(cb || (() => {}))
   }
 
   override destroy(cb?: () => void): void {
+    this.#abortCancelFetch()
     super.destroy(cb || (() => {}))
   }
 }
