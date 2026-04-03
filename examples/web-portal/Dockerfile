@@ -1,15 +1,10 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 FROM oven/bun:1 AS build
 
 WORKDIR /app
 COPY package.json bun.lock ./
-COPY packages/browser/package.json packages/browser/package.json
-COPY packages/core/package.json packages/core/package.json
-COPY packages/parse/package.json packages/parse/package.json
-COPY packages/protocol/package.json packages/protocol/package.json
-COPY packages/create/package.json packages/create/package.json
-COPY packages/utils/package.json packages/utils/package.json
-COPY examples/web-portal/package.json examples/web-portal/package.json
+COPY --parents packages/*/package.json ./
+COPY --parents examples/*/package.json ./
 RUN bun install --frozen-lockfile
 
 COPY packages/ packages/
