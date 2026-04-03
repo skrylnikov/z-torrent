@@ -1,4 +1,5 @@
 import type { ZTorrent } from '@z-torrent/node'
+import { json } from '../http.js'
 import type { ApiKeyConfig } from '../../config.js'
 import type { DeploymentRow } from '../../storage/db.js'
 import { getDeploymentsByKey, getStorageUsage, getDeploymentCount } from '../../storage/db.js'
@@ -82,12 +83,5 @@ export function handleStats(client: ZTorrent, db: any, apiKey: ApiKeyConfig): Re
       downloaded: totalDownloaded,
       peers: totalPeers,
     },
-  })
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
   })
 }

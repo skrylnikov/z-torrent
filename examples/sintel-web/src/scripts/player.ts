@@ -1,32 +1,6 @@
+import { ZTorrentHost, type TorrentProgress } from '@z-torrent/host-sdk'
+
 const SINTEL_MAGNET = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel'
-
-const NS = 'z-torrent'
-
-interface PendingRequest {
-  resolve: (result: AddTorrentResult) => void
-  reject: (error: Error) => void
-  timer: ReturnType<typeof setTimeout>
-  onProgress?: ((p: TorrentProgress) => void) | undefined
-}
-
-interface AddTorrentOptions {
-  timeout?: number
-  onProgress?: (p: TorrentProgress) => void
-}
-
-interface TorrentProgress {
-  phase: 'connecting' | 'metadata' | 'downloading' | 'ready'
-  progress: number
-  downloadSpeed: number
-  peers: number
-  downloaded: number
-  totalSize: number
-}
-
-interface AddTorrentResult {
-  infoHash: string
-  files: Record<string, string>
-}
 
 function fmtBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -47,75 +21,8 @@ function hide(el: HTMLElement | null) {
   el?.classList.add('hidden')
 }
 
-class HostSDK {
-  private _pending = new Map<string, PendingRequest>()
-  private _onMessage = this._handleMessage.bind(this)
-
-  constructor() {
-    window.addEventListener('message', this._onMessage)
-  }
-
-  get isEmbedded(): boolean {
-    return window.parent !== window
-  }
-
-  add(magnetURI: string, opts: AddTorrentOptions = {}): Promise<AddTorrentResult> {
-    if (!this.isEmbedded) {
-      return Promise.reject(new Error('HostSDK.add() can only be called from within an iframe'))
-    }
-
-    const id = crypto.randomUUID()
-    const timeout = opts.timeout ?? 120_000
-
-    return new Promise<AddTorrentResult>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this._pending.delete(id)
-        reject(new Error(`Timeout: no response within ${timeout / 1000}s`))
-      }, timeout)
-
-      this._pending.set(id, { resolve, reject, timer, onProgress: opts.onProgress })
-      window.parent.postMessage({ type: `${NS}:add-torrent`, id, magnetURI }, '*')
-    })
-  }
-
-  destroy(): void {
-    window.removeEventListener('message', this._onMessage)
-    this._pending.forEach((p) => {
-      clearTimeout(p.timer)
-      p.reject(new Error('HostSDK destroyed'))
-    })
-    this._pending.clear()
-  }
-
-  private _handleMessage(event: MessageEvent): void {
-    const d = event.data
-    if (!d || typeof d.type !== 'string' || !d.type.startsWith(NS + ':') || !d.id) return
-    const p = this._pending.get(d.id)
-    if (!p) return
-
-    if (d.type === `${NS}:torrent-added`) {
-      clearTimeout(p.timer)
-      this._pending.delete(d.id)
-      p.resolve({ infoHash: d.infoHash || '', files: d.files || {} })
-    } else if (d.type === `${NS}:torrent-progress` && p.onProgress) {
-      p.onProgress({
-        phase: d.phase || 'connecting',
-        progress: d.progress || 0,
-        downloadSpeed: d.downloadSpeed || 0,
-        peers: d.peers || 0,
-        downloaded: d.downloaded || 0,
-        totalSize: d.totalSize || 0,
-      })
-    } else if (d.type === `${NS}:torrent-error`) {
-      clearTimeout(p.timer)
-      this._pending.delete(d.id)
-      p.reject(new Error(d.error || 'Unknown error'))
-    }
-  }
-}
-
 export function initPlayer(): void {
-  const host = new HostSDK()
+  const host = new ZTorrentHost()
   const watchBtn = qs<HTMLButtonElement>('#watchBtn')
   const playerSection = qs<HTMLElement>('#playerSection')
   const loadingOverlay = qs<HTMLElement>('#loadingOverlay')
@@ -170,7 +77,7 @@ export function initPlayer(): void {
     watchBtn.textContent = 'Loading...'
     playerSection.scrollIntoView({ behavior: 'smooth' })
 
-    host
+    void host
       .add(SINTEL_MAGNET, {
         timeout: 120_000,
         onProgress: updateProgress,
@@ -206,7 +113,7 @@ export function initPlayer(): void {
         }
         video.addEventListener('click', unmute)
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         hide(loadingOverlay)
         show(errorOverlay)
         if (errorText) errorText.textContent = err.message || 'Failed to load video'

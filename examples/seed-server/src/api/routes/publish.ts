@@ -1,5 +1,6 @@
 import type { ZTorrent } from '@z-torrent/node'
 import Database from 'bun:sqlite'
+import { json } from '../http.js'
 import type { ApiKeyConfig, ServerConfig } from '../../config.js'
 import { parseBytes, parseTTL } from '../../config.js'
 import { validateManifest } from '../../schema.js'
@@ -212,14 +213,7 @@ export async function handleDelete(
 
   deleteDeploymentFromDb(db, infoHash)
 
-  return json({ deleted: true, expired: true, infoHash })
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
+  return json({ deleted: true, infoHash })
 }
 
 interface TorrentFile {

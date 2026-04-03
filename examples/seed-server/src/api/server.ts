@@ -7,21 +7,9 @@ import { handleHealthMinimal, handleHealthDetailed } from './routes/health.js'
 import { handleStatus } from './routes/status.js'
 import { handleStats } from './routes/stats.js'
 import { handlePublish, handleDelete } from './routes/publish.js'
+import { CORS_HEADERS, json } from './http.js'
 
 const INFO_HASH_SEGMENT = '(?:[a-f0-9]{40}|[a-f0-9]{64})'
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  })
-}
 
 export function createApiServer(
   client: ZTorrent,

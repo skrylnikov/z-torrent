@@ -59,27 +59,36 @@ export async function waitForReady(
   const deadline = Date.now() + timeout
 
   while (Date.now() < deadline) {
+    let res: Response
     try {
-      const res = await fetch(`${serverUrl}/api/status/${infoHash}`, {
+      res = await fetch(`${serverUrl}/api/status/${infoHash}`, {
         headers: { Authorization: `Bearer ${apiKey}` },
       })
-
-      if (!res.ok) {
-        if (res.status === 404) {
-          throw new Error(`Resource not found: ${infoHash}`)
-        }
-        const remaining = Math.ceil((deadline - Date.now()) / 1000)
-        await new Promise((r) => setTimeout(r, Math.min(POLL_INTERVAL, remaining * 1000)))
-        continue
-      }
-
-      const status = (await res.json()) as StatusResponse
-      if (status.ready) return status
-    } catch (err: any) {
+    } catch {
       if (Date.now() >= deadline) break
       await new Promise((r) => setTimeout(r, POLL_INTERVAL))
       continue
     }
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error(`Resource not found: ${infoHash}`)
+      }
+      const remaining = Math.ceil((deadline - Date.now()) / 1000)
+      await new Promise((r) => setTimeout(r, Math.min(POLL_INTERVAL, remaining * 1000)))
+      continue
+    }
+
+    let status: StatusResponse
+    try {
+      status = (await res.json()) as StatusResponse
+    } catch {
+      if (Date.now() >= deadline) break
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL))
+      continue
+    }
+
+    if (status.ready) return status
 
     await new Promise((r) => setTimeout(r, POLL_INTERVAL))
   }

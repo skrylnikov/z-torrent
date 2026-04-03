@@ -98,7 +98,7 @@ Get statistics for the API key (deployments, usage, totals).
 
 ### `DELETE /api/deployments/:infoHash`
 
-Remove a deployment (only the key that created it can delete).
+Remove a deployment (only the key that created it can delete). Responds with `{ deleted: true, infoHash }`.
 
 ## HTTP Streaming Server
 

@@ -11,18 +11,29 @@ export interface IDBChunkStoreOpts {
   torrent?: { infoHash?: string }
 }
 
+function normalizeStoreOpts(opts: Record<string, unknown>): IDBChunkStoreOpts {
+  const out: IDBChunkStoreOpts = {}
+  if (typeof opts.infoHash === 'string') out.infoHash = opts.infoHash
+  if (typeof opts.dbName === 'string') out.dbName = opts.dbName
+  const t = opts.torrent
+  if (t && typeof t === 'object' && t !== null) {
+    const ih = (t as { infoHash?: unknown }).infoHash
+    if (typeof ih === 'string') out.torrent = { infoHash: ih }
+  }
+  return out
+}
+
+/** Browser chunk store — public API aligned with z-torrent-core `ChunkStore` / `ChunkStoreConstructor`. */
 export class IDBChunkStore {
   private _db: IDBDatabase | null = null
   private _pending: Promise<void>
-  private _pieceLength: number
   private _opts: IDBChunkStoreOpts
   private _destroyed = false
   chunkLength: number
 
-  constructor(pieceLength: number, opts: IDBChunkStoreOpts = {}) {
-    this._pieceLength = pieceLength
+  constructor(pieceLength: number, opts: Record<string, unknown> = {}) {
     this.chunkLength = pieceLength
-    this._opts = opts
+    this._opts = normalizeStoreOpts(opts)
     this._pending = this._open()
   }
 
@@ -34,6 +45,11 @@ export class IDBChunkStore {
   }
 
   private _open(): Promise<void> {
+    if (typeof indexedDB === 'undefined') {
+      return Promise.reject(
+        new Error('IndexedDB is not available in this environment (SSR or non-browser)')
+      )
+    }
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this._dbName(), DB_VERSION)
 
@@ -68,16 +84,32 @@ export class IDBChunkStore {
     return tx.objectStore(STORE_NAME)
   }
 
+  get(index: number, cb: (err: Error | null, chunk?: Uint8Array) => void): void
   get(
     index: number,
-    opts: { offset?: number; length?: number } | ((err: Error | null, chunk?: Uint8Array) => void),
+    opts: { offset?: number; length?: number },
+    cb: (err: Error | null, chunk?: Uint8Array) => void
+  ): void
+  get(
+    index: number,
+    optsOrCb:
+      | { offset?: number; length?: number }
+      | ((err: Error | null, chunk?: Uint8Array) => void),
     cb?: (err: Error | null, chunk?: Uint8Array) => void
   ): void {
-    if (typeof opts === 'function') {
-      cb = opts
+    let opts: { offset?: number; length?: number }
+    let callback: (err: Error | null, chunk?: Uint8Array) => void
+    if (typeof optsOrCb === 'function') {
       opts = {}
+      callback = optsOrCb
+    } else {
+      if (cb === undefined) {
+        throw new Error('IDBChunkStore.get: callback is required')
+      }
+      opts = optsOrCb
+      callback = cb
     }
-    const realCb = cb!
+
     this._pending
       .then(() => {
         const store = this._getStore('readonly')
@@ -86,7 +118,7 @@ export class IDBChunkStore {
         req.onsuccess = () => {
           const data = req.result as ArrayBuffer | undefined
           if (!data) {
-            realCb(new Error(`Chunk ${index} not found`))
+            callback(new Error(`Chunk ${index} not found`))
             return
           }
 
@@ -95,29 +127,25 @@ export class IDBChunkStore {
           const length = opts.length ?? buf.byteLength - offset
 
           if (offset === 0 && length === buf.byteLength) {
-            realCb(null, buf)
+            callback(null, buf)
           } else {
-            realCb(null, buf.subarray(offset, offset + length))
+            callback(null, buf.subarray(offset, offset + length))
           }
         }
 
         req.onerror = () => {
-          realCb(new Error(`Failed to get chunk ${index}: ${req.error?.message}`))
+          callback(new Error(`Failed to get chunk ${index}: ${req.error?.message}`))
         }
       })
-      .catch((err) => realCb(err))
+      .catch((err: Error) => callback(err))
   }
 
   put(
     index: number,
     chunk: Uint8Array,
-    _opts: Record<string, unknown> | ((err?: Error) => void),
-    cb?: (err?: Error) => void
+    _opts: Record<string, unknown>,
+    cb: (err?: Error) => void
   ): void {
-    if (typeof _opts === 'function') {
-      cb = _opts
-    }
-    const realCb = cb!
     this._pending
       .then(() => {
         const store = this._getStore('readwrite')
@@ -126,7 +154,7 @@ export class IDBChunkStore {
           index
         )
 
-        req.onsuccess = () => realCb()
+        req.onsuccess = () => cb()
         req.onerror = () => {
           const err = req.error
           if (err?.name === 'QuotaExceededError') {
@@ -134,29 +162,29 @@ export class IDBChunkStore {
               `[@z-torrent/utils/idb-chunk-store] IndexedDB quota exceeded. Piece ${index} not stored.`
             )
           }
-          realCb(new Error(`Failed to put chunk ${index}: ${err?.message}`))
+          cb(new Error(`Failed to put chunk ${index}: ${err?.message}`))
         }
       })
-      .catch((err) => realCb(err))
+      .catch((err: Error) => cb(err))
   }
 
-  close(cb?: (err?: Error | null) => void): void {
+  close(cb: () => void): void {
     this.destroy(cb)
   }
 
-  destroy(cb?: (err?: Error | null) => void): void {
+  destroy(cb: () => void): void {
     this._destroyed = true
 
     this._pending
       .then(() => {
         this._db?.close()
         this._db = null
-        cb?.()
+        cb()
       })
       .catch(() => {
         this._db?.close()
         this._db = null
-        cb?.()
+        cb()
       })
   }
 }

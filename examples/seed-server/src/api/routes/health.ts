@@ -1,5 +1,6 @@
 import Database from 'bun:sqlite'
 import type { ZTorrent } from '@z-torrent/node'
+import { json } from '../http.js'
 import { getTotalStorage } from '../../storage/db.js'
 
 export function handleHealthMinimal(): Response {
@@ -34,11 +35,4 @@ export function handleHealthDetailed(
   }
 
   return json(body, 200)
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
 }

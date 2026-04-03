@@ -1,4 +1,5 @@
 import type { ZTorrent } from '@z-torrent/node'
+import { json } from '../http.js'
 import type { ApiKeyConfig } from '../../config.js'
 import type { ZTManifest } from '../../schema.js'
 import type { DeploymentRow } from '../../storage/db.js'
@@ -64,12 +65,5 @@ export function handleStatus(
       ? new Date(new Date(dep.last_accessed_at).getTime() + dep.ttl_seconds * 1000).toISOString()
       : null,
     manifest: manifest ? { site: manifest.site, type: manifest.type } : undefined,
-  })
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
   })
 }
