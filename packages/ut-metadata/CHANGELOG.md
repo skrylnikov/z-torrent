@@ -1,5 +1,7 @@
 ## [4.0.3](https://github.com/webtorrent/ut_metadata/compare/v4.0.2...v4.0.3) (2023-08-10)
 
+## 0.0.15
+
 ## 0.0.14
 
 ## 0.0.13
