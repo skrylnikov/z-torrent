@@ -24,7 +24,6 @@ interface PendingRequest {
   reject: (error: Error) => void
   timer: ReturnType<typeof setTimeout>
   onProgress: ((p: TorrentProgress) => void) | undefined
-  progressInterval: ReturnType<typeof setInterval> | undefined
 }
 
 type MessagePayload = {
@@ -88,7 +87,6 @@ export class ZTorrentHost {
         reject,
         timer,
         onProgress: opts.onProgress,
-        progressInterval: undefined,
       })
 
       this._parent!.postMessage(
@@ -102,7 +100,6 @@ export class ZTorrentHost {
     window.removeEventListener('message', this._onMessage)
     for (const [, pending] of this._pending) {
       clearTimeout(pending.timer)
-      if (pending.progressInterval) clearInterval(pending.progressInterval)
       pending.reject(new Error('ZTorrentHost destroyed'))
     }
     this._pending.clear()
@@ -123,7 +120,6 @@ export class ZTorrentHost {
     switch (type) {
       case `${NAMESPACE}:torrent-added`: {
         clearTimeout(pending.timer)
-        if (pending.progressInterval) clearInterval(pending.progressInterval)
         this._pending.delete(id)
         pending.resolve({
           infoHash: event.data.infoHash ?? '',
@@ -148,7 +144,6 @@ export class ZTorrentHost {
 
       case `${NAMESPACE}:torrent-error`: {
         clearTimeout(pending.timer)
-        if (pending.progressInterval) clearInterval(pending.progressInterval)
         this._pending.delete(id)
         pending.reject(new Error(event.data.error ?? 'Unknown error from parent portal'))
         break

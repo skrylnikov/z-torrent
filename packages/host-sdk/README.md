@@ -93,7 +93,7 @@ Message types use the `z-torrent:` prefix. Useful if you implement a custom port
 | parent → iframe | `z-torrent:torrent-progress` | `id`, same fields as `TorrentProgress` |
 | parent → iframe | `z-torrent:torrent-error`    | `id`, `error`                          |
 
-The SDK uses `postMessage(..., '*')`. The parent portal should **validate `event.origin`** and, when replying, prefer a concrete `targetOrigin` instead of `*`.
+The SDK uses `postMessage(..., window.location.origin)` for outbound messages from the iframe. The parent portal should **validate `event.origin`** and, when replying, use a concrete `targetOrigin` (typically the iframe's origin) instead of `*`.
 
 Reference handler: [`examples/web-portal/src/components/Viewer.svelte`](../../examples/web-portal/src/components/Viewer.svelte).
 

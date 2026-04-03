@@ -1,18 +1,10 @@
 <script lang="ts">
+  import { extractHash } from '../lib/url.js'
+
   let { onNavigate }: { onNavigate: (hash: string) => void } = $props()
 
   let address = $state('')
   let focused = $state(false)
-
-  function extractHash(input: string): string | null {
-    const trimmed = input.trim()
-    if (/^[a-f0-9]{40}$/i.test(trimmed)) return trimmed.toLowerCase()
-    const magnetMatch = trimmed.match(/btih:([a-f0-9]{40})/i)
-    if (magnetMatch) return magnetMatch[1].toLowerCase()
-    const urlMatch = trimmed.match(/z-torrent\.xyz\/([a-f0-9]{40})/i)
-    if (urlMatch) return urlMatch[1].toLowerCase()
-    return null
-  }
 
   function handleSubmit(e: Event) {
     e.preventDefault()

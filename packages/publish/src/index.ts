@@ -75,11 +75,11 @@ function scanDir(dir: string): { totalSize: number; fileCount: number; warnings:
 
         const ext = path.extname(entry.name).toLowerCase()
         if (FORBIDDEN_EXTENSIONS.has(ext)) {
-          warnings.push(`Forbidden file type: ${rel} (${ext})`)
+          warnings.push(`Forbidden file type: ${relReal} (${ext})`)
         }
 
         if (size > 100 * 1024 * 1024) {
-          warnings.push(`Large file: ${rel} (${(size / 1024 / 1024).toFixed(1)} MB)`)
+          warnings.push(`Large file: ${relReal} (${(size / 1024 / 1024).toFixed(1)} MB)`)
         }
 
         if (ext === '.html' || ext === '.htm') {
@@ -88,7 +88,7 @@ function scanDir(dir: string): { totalSize: number; fileCount: number; warnings:
             const matches = content.match(ROOT_RELATIVE_RE)
             if (matches && matches.length > 0) {
               warnings.push(
-                `Root-relative paths in ${rel}: ${matches.length} occurrence(s). Consider using relative paths instead.`
+                `Root-relative paths in ${relReal}: ${matches.length} occurrence(s). Consider using relative paths instead.`
               )
             }
           } catch {

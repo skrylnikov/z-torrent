@@ -212,7 +212,7 @@ export async function handleDelete(
 
   deleteDeploymentFromDb(db, infoHash)
 
-  return json({ deleted: true, expired: false, infoHash })
+  return json({ deleted: true, expired: true, infoHash })
 }
 
 function json(data: unknown, status = 200): Response {

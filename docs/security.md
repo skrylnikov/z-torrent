@@ -55,7 +55,7 @@ The SW is registered at scope `/` and intercepts all `/z-torrent/` requests.
 
 - The SW only intercepts URLs containing `z-torrent/`
 - Non-`z-torrent/` requests pass through unmodified (`return null`)
-- Cache is scoped to the `z-torrent-v1` cache name
+- Cache uses a versioned name `z-torrent-v{N}` (see `CACHE_VERSION` in the Service Worker); bump the version when SW caching logic changes so old caches are discarded on activate
 - The SW has no access to the portal's DOM or cookies
 
 ## Future Security Improvements (v2)

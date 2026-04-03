@@ -8,5 +8,6 @@
  * @returns Optimal piece length in bytes (power of 2, >= 16384)
  */
 export function calcPieceLength(bytes: number): number {
-  return Math.max(16384, 1 << ((Math.log2(bytes < 1024 ? 1 : bytes / 1024) + 0.5) | 0))
+  const exp = (Math.log2(bytes < 1024 ? 1 : bytes / 1024) + 0.5) | 0
+  return Math.max(16384, 2 ** exp)
 }
