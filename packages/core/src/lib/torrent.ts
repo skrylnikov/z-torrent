@@ -952,7 +952,7 @@ export class Torrent extends EventEmitter implements TorrentWire, TorrentForFile
   }
 
   #updateWireWrapper(): void {
-    if (this.destroyed) return
+    if (this.destroyed || !this.bitfield) return
     let enqueued = 0
     let anyProgress = true
     while (anyProgress && enqueued < MAX_REQUESTS_PER_UPDATE) {
@@ -1186,10 +1186,6 @@ export class Torrent extends EventEmitter implements TorrentWire, TorrentForFile
 
     this.store = new ImmediateChunkStore(rawStore)
 
-    if (this.pieces.length !== 0 && !this._startAsDeselected) {
-      this.select(0, this.pieces.length - 1)
-    }
-
     this._hashes = this.pieces as any
     const hasStartupBitfield =
       this._startupBitfield &&
@@ -1210,6 +1206,10 @@ export class Torrent extends EventEmitter implements TorrentWire, TorrentForFile
         i === (this.pieces as any[]).length - 1 ? this.lastPieceLength : this.pieceLength
       return new Piece(pieceLength)
     }) as any
+
+    if (this.pieces.length !== 0 && !this._startAsDeselected) {
+      this.select(0, this.pieces.length - 1)
+    }
 
     this.emit('metadata')
 
