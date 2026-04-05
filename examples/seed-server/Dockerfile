@@ -22,7 +22,6 @@ COPY --from=builder /app /app
 
 WORKDIR /app/examples/seed-server
 
-EXPOSE 8080
 EXPOSE 3000
 
 CMD ["bun", "run", "src/index.ts"]

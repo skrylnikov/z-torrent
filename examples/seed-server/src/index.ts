@@ -125,14 +125,6 @@ function main() {
   const apiServer = createApiServer(client, db, config)
   console.log(`API server: http://localhost:${config.apiPort}/api`)
 
-  if (config.httpPort > 0) {
-    const server = client.createServer()
-    server.listen(config.httpPort, () => {
-      const addr = server.address() as { port: number; address: string }
-      console.log(`HTTP server: http://${addr.address}:${addr.port}/z-torrent`)
-    })
-  }
-
   const cleanupTimer = setInterval(() => {
     void cleanupExpired(client, db, downloadPath).catch((err) => {
       console.error('[cleanup] Error:', err)

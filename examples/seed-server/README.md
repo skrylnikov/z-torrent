@@ -20,7 +20,6 @@ Node.js application for downloading and seeding torrents, with a REST API for ac
 | `TORRENT_MAGNETS`       | Magnet links (comma or newline separated). Optional — server works with API only | —                   |
 | `TORRENT_TRACKERS`      | Tracker URLs for announce                                                        | WSS public trackers |
 | `TORRENT_DOWNLOAD_PATH` | Directory for downloaded files                                                   | `./downloads`       |
-| `TORRENT_HTTP_PORT`     | HTTP streaming port (0 = disabled)                                               | `8080`              |
 
 ### WebRTC
 
@@ -99,14 +98,6 @@ Get statistics for the API key (deployments, usage, totals).
 ### `DELETE /api/deployments/:infoHash`
 
 Remove a deployment (only the key that created it can delete). Responds with `{ deleted: true, infoHash }`.
-
-## HTTP Streaming Server
-
-When `TORRENT_HTTP_PORT > 0`, files are available at:
-
-- `http://localhost:PORT/z-torrent` — torrent list
-- `http://localhost:PORT/z-torrent/INFO_HASH/` — torrent page
-- `http://localhost:PORT/z-torrent/INFO_HASH/path/to/file` — file download
 
 ## Docker (Local Build)
 

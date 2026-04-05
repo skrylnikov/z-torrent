@@ -17,7 +17,6 @@ export interface ServerConfig {
   magnets: string[]
   trackers: string[]
   downloadPath: string
-  httpPort: number
   stunUrl: string
   turnUrl: string
   turnUsername: string
@@ -143,7 +142,6 @@ export function loadConfig(): ServerConfig {
     magnets,
     trackers,
     downloadPath: process.env.TORRENT_DOWNLOAD_PATH || './downloads',
-    httpPort: process.env.TORRENT_HTTP_PORT ? parseInt(process.env.TORRENT_HTTP_PORT, 10) : 0,
     stunUrl: process.env.STUN_URL || 'stun:turn.z-torrent.xyz:3478',
     turnUrl: process.env.TURN_URL || 'turn:turn.z-torrent.xyz:3478',
     turnUsername: process.env.TURN_USERNAME || 'z-torrent',
