@@ -1,0 +1,7 @@
+services:
+  web-portal:
+    # CI publishes to ghcr.io/<github.repository_owner>/z-torrent-web-portal
+    image: ghcr.io/${WEB_PORTAL_IMAGE_OWNER:-skrylnikov}/z-torrent-web-portal:latest
+    ports:
+      - '3000:80'
+    restart: unless-stopped

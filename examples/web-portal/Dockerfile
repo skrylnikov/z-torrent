@@ -27,6 +27,7 @@ COPY examples/sintel-web/package.json examples/sintel-web/package.json
 COPY examples/web-portal/package.json examples/web-portal/package.json
 RUN bun install --frozen-lockfile
 
+COPY turbo.json turbo.json
 COPY packages/ packages/
 COPY examples/web-portal/ examples/web-portal/
 RUN bun run build -- --filter=@z-torrent/browser
