@@ -28,6 +28,7 @@ COPY examples/web-portal/package.json examples/web-portal/package.json
 RUN bun install --frozen-lockfile
 
 COPY turbo.json turbo.json
+COPY tsconfig.json tsconfig.json
 COPY packages/ packages/
 COPY examples/web-portal/ examples/web-portal/
 RUN bun run build -- --filter=@z-torrent/browser
