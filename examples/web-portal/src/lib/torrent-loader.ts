@@ -178,52 +178,85 @@ async function loadTorrentOnce(
 
       opts.onProgress?.(makeState({ phase: 'metadata' }))
 
-      const manifest = await parseManifest(t)
-      const siteName = manifest?.site?.name ?? t.name ?? 'Z-Torrent Site'
+      // CRITICAL: Do NOT await parseManifest here — it calls blob()/arrayBuffer()
+      // which uses FileIterator that blocks on the 'verified' event for each piece.
+      // But 'verified' only fires AFTER #onWireWithMetadata runs, which hasn't
+      // executed yet because this callback is still running. This creates a deadlock.
+      // Instead, parse manifest in the background and select files immediately.
+      let manifest: ZTManifest | null = null
+      let siteName = t.name ?? 'Z-Torrent Site'
+
+      // Parse manifest non-blocking — fire and resolve later
+      const manifestPromise = parseManifest(t).then((m) => {
+        manifest = m
+        siteName = m?.site?.name ?? t.name ?? 'Z-Torrent Site'
+
+        // Re-prioritize files based on manifest (now that data is flowing)
+        if (m?.priority?.length) {
+          for (const file of t.files) {
+            const name = file.name as string
+            for (const pattern of m.priority) {
+              if (matchGlob(name, pattern)) {
+                file.select(5)
+                break
+              }
+            }
+          }
+        }
+
+        return m
+      })
+
+      // Select files immediately without waiting for manifest
+      const manifestFile = t.files.find((f: any) => f.name === 'zt-manifest.json')
+      if (manifestFile) manifestFile.select(7)
+
+      // Default entry file
+      const entryFile = t.files.find(
+        (f: any) => f.name === 'index.html' || f.path.endsWith('/index.html')
+      )
+      if (entryFile) entryFile.select(6)
+
+      // Select CSS/JS as priority (fallback when no manifest yet)
+      const priorityFiles: any[] = []
+      for (const file of t.files) {
+        const name = file.name as string
+        if (/\.(css|js|mjs)$/i.test(name) && file !== entryFile && file !== manifestFile) {
+          file.select(5)
+          priorityFiles.push(file)
+        }
+      }
 
       opts.onProgress?.(
         makeState({
           phase: 'downloading',
-          manifest,
+          manifest: null,
           siteName,
           totalSize: t.length,
         })
       )
 
-      const manifestFile = t.files.find((f: any) => f.name === 'zt-manifest.json')
-      if (manifestFile) manifestFile.select(7)
-
-      const entryName = manifest?.routing?.entry ?? 'index.html'
-      const entryFile = t.files.find(
-        (f: any) => f.name === entryName || f.path.endsWith('/' + entryName)
-      )
-      if (entryFile) entryFile.select(6)
-
-      const priorityFiles: any[] = []
-      if (manifest?.priority?.length) {
-        for (const file of t.files) {
-          const name = file.name as string
-          for (const pattern of manifest.priority) {
-            if (matchGlob(name, pattern)) {
-              file.select(5)
-              priorityFiles.push(file)
-              break
-            }
-          }
-        }
-      }
-
-      if (priorityFiles.length === 0) {
-        for (const file of t.files) {
-          const name = file.name as string
-          if (/\.(css|js|mjs)$/i.test(name) && file !== entryFile && file !== manifestFile) {
-            file.select(5)
-            priorityFiles.push(file)
-          }
-        }
-      }
-
       let resolved = false
+      let updateInterval: ReturnType<typeof setInterval> | null = null
+
+      // Start periodic progress tracking
+      updateInterval = setInterval(() => {
+        if (resolved) return
+        opts.onProgress?.(
+          makeState({
+            phase: 'downloading',
+            manifest,
+            siteName,
+            downloadSpeed: t.downloadSpeed,
+            uploadSpeed: t.uploadSpeed,
+            peerCount: t.numPeers,
+            downloaded: t.downloaded,
+            totalSize: t.length,
+            timeRemaining: t.timeRemaining,
+          })
+        )
+      }, 500)
+
       const finish = () => {
         if (resolved) return
         resolved = true
@@ -244,12 +277,16 @@ async function loadTorrentOnce(
       }
 
       if (t.done && !resolved) finish()
+
+      // Let manifest parsing continue in the background — it will resolve
+      // once pieces start flowing (which now happens because we returned
+      // control from this callback, allowing #onWireWithMetadata to run).
+      manifestPromise.catch(() => {
+        // manifest parsing failed — non-fatal, we already have file selection
+      })
     })
 
     torrent?.on?.('error', (err: Error) => {
-      if (updateInterval) clearInterval(updateInterval)
-      opts.signal?.removeEventListener('abort', onAbort)
-      opts.onProgress?.(makeState({ phase: 'error', error: err.message }))
       reject(err)
     })
   })

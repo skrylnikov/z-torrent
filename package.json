@@ -14,6 +14,8 @@
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "test-live": "turbo run test-live",
+    "test:e2e": "turbo build && bun run --filter sintel-web e2e",
+    "test:e2e:install": "bun run --filter sintel-web e2e:install",
     "lint": "eslint packages",
     "lint:fix": "eslint packages --fix",
     "clean": "turbo clean && rm -rf node_modules",

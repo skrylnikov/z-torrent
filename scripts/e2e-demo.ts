@@ -21,6 +21,7 @@ import { spawn, ChildProcess, execSync } from 'child_process'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { cpSync, mkdirSync, readFileSync, existsSync } from 'fs'
+import bencode from 'bencode'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -237,14 +238,20 @@ async function main() {
 
   log('[6/8] Copying site files to seed server downloads...')
   const downloadsDir = resolve(ROOT, 'examples/seed-server/downloads')
-  const torrentFilesDir = resolve(downloadsDir, result.infoHash, 'dist')
+  // WebTorrent stores a multi-file torrent under `<path>/<info.name>/`, so we
+  // must mirror dist into `downloads/<infoHash>/<torrentName>/` for the
+  // seed-server to find and verify the already-present bytes. Copying flat to
+  // `downloads/<infoHash>/` leaves WebTorrent waiting for a download that never
+  // starts (peers stay 0, status never reaches `seeding`).
+  const torrentBuf = readFileSync(torrentOutputPath)
+  const torrentName = String(bencode.decode(torrentBuf, 'utf8').info.name)
+  const torrentFilesDir = resolve(downloadsDir, result.infoHash, torrentName)
   mkdirSync(torrentFilesDir, { recursive: true })
   cpSync(SINTEL_DIST_DIR, torrentFilesDir, { recursive: true })
   log(`  Copied to ${torrentFilesDir}`)
   log('')
 
   log('[7/8] Uploading to seed server...')
-  const torrentBuf = readFileSync(torrentOutputPath)
   try {
     const publishRes = await pushToServer(
       `http://localhost:${SEED_API_PORT}`,

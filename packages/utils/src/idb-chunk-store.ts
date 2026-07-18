@@ -143,9 +143,28 @@ export class IDBChunkStore {
   put(
     index: number,
     chunk: Uint8Array,
-    _opts: Record<string, unknown>,
+    opts: Record<string, unknown>,
     cb: (err?: Error) => void
+  ): void
+  put(index: number, chunk: Uint8Array, cb: (err?: Error) => void): void
+  put(
+    index: number,
+    chunk: Uint8Array,
+    optsOrCb: Record<string, unknown> | ((err?: Error) => void),
+    cb?: (err?: Error) => void
   ): void {
+    // Support both the abstract-chunk-store 3-arg form `put(index, buf, cb)`
+    // and the 4-arg `put(index, buf, opts, cb)` form. Core calls the 3-arg form.
+    let callback: (err?: Error) => void
+    if (typeof optsOrCb === 'function') {
+      callback = optsOrCb
+    } else {
+      if (cb === undefined) {
+        throw new Error('IDBChunkStore.put: callback is required')
+      }
+      callback = cb
+    }
+
     this._pending
       .then(() => {
         const store = this._getStore('readwrite')
@@ -154,7 +173,7 @@ export class IDBChunkStore {
           index
         )
 
-        req.onsuccess = () => cb()
+        req.onsuccess = () => callback()
         req.onerror = () => {
           const err = req.error
           if (err?.name === 'QuotaExceededError') {
@@ -162,10 +181,10 @@ export class IDBChunkStore {
               `[@z-torrent/utils/idb-chunk-store] IndexedDB quota exceeded. Piece ${index} not stored.`
             )
           }
-          cb(new Error(`Failed to put chunk ${index}: ${err?.message}`))
+          callback(new Error(`Failed to put chunk ${index}: ${err?.message}`))
         }
       })
-      .catch((err: Error) => cb(err))
+      .catch((err: Error) => callback(err))
   }
 
   close(cb: () => void): void {

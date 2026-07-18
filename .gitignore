@@ -14,3 +14,11 @@ downloads
 
 # Seed server runtime SQLite and uploads (see examples/seed-server README)
 examples/seed-server/data/
+
+# Playwright e2e artifacts (sintel-web)
+examples/sintel-web/e2e/.state.json
+examples/sintel-web/e2e/.logs/
+examples/sintel-web/test-results/
+examples/sintel-web/playwright-report/
+examples/sintel-web/blob-report/
+examples/sintel-web/playwright/.cache

@@ -6,13 +6,17 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "build": "astro build && bun run scripts/relativize.ts dist",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
+    "e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@z-torrent/host-sdk": "workspace:*",
     "astro": "^6.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "typescript": "^5.9.3"
   }
 }
