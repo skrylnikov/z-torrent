@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/publish",
   "description": "Publish static sites as torrents",
-  "version": "0.0.1",
+  "version": "0.0.16",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "type": "module",
   "bin": {

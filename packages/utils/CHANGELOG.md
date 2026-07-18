@@ -1,5 +1,15 @@
 # @z-torrent/utils
 
+## 0.0.16
+
+### Patch Changes
+
+- [`a5c4547`](https://github.com/skrylnikov/z-torrent/commit/a5c45475dc9fa0f0019390a020008039e3f86c4c) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Fix `IDBChunkStore.put` to accept the 3-argument form `put(index, chunk, cb)` that `@z-torrent/core` uses when persisting pieces. Previously the callback was treated as options, which broke the browser default chunk store during downloads.
+
+- [#28](https://github.com/skrylnikov/z-torrent/pull/28) [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Ship `IDBChunkStore` under the `@z-torrent/utils/idb-chunk-store` entry point: an IndexedDB-backed store for piece data, with clearer quota and error behaviour suited to long-lived browser clients.
+
+  Export `calcPieceLength` from the main util surface so torrent creation and publish tooling can agree on piece sizing (including BEP-52 style constraints where applicable). Add unit tests for the chunk store and piece-length helpers to lock in behaviour.
+
 ## 0.0.15
 
 ## 0.0.14

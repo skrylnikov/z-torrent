@@ -1,5 +1,20 @@
 ## [2.8.5](https://github.com/webtorrent/webtorrent/compare/v2.8.4...v2.8.5) (2025-11-30)
 
+## 0.0.16
+
+### Patch Changes
+
+- [#28](https://github.com/skrylnikov/z-torrent/pull/28) [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Update the Node `Server` implementation to follow the same `ServerBase` contract and behaviour as the browser adapter: consistent URL/path handling for torrent-backed HTTP responses in tooling, tests, and any Node-based portal or seed workflows.
+
+  This keeps parity with the web-hosting changes in core and avoids subtle differences between Node and browser when serving the same manifest or file layout.
+
+- Updated dependencies [[`a5c4547`](https://github.com/skrylnikov/z-torrent/commit/a5c45475dc9fa0f0019390a020008039e3f86c4c), [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757), [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757), [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757)]:
+  - @z-torrent/utils@0.0.16
+  - @z-torrent/core@0.0.16
+  - @z-torrent/create@0.0.16
+  - @z-torrent/dht@0.0.16
+  - @z-torrent/discovery@0.0.16
+
 ## 0.0.15
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # [6.1.0](https://github.com/webtorrent/create-torrent/compare/v6.0.18...v6.1.0) (2025-01-04)
 
+## 0.0.16
+
+### Patch Changes
+
+- [#28](https://github.com/skrylnikov/z-torrent/pull/28) [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757) Thanks [@skrylnikov](https://github.com/skrylnikov)! - Route piece-length calculation through `calcPieceLength` from `@z-torrent/utils` when building torrents from files or streams. That keeps sizing rules aligned with the publish pipeline and other packages instead of duplicating heuristics inside `create`.
+
+  Consumers should see identical piece layouts where they also use the shared helper elsewhere; no public API surface change beyond depending on the updated utils behaviour.
+
+- Updated dependencies [[`a5c4547`](https://github.com/skrylnikov/z-torrent/commit/a5c45475dc9fa0f0019390a020008039e3f86c4c), [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757)]:
+  - @z-torrent/utils@0.0.16
+  - @z-torrent/merkle-tree@0.0.16
+
 ## 0.0.15
 
 ### Patch Changes
