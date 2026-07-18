@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/host-sdk",
   "description": "PostMessage SDK for z-torrent hosted sites to request torrent content from the parent portal",
-  "version": "0.0.1",
+  "version": "0.0.16",
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "type": "module",
   "bugs": {

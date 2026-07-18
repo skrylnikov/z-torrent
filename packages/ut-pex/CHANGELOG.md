@@ -1,5 +1,12 @@
 ## [4.0.4](https://github.com/webtorrent/ut_pex/compare/v4.0.3...v4.0.4) (2023-08-10)
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [[`a5c4547`](https://github.com/skrylnikov/z-torrent/commit/a5c45475dc9fa0f0019390a020008039e3f86c4c), [`3748a93`](https://github.com/skrylnikov/z-torrent/commit/3748a930b8c875494c3d901cf2ae4bec51929757)]:
+  - @z-torrent/utils@0.0.16
+
 ## 0.0.15
 
 ### Patch Changes

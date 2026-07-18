@@ -1,7 +1,7 @@
 {
   "name": "@z-torrent/fixtures",
   "description": "Sample torrent and content files for the Z-Torrent test suite",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "author": "Dmitriy Skrylnikov <skrylnikovd@ya.ru>",
   "bugs": {

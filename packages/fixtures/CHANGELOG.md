@@ -1,5 +1,12 @@
 ## [2.0.2](https://github.com/webtorrent/webtorrent-fixtures/compare/v2.0.1...v2.0.2) (2023-01-31)
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @z-torrent/parse@0.0.16
+
 ## 0.0.7
 
 ### Patch Changes

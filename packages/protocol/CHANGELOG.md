@@ -1,5 +1,7 @@
 ## [4.1.21](https://github.com/webtorrent/bittorrent-protocol/compare/v4.1.20...v4.1.21) (2025-09-14)
 
+## 0.0.16
+
 ## 0.0.15
 
 ## 0.0.14
